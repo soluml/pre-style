@@ -4,7 +4,7 @@ const SweatMap = require('sweatmap');
 
 module.exports = function PreStyle(cssstr) {
   const sassObj = Sass.renderSync({
-    data: cssstr[0],
+    data: cssstr.toString(),
     importer: SassJsonImporter,
     outputStyle: 'compressed',
   });
