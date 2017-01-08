@@ -1,5 +1,13 @@
-module.exports = function PreStyle(cssstr) {
-  console.log(cssstr);
+const Sass = require('node-sass');
+const SassJsonImporter = require('node-sass-json-importer');
+const SweatMap = require('sweatmap');
 
-  return '';
+module.exports = function PreStyle(cssstr) {
+  const sassObj = Sass.renderSync({
+    data: cssstr[0],
+    importer: SassJsonImporter,
+    outputStyle: 'compressed',
+  });
+
+  return sassObj.css.toString();
 };

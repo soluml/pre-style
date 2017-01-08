@@ -19,6 +19,8 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
+    "node-sass": "^4.1.1",
+    "node-sass-json-importer": "^3.0.0",
     "sweatmap": "^0.1.0"
   },
   "devDependencies": {
