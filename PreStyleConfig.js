@@ -1,5 +1,5 @@
 module.exports = {
   vars: {
-    blue: '#00f'
+    color: '#00f'
   }
 };

@@ -6,9 +6,9 @@ describe('Pre-Style', () => {
     expect(
       PreStyle`
         body {
-          color: blue;
+          color: $color;
         }
       `.trim()
-    ).toBe('body{color:blue}');
+    ).toBe('body{color:#00f}');
   });
 });
