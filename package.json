@@ -4,7 +4,7 @@
   "description": "A CSS tool",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "eslint src/* test/* && mocha"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,8 @@
   "devDependencies": {
     "eslint": "^3.13.0",
     "eslint-config-airbnb": "^13.0.0",
+    "eslint-plugin-import": "^2.2.0",
+    "expect": "^1.20.2",
     "mocha": "^3.2.0"
   }
 }

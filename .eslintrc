@@ -1,5 +1,5 @@
 {
-  "extends": "airbnb",
+  "extends": "airbnb/base",
   "globals": {
   },
   "env": {
@@ -19,6 +19,7 @@
     "space-in-parens": 0,
     "space-before-function-paren": 0,
     "no-underscore-dangle": 0,
+    "import/no-extraneous-dependencies": 0,
     "quotes": [2, "single", {
       avoidEscape: true,
       allowTemplateLiterals: true
