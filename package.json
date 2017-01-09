@@ -19,6 +19,8 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
+    "cssnano": "^3.10.0",
+    "gonzales": "^1.0.7",
     "node-sass": "^4.1.1",
     "sweatmap": "^0.1.0"
   },

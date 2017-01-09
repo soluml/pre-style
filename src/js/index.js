@@ -1,17 +1,33 @@
 const Sass = require('node-sass');
+const CSSNano = require('cssnano');
+const Gonzales = require('gonzales');
 const SweatMap = require('sweatmap');
 const config = require('../../PreStyleConfig');
 
+const CSSNanoConfig = {
+  autoprefixer: false,
+  calc: true,
+  colormin: true,
+  convertValues: true,
+  core: true,
+  discardDuplicates: true,
+  discardEmpty: true,
+  discardOverridden: true,
+};
+
 module.exports = function PreStyle(cssstr) {
-  let prestr = '';
-  Object.keys(config.vars).forEach((v) => { prestr += `$${v}: ${config.vars[v]};\n`; });
-
-  console.log('PRE', prestr + cssstr.toString());
-
+  const prestr = '';
   const sassObj = Sass.renderSync({
-    data: prestr + cssstr.toString(),
-    outputStyle: 'compressed',
+    data: `${prestr} .PLACEHOLDER { ${cssstr.toString()} }`,
+    outputStyle: 'compact',
   });
 
-  return sassObj.css.toString();
+  //First, process CSS via CSS Nano Config
+  CSSNano.process(sassObj.css.toString(), CSSNanoConfig)
+    .then((result) => {
+      const AST = Gonzales.srcToCSSP(result.css);
+
+      console.log( result.css );
+      console.log( Gonzales.csspToTree(AST) );
+    });
 };
