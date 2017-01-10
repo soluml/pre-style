@@ -34,6 +34,6 @@ describe('Pre-Style', () => {
           color: white;
         }
       `
-    ).toBe('body{color:#0071ba}');
+    ).toBe(undefined);
   });
 });
