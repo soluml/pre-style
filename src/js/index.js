@@ -60,6 +60,7 @@ module.exports = function PreStyle(cssstr) {
       const AST = Gonzales.srcToCSSP(result.css);
 
       console.log( result.css );
+      console.log('');
       console.log( Gonzales.csspToTree(AST) );
     })
 

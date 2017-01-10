@@ -21,10 +21,19 @@ describe('Pre-Style', () => {
           font-size: 0.9em;
         }
 
+        @supports not ((text-align-last:justify) or (-moz-text-align-last:justify)) {
+          text-align: center;
+        }
+
+        .AnotherClass > & {
+          color: white!important;
+          font-weight: bolder;
+        }
+
         &:hover {
           color: white;
         }
-      `.trim()
+      `
     ).toBe('body{color:#0071ba}');
   });
 });
