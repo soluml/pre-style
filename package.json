@@ -4,7 +4,7 @@
   "description": "A CSS tool",
   "main": "index.js",
   "scripts": {
-    "test": "eslint src/* test/* && mocha"
+    "test": "eslint **/*.js && mocha"
   },
   "repository": {
     "type": "git",

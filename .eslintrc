@@ -10,6 +10,7 @@
     "mocha": true
   },
   "rules": {
+    "eqeqeq": 1,
     "max-len": 0,
     "new-cap": 0,
     "no-unused-vars": 1,
@@ -20,6 +21,7 @@
     "space-before-function-paren": 0,
     "no-underscore-dangle": 0,
     "import/no-extraneous-dependencies": 0,
+    "import/no-dynamic-require": 1,
     "quotes": [2, "single", {
       avoidEscape: true,
       allowTemplateLiterals: true
