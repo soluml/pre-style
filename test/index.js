@@ -1,5 +1,5 @@
 const expect = require('expect');
-const PreStyle = require('../src/js/');
+const PreStyle = require('../src/js/prestyle');
 
 describe('Pre-Style', () => {
   it('Default character limits:', () => {
