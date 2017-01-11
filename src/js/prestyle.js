@@ -1,11 +1,12 @@
 const Adapter = require('./adapter');
 const Minify = require('./minify');
 const Atomize = require('./atomize');
+const defaultConfig = require('./config');
 
 //Process our syntax
 module.exports = function PreStyle(cssstr) {
   //Get hardcoded config for now
-  const config = require('../../test/PreStyleConfig'); // eslint-disable-line global-require
+  const config = Object.assign({}, defaultConfig, require('../../test/PreStyleConfig'));
 
   //Use the adapater specified in the config
   Adapter(config, cssstr)

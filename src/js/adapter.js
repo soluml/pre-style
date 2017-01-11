@@ -5,8 +5,8 @@ module.exports = function Adapter(config, cssStr) {
   const preStr = config.prependedFiles.map(fn => fs.readFileSync(fn).toString()).join('');
 
   //Determine PLACEHOLDER class
-  let PLACEHOLDER = 'PLACEHOLDER';
-  while (`${preStr} ${cssStr.toString()}`.match(new RegExp(PLACEHOLDER, 'g'))) PLACEHOLDER = `PLACEHOLDER_${Date.now()}`;
+  let PLACEHOLDER = '✨PLACEHOLDER✨';
+  while (`${preStr} ${cssStr.toString()}`.match(new RegExp(PLACEHOLDER, 'g'))) PLACEHOLDER = `✨PLACEHOLDER✨_${Date.now()}`;
 
   //Pass the CSS string to the adapter
   return Promise.all([

@@ -11,6 +11,7 @@
   },
   "rules": {
     "eqeqeq": 1,
+    "global-require": 1,
     "max-len": 0,
     "new-cap": 0,
     "no-unused-vars": 1,
