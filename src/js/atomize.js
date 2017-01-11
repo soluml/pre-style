@@ -38,10 +38,21 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
     }
   }
 
+  //Find changes that are needed for the AST
   AST.map((token, i) => seekOutRuleset(token, [i]));
 
-  console.log('{|}{|}{|}{|}{|}');
-  console.log(ASTChanges);
+  //Make those changes to newAST
+  ASTChanges.reverse().forEach((change) => {
+    const spi = change.ind.pop(); //Last Index is where we'll actually be making the edits
+    let ASTArr = AST;
+
+    //Get nested array
+    while (change.ind.length) ASTArr = ASTArr[change.ind.shift()];
+
+    //Make changes to AST
+    ASTArr.splice(spi, 1, ...change.rules);
+  });
+
   console.log('+++');
   console.log(Gonzales.csspToTree(AST));
   console.log('');
