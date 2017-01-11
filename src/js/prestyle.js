@@ -1,8 +1,11 @@
 const Adapter = require('./adapter');
 const Normalize = require('./normalize');
 const Atomize = require('./atomize');
-const Sweat = require('./sweat');
+const Sweatmap = require('sweatmap');
+const Classify = require('./classify');
 const defaultConfig = require('./config');
+
+const MAP = new Sweatmap({ cssSafe: true });
 
 //Process our syntax
 module.exports = function PreStyle(cssstr) {
@@ -19,7 +22,7 @@ module.exports = function PreStyle(cssstr) {
     .then(data => Atomize(data[0], data[1]))
 
     //Create class names from AST
-    .then(data => Sweat(data[0], data[1]))
+    .then(data => Classify(data[0], data[1], MAP))
 
     //Was there an error?
     .catch(console.error);
