@@ -6,7 +6,7 @@ module.exports = {
   adapter(data) {
     try {
       const Sass = require('node-sass');
-      return Promise.resolve(Sass.renderSync({ data, outputStyle: 'compact' }).css);
+      return Promise.resolve(Sass.renderSync({ data, outputStyle: 'compressed' }).css);
     } catch (e) {
       return Promise.reject(e);
     }

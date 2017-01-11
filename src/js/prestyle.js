@@ -1,5 +1,5 @@
 const Adapter = require('./adapter');
-const Minify = require('./minify');
+const Normalize = require('./normalize');
 const Atomize = require('./atomize');
 const defaultConfig = require('./config');
 
@@ -12,7 +12,7 @@ module.exports = function PreStyle(cssstr) {
   Adapter(config, cssstr)
 
     //Next let's minify it to reduce AST size and normalize values
-    .then(data => Minify(data[0], data[1]))
+    .then(data => Normalize(data[0], data[1]))
 
     //Then let's run our CSS through the AST
     .then(data => Atomize(data[0], data[1]))

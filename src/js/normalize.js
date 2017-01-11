@@ -1,6 +1,6 @@
 const CSSNano = require('cssnano');
 
-module.exports = function Minify(cssObj, PLACEHOLDER) {
+module.exports = function Normalize(cssObj, PLACEHOLDER) {
   return Promise.all([
     CSSNano.process(
       cssObj.toString(),
@@ -23,7 +23,7 @@ module.exports = function Minify(cssObj, PLACEHOLDER) {
         minifyGradients: true,
         minifyParams: true,
         minifySelectors: true,
-        normalizeCharset: false,
+        normalizeCharset: true,
         normalizeString: true,
         normalizeUnicode: true,
         normalizeUrl: true,
