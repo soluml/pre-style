@@ -53,8 +53,9 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
     ASTArr.splice(spi, 1, ...change.rules);
   });
 
-  console.log('+++');
-  console.log(Gonzales.csspToTree(AST));
-  console.log('');
-  console.log(Gonzales.csspToSrc(AST));
+  //Return Atomized CSS and Placeholder
+  return Promise.all([
+    { css: Gonzales.csspToSrc(AST) },
+    PLACEHOLDER
+  ]);
 };

@@ -1,6 +1,7 @@
 const Adapter = require('./adapter');
 const Normalize = require('./normalize');
 const Atomize = require('./atomize');
+const Sweat = require('./sweat');
 const defaultConfig = require('./config');
 
 //Process our syntax
@@ -16,6 +17,9 @@ module.exports = function PreStyle(cssstr) {
 
     //Then let's run our CSS through the AST
     .then(data => Atomize(data[0], data[1]))
+
+    //Create class names from AST
+    .then(data => Sweat(data[0], data[1]))
 
     //Was there an error?
     .catch(console.error);
