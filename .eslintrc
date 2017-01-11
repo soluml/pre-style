@@ -14,6 +14,7 @@
     "global-require": 1,
     "max-len": 0,
     "new-cap": 0,
+    "no-plusplus": 0,
     "no-unused-vars": 1,
     "comma-dangle": 0,
     "spaced-comment": 0,

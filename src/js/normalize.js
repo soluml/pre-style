@@ -18,7 +18,7 @@ module.exports = function Normalize(cssObj, PLACEHOLDER) {
         functionOptimiser: true,
         mergeIdents: false,
         mergeLonghand: true,
-        mergeRules: false,
+        mergeRules: true,
         minifyFontValues: true,
         minifyGradients: true,
         minifyParams: true,
