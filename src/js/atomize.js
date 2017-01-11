@@ -19,8 +19,16 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   }
 
   function processAtruler(atruler) {
-    console.log(atruler);
-    return atruler;
+    //Grab all pieces but last (@ declaration)
+    const muler = atruler.slice(0, -1);
+
+    //The rules inside of the @ declaration
+    const atrulers = atruler.slice(-1)[0];
+
+    //Create array of atrulers for every ruleset inside
+    const newAtrulers = atrulers.slice(1).map(ruleset => muler.concat([['atrulers', ruleset]]));
+
+    return newAtrulers;
   }
 
   function seekOutToken(name, token, ind) {
@@ -51,6 +59,10 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   //Find and process ruleset changes that are needed for the AST
   AST.map((token, i) => seekOutToken('ruleset', token, [i]));
   processChanges(ASTChanges);
+
+  //Find and process ruleset changes that are needed for the AST
+  AST.map((token, i) => seekOutToken('atruler', token, [i]));
+  //processChanges(ASTChanges);
 
 
   //Return Atomized CSS and Placeholder
