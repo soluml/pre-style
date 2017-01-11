@@ -3,6 +3,7 @@ const Gonzales = require('gonzales');
 module.exports = function Atomize(cssObj, PLACEHOLDER) {
   const CSS = cssObj.css;
   const AST = Gonzales.srcToCSSP(CSS);
+  const ASTChanges = [];
 
   function processRuleset(ruleset) {
     //The selector should be used for every block declaration
@@ -25,35 +26,22 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
     return newRulesets;
   }
 
-  function seekOutRuleset(token) {
+  function seekOutRuleset(token, ind) {
     if (token) {
       let i = 0;
 
       while (token[i]) {
-        if (token[i] == 'ruleset') token = processRuleset(token); // eslint-disable-line no-param-reassign
-        else seekOutRuleset(token[i + 1]);
+        if (token[i] == 'ruleset') ASTChanges.push({ ind, rules: processRuleset(token) });
+        else seekOutRuleset(token[i + 1], ind.concat([i + 1]));
         i++;
       }
     }
   }
 
-  //AST.forEach(seekOutRuleset);
-  AST.push(
-    ['ruleset',
-      ['selector',
-        ['simpleselector',
-          ['clazz',
-            ['ident', '✨PLACEHOLDER✨']],
-          ['pseudoc',
-            ['ident', 'hover']]]],
-      ['block',
-        ['declaration',
-          ['property',
-            ['ident', 'color']],
-          ['value',
-            ['vhash', 'f0f']]]]]
-  );
+  AST.map((token, i) => seekOutRuleset(token, [i]));
 
+  console.log('{|}{|}{|}{|}{|}');
+  console.log(ASTChanges);
   console.log('+++');
   console.log(Gonzales.csspToTree(AST));
   console.log('');
