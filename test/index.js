@@ -16,14 +16,19 @@ describe('Pre-Style', () => {
           font-weight: normal;
         }
 
+        @supports not ((text-align-last:justify) or (-moz-text-align-last:justify)) {
+          text-align: center;
+        }
+
         @media (max-width: 600px) {
           height: 30px;
           font-size: 0.9em;
           color: rgba(255,255,255,.3)
         }
 
-        @supports not ((text-align-last:justify) or (-moz-text-align-last:justify)) {
-          text-align: center;
+        @media (max-width: 600px), (min-width: 800px) {
+          background-color: yellow;
+          font-weight: normal;
         }
 
         .AnotherClass > & {
