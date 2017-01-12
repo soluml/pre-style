@@ -1,6 +1,6 @@
 module.exports = {
   // Final destination of output
-  cssDest: '../../build/_atomic.css',
+  outputFile: '../../build/_atomic.css',
 
   // Adapter that processes our syntax. This file or function should return a promise.
   adapter(data) {
