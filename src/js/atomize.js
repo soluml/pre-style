@@ -3,7 +3,7 @@ const Gonzales = require('gonzales');
 module.exports = function Atomize(cssObj, PLACEHOLDER) {
   const CSS = cssObj.css;
   const AST = Gonzales.srcToCSSP(CSS);
-  const ASTChanges = [];
+  let ASTChanges = [];
 
   function processRuleset(ruleset) {
     //The selector should be used for every block declaration
@@ -61,9 +61,9 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   processChanges(ASTChanges);
 
   //Find and process ruleset changes that are needed for the AST
+  ASTChanges = [];
   AST.map((token, i) => seekOutToken('atruler', token, [i]));
-  //processChanges(ASTChanges);
-
+  processChanges(ASTChanges);
 
   //Return Atomized CSS and Placeholder
   return Promise.all([
