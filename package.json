@@ -2,7 +2,7 @@
   "name": "pre-style",
   "version": "0.0.1",
   "description": "A CSS tool",
-  "main": "index.js",
+  "main": "src/js/prestyle.js",
   "scripts": {
     "test": "eslint **/*.js && mocha"
   },
