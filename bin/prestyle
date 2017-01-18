@@ -1,3 +1,27 @@
 #!/usr/bin/env node
 
+const fs = require('fs');
+const path = require('path');
+const program = require('commander');
+const chalk = require('chalk');
+const packageJSON = require('../package.json');
 const PreStyle = require('../src/js/prestyle');
+
+program
+  .version(packageJSON.version)
+  .option('-c, --config [file]', 'source config file')
+  .parse(process.argv);
+
+try {
+  const configFileLocation = program.config || 'PreStyleConfig.js';
+
+  if (!fs.existsSync(configFileLocation)) {
+    throw new Error(`Configuration file “${chalk.cyan(configFileLocation)}” not found.`);
+  }
+
+  const config = require(path.resolve(configFileLocation));
+
+  console.log('CONF', config);
+} catch (e) {
+  console.log(e);
+}
