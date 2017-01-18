@@ -12,6 +12,7 @@ const union = require('lodash/union');
 const flattenDeep = require('lodash/flattenDeep');
 const packageJSON = require('../package.json');
 const PreStyle = require('../src/js/prestyle');
+const Normalize = require('../src/js/normalize');
 
 program
   .version(packageJSON.version)
@@ -50,6 +51,9 @@ function processFiles(config) {
   });
 }
 
+let promises = [];
+let config;
+
 try {
   //Get config info
   const configFileLocation = program.config || 'PreStyleConfig.js';
@@ -58,7 +62,7 @@ try {
     throw new Error(`Configuration file “${chalk.cyan(configFileLocation)}” not found.`);
   }
 
-  const config = Object.assign(
+  config = Object.assign(
     {},
     require(path.resolve('src/js/config')),
     require(path.resolve(configFileLocation)),
@@ -77,15 +81,21 @@ try {
   config.sourceFiles = union(program.args) || [];
 
   //Write!
-  const promises = flattenDeep(processFiles(config));
-  Promise.all(promises)
-    .then(
-      (data) => {
-        fs.mkdir(path.dirname(config.outputFile), () => {
-          const cssContent = data.map(cssObj => cssObj.css).join('');
-          const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
+  promises = flattenDeep(processFiles(config));
+} catch (e) {
+  console.log(chalk.underline.red('Error:'));
+  console.log(e);
+}
 
-          fs.writeFile(path.resolve(config.outputFile), cssContent, (err) => {
+Promise.all(promises)
+  .then(
+    (data) => {
+      fs.mkdir(path.dirname(config.outputFile), () => {
+        const cssContent = Normalize(data.map(cssObj => cssObj.css).join(''));
+        const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
+
+        cssContent.then((cssObj) => {
+          fs.writeFile(path.resolve(config.outputFile), cssObj[0].css, (err) => {
             if (err) throw err;
 
             console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
@@ -97,13 +107,10 @@ try {
             console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
           });
         });
-      }
-    )
-    .catch((e) => {
-      console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
-      console.log(e);
-    });
-} catch (e) {
-  console.log(chalk.underline.red('Error:'));
-  console.log(e);
-}
+      });
+    }
+  )
+  .catch((e) => {
+    console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
+    console.log(e);
+  });
