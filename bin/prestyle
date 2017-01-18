@@ -10,18 +10,33 @@ const PreStyle = require('../src/js/prestyle');
 program
   .version(packageJSON.version)
   .option('-c, --config [file]', 'source config file')
+  .option('-o, --outputFile [file]', 'generated css file')
+  .option('-p, --prependedFiles <items>', 'list of files to prepend', list => list.split(','))
   .parse(process.argv);
 
 try {
   const configFileLocation = program.config || 'PreStyleConfig.js';
 
-  if (!fs.existsSync(configFileLocation)) {
+  if (!fs.existsSync(path.resolve(configFileLocation))) {
     throw new Error(`Configuration file “${chalk.cyan(configFileLocation)}” not found.`);
   }
 
-  const config = require(path.resolve(configFileLocation));
+  const config = Object.assign(
+    {},
+    require(path.resolve(configFileLocation)),
+    (program.outputFile ? { outputFile: program.outputFile } : {}),
+    (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {})
+  );
+
+  if (!config.outputFile) {
+    throw new Error(`You ${chalk.bold('MUST')} specify an output file with ${chalk.italic('-o')}, ${chalk.italic('--outputFile')}, or via the config file.`);
+  }
+
 
   console.log('CONF', config);
+
+
 } catch (e) {
+  console.log(chalk.underline.red('Error:'));
   console.log(e);
 }
