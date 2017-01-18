@@ -43,5 +43,19 @@ describe('Pre-Style', () => {
       expect(data.classNames).toBe('A B C D E F G H I J K L M');
       done();
     });
+
+    it('Default character limits:', (done) => {
+      PreStyle`
+        /* TEST */
+
+        font-weight: bold;
+        color: $color;
+        font-weight: bold;
+        font-size: .9em;
+      `.then((data) => {
+        console.log(data.css);
+        expect(data.classNames).toBe('A B C');
+        done();
+      });
   });
 });

@@ -23,11 +23,13 @@ function preStyleFile(file, config) {
   const fileContents = fs.readFileSync(file, { encoding: 'utf-8' });
 
   //Initially, look for PreStyle`...` blocks
-  const blocks = /PreStyle`\s([\s\S]+?)\s`/gm.exec(fileContents)
-    .filter((block, i) => i % 2)
-    .map(block => PreStyle(block, config));
+  const blocks = [];
+  const re = /PreStyle`\s([\s\S]+?)\s`/gm;
+  let matches;
 
-  return blocks;
+  while ((matches = re.exec(fileContents)) !== null) blocks.push(matches[1]);
+
+  return blocks.map(block => PreStyle(block, config));
 }
 
 function processFiles(config) {
@@ -78,7 +80,7 @@ try {
     .then(
       (data) => {
         fs.mkdir(path.dirname(config.outputFile), () => {
-          const cssContent = '';
+          const cssContent = data.map(cssObj => cssObj.css).join('');
           const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
 
           fs.writeFile(path.resolve(config.outputFile), cssContent, (err) => {
