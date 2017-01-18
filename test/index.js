@@ -1,15 +1,18 @@
 const expect = require('expect');
 const PreStyle = require('../src/js/prestyle');
+const config = Object.assign({}, require('../src/js/config'), require('./PreStyleConfig'));
 
 describe('Pre-Style', () => {
   it('Default character limits:', (done) => {
-    PreStyle`
+    PreStyle(`
       /* TEST */
 
       font-weight: bold;
       color: $color;
       font-weight: bold;
       font-size: .9em;
+
+      @extend .extraClassFilter; //From prependedFiles
 
       @media (max-width: 600px) {
         font-weight: normal;
@@ -38,24 +41,10 @@ describe('Pre-Style', () => {
       &:hover {
         color: white;
       }
-    `.then((data) => {
+    `, config).then((data) => {
       console.log(data.css);
-      expect(data.classNames).toBe('A B C D E F G H I J K L M');
+      expect(data.classNames).toBe('A B C D E F G H I J K L M N');
       done();
     });
-
-    it('Default character limits:', (done) => {
-      PreStyle`
-        /* TEST */
-
-        font-weight: bold;
-        color: $color;
-        font-weight: bold;
-        font-size: .9em;
-      `.then((data) => {
-        console.log(data.css);
-        expect(data.classNames).toBe('A B C');
-        done();
-      });
   });
 });

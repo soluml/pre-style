@@ -3,7 +3,7 @@ const Gonzales = require('gonzales');
 module.exports = function Atomize(cssObj, PLACEHOLDER) {
   const CSS = cssObj.css;
   const AST = Gonzales.srcToCSSP(CSS);
-  let ASTChanges = [];
+  let ASTChanges;
 
   function processRuleset(ruleset) {
     //The selector should be used for every block declaration
@@ -56,7 +56,15 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
     });
   }
 
+  //Find and process delimited selectors and break them into their own rulesets
+  ASTChanges = [];
+  console.log('DO DELIM');
+  console.log(Gonzales.csspToTree(AST));
+  console.log('++++++++++++++++++++++++');
+
+
   //Find and process ruleset changes that are needed for the AST
+  ASTChanges = [];
   AST.map((token, i) => seekOutToken('ruleset', token, [i]));
   processChanges(ASTChanges);
 
