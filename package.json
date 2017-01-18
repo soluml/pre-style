@@ -27,6 +27,7 @@
     "css-mqpacker": "^5.0.1",
     "cssnano": "^3.10.0",
     "gonzales": "^1.0.7",
+    "lodash": "^4.17.4",
     "node-sass": "^4.1.1",
     "sweatmap": "^0.1.0"
   },

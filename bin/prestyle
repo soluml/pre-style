@@ -1,20 +1,48 @@
 #!/usr/bin/env node
 
+'use strict'; //eslint-disable-line
+
 const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const chalk = require('chalk');
+const union = require('lodash/union');
+const flattenDeep = require('lodash/flattenDeep');
 const packageJSON = require('../package.json');
 const PreStyle = require('../src/js/prestyle');
 
 program
   .version(packageJSON.version)
   .option('-c, --config [file]', 'source config file')
-  .option('-o, --outputFile [file]', 'generated css file')
-  .option('-p, --prependedFiles <items>', 'list of files to prepend', list => list.split(','))
+  .option('-o, --outputFile [file]', 'generated .css file')
+  .option('-p, --prependedFiles <items>', 'comma separated list of files to prepend', list => list.split(','))
   .parse(process.argv);
 
+function preStyleFile(file) {
+  console.log(`Processing file ${chalk.cyan(file)}`);
+  const fileContents = fs.readFileSync(file, { encoding: 'utf-8' });
+
+  return file;
+}
+
+function processFiles(config) {
+  return config.sourceFiles.map(function processFile(file) {
+    const resloc = path.relative(process.cwd(), path.resolve(file));
+    const stat = fs.statSync(resloc);
+
+    if (stat.isFile()) {
+      return preStyleFile(resloc);
+    } else if (stat.isDirectory()) {
+      console.log(`Looking for files in directory ${chalk.cyan(resloc)}`);
+      return fs.readdirSync(resloc).map(fn => processFile(`${resloc}/${fn}`));
+    }
+
+    return null;
+  });
+}
+
 try {
+  //Get config info
   const configFileLocation = program.config || 'PreStyleConfig.js';
 
   if (!fs.existsSync(path.resolve(configFileLocation))) {
@@ -23,6 +51,7 @@ try {
 
   const config = Object.assign(
     {},
+    require(path.resolve('src/js/config')),
     require(path.resolve(configFileLocation)),
     (program.outputFile ? { outputFile: program.outputFile } : {}),
     (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {})
@@ -32,10 +61,17 @@ try {
     throw new Error(`You ${chalk.bold('MUST')} specify an output file with ${chalk.italic('-o')}, ${chalk.italic('--outputFile')}, or via the config file.`);
   }
 
+  if (!config.adapter) {
+    throw new Error(`You ${chalk.bold('MUST')} specify an adapter in the config file or leave it undefined to use the default.`);
+  }
 
-  console.log('CONF', config);
+  config.sourceFiles = union(program.args) || [];
 
+  //Get the Classnames and CSS
+  const CSS = flattenDeep(processFiles(config));
 
+  //Write!
+  console.log('CSS', CSS);
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
