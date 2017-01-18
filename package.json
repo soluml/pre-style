@@ -3,8 +3,11 @@
   "version": "0.0.1",
   "description": "A CSS tool",
   "main": "src/js/prestyle.js",
+  "bin": {
+    "prestyle": "./bin/prestyle"
+  },
   "scripts": {
-    "test": "eslint **/*.js && mocha"
+    "test": "eslint **/*.js bin/prestyle && mocha"
   },
   "repository": {
     "type": "git",
@@ -19,6 +22,7 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
+    "css-mqpacker": "^5.0.1",
     "cssnano": "^3.10.0",
     "gonzales": "^1.0.7",
     "node-sass": "^4.1.1",

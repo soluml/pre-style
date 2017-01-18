@@ -1,4 +1,5 @@
 const Gonzales = require('gonzales');
+const MQpacker = require('css-mqpacker');
 const Normalize = require('./normalize');
 
 module.exports = function Write(cssObj) {
@@ -8,9 +9,7 @@ module.exports = function Write(cssObj) {
   return new Promise((resolve, reject) => {
     Normalize(uncss)
       .then((data) => {
-        const { css } = data[0];
-
-        //Write stuff to file
+        const { css } = MQpacker.pack(data[0].css);
 
         //Resolve with this
         resolve({ css, classNames });
