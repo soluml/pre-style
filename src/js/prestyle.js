@@ -4,15 +4,11 @@ const Atomize = require('./atomize');
 const Sweatmap = require('sweatmap');
 const Classify = require('./classify');
 const Write = require('./write');
-const defaultConfig = require('./config');
 
 const MAP = new Sweatmap({ cssSafe: true });
 
 //Process our syntax
-module.exports = function PreStyle(cssstr) {
-  //Get hardcoded config for now
-  const config = Object.assign({}, defaultConfig, require('../../test/PreStyleConfig'));
-
+module.exports = function PreStyle(cssstr, config) {
   //Use the adapater specified in the config
   return Adapter(config, cssstr)
 

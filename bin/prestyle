@@ -18,11 +18,16 @@ program
   .option('-p, --prependedFiles <items>', 'comma separated list of files to prepend', list => list.split(','))
   .parse(process.argv);
 
-function preStyleFile(file) {
+function preStyleFile(file, config) {
   console.log(`Processing file ${chalk.cyan(file)}`);
   const fileContents = fs.readFileSync(file, { encoding: 'utf-8' });
 
-  return file;
+  //Initially, look for PreStyle`...` blocks
+  const blocks = /PreStyle`\s([\s\S]+?)\s`/gm.exec(fileContents)
+    .filter((block, i) => i % 2)
+    .map(block => PreStyle(block, config));
+
+  return blocks;
 }
 
 function processFiles(config) {
@@ -31,7 +36,7 @@ function processFiles(config) {
     const stat = fs.statSync(resloc);
 
     if (stat.isFile()) {
-      return preStyleFile(resloc);
+      return preStyleFile(resloc, config);
     } else if (stat.isDirectory()) {
       console.log(`Looking for files in directory ${chalk.cyan(resloc)}`);
       return fs.readdirSync(resloc).map(fn => processFile(`${resloc}/${fn}`));
@@ -67,11 +72,33 @@ try {
 
   config.sourceFiles = union(program.args) || [];
 
-  //Get the Classnames and CSS
-  const CSS = flattenDeep(processFiles(config));
-
   //Write!
-  console.log('CSS', CSS);
+  const promises = flattenDeep(processFiles(config));
+  Promise.all(promises)
+    .then(
+      (data) => {
+        fs.mkdir(path.dirname(config.outputFile), () => {
+          const cssContent = '';
+          const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
+
+          fs.writeFile(path.resolve(config.outputFile), cssContent, (err) => {
+            if (err) throw err;
+
+            console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
+          });
+
+          fs.writeFile(path.resolve(`${config.outputFile}.classNames.json`), classnameContent, (err) => {
+            if (err) throw err;
+
+            console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
+          });
+        });
+      }
+    )
+    .catch((e) => {
+      console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
+      console.log(e);
+    });
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
