@@ -5,6 +5,19 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   const AST = Gonzales.srcToCSSP(CSS);
   let ASTChanges;
 
+  function splitOutDelim(token, ind) {
+    if (typeof token === 'object') {
+      let i = 0;
+
+      while (token[i]) {
+        splitOutDelim(token[i], ind.concat([i]));
+        i++;
+      }
+    } else if (token === 'delim') {
+      ASTChanges.push(ind.slice(0, -1));
+    }
+  }
+
   function processRuleset(ruleset) {
     //The selector should be used for every block declaration
     const selector = ruleset[1];
@@ -56,12 +69,16 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
     });
   }
 
+  function processDelim(changes) {
+    console.log(ASTChanges);
+    console.log(Gonzales.csspToTree(AST));
+    console.log('++++++++++++++++++++++++');
+  }
+
   //Find and process delimited selectors and break them into their own rulesets
   ASTChanges = [];
-  console.log('DO DELIM');
-  console.log(Gonzales.csspToTree(AST));
-  console.log('++++++++++++++++++++++++');
-
+  AST.map((token, i) => splitOutDelim(token, [i]));
+  processDelim(ASTChanges);
 
   //Find and process ruleset changes that are needed for the AST
   ASTChanges = [];

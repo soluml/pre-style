@@ -14,6 +14,12 @@ describe('Pre-Style', () => {
 
       @extend .extraClassFilter; //From prependedFiles
 
+      &:hover,
+      &:link,
+      &:active {
+        color: green;
+      }
+
       @media (max-width: 600px) {
         font-weight: normal;
       }
