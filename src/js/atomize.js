@@ -1,4 +1,5 @@
 const Gonzales = require('gonzales');
+const get = require('lodash/get');
 
 module.exports = function Atomize(cssObj, PLACEHOLDER) {
   const CSS = cssObj.css;
@@ -70,9 +71,19 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   }
 
   function processDelim(changes) {
-    console.log(ASTChanges);
-    console.log(Gonzales.csspToTree(AST));
-    console.log('++++++++++++++++++++++++');
+    changes.reverse().forEach((changeArr) => {
+      const orig = get(AST, changeArr.slice(0, -3).map(x => `[${x}]`).join(''), AST);
+      const refBase = get(AST, changeArr.slice(0, -2).map(x => `[${x}]`).join(''), null).concat([]);
+      const refBase2 = refBase.concat([]);
+      const base = refBase[1].concat([]);
+      const lastInd = changeArr.pop();
+      const selectorString = base.shift();
+
+      refBase[1] = [selectorString, ...base.slice(0, lastInd - 1)];
+      refBase2[1] = [selectorString, ...base.slice(lastInd)];
+
+      orig.splice(changeArr.slice(-2)[0], 1, refBase, refBase2);
+    });
   }
 
   //Find and process delimited selectors and break them into their own rulesets

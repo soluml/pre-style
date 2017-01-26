@@ -14,18 +14,24 @@ describe('Pre-Style', () => {
 
       @extend .extraClassFilter; //From prependedFiles
 
-      &:hover,
-      &:link,
-      &:active {
-        color: green;
-      }
-
       @media (max-width: 600px) {
         font-weight: normal;
       }
 
+      &:hover,
+      &:link,
+      &:active {
+        color: fuschia;
+      }
+
       @supports not ((text-align-last:justify) or (-moz-text-align-last:justify)) {
         text-align: center;
+
+        &:hover,
+        &:link,
+        &:active {
+          color: green;
+        }
       }
 
       @media (max-width: 600px) {
@@ -49,7 +55,7 @@ describe('Pre-Style', () => {
       }
     `, config).then((data) => {
       console.log(data.css);
-      expect(data.classNames).toBe('A B C D E F G H I J K L M N');
+      expect(data.classNames).toBe('A B C D E F G H I J K L M N O P');
       done();
     });
   });
