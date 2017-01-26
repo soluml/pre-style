@@ -101,6 +101,9 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   AST.map((token, i) => seekOutToken('atruler', token, [i]));
   processChanges(ASTChanges);
 
+  //Eliminate selectors without a PLACEHOLDER class in them
+  //ASTChanges = [];
+
   //Return Atomized CSS and Placeholder
   return Promise.all([
     { css: Gonzales.csspToSrc(AST) },
