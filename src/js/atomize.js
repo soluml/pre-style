@@ -86,6 +86,24 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
     });
   }
 
+  function processDeadRules(changes) {
+    changes.reverse().forEach((change) => {
+      const ruleset = get(AST, change.ind.map(x => `[${x}]`).join(''), null);
+      const selector = Gonzales.csspToSrc(ruleset[1][1]);
+
+      if (!~selector.indexOf(PLACEHOLDER)) {
+        //You have been deemed.... unworthy...
+
+        console.log(selector);
+        console.log(change.ind);
+        console.log('------------------------');
+      }
+    });
+
+    console.log('===================');
+    console.log(Gonzales.csspToTree(AST));
+  }
+
   //Find and process delimited selectors and break them into their own rulesets
   ASTChanges = [];
   AST.map((token, i) => splitOutDelim(token, [i]));
@@ -102,7 +120,9 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   processChanges(ASTChanges);
 
   //Eliminate selectors without a PLACEHOLDER class in them
-  //ASTChanges = [];
+  ASTChanges = [];
+  AST.map((token, i) => seekOutToken('ruleset', token, [i]));
+  processDeadRules(ASTChanges);
 
   //Return Atomized CSS and Placeholder
   return Promise.all([

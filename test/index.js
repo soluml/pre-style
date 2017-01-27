@@ -24,6 +24,10 @@ describe('Pre-Style', () => {
         color: fuschia;
       }
 
+      &:active {
+        color: fuschia;
+      }
+
       @supports not ((text-align-last:justify) or (-moz-text-align-last:justify)) {
         text-align: center;
 
