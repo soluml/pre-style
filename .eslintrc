@@ -1,6 +1,7 @@
 {
   "extends": "airbnb/base",
   "globals": {
+    PreStyle: true
   },
   "env": {
     "es6": true,

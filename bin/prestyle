@@ -82,35 +82,35 @@ try {
 
   //Write!
   promises = flattenDeep(processFiles(config));
+
+  Promise.all(promises)
+    .then(
+      (data) => {
+        fs.mkdir(path.dirname(config.outputFile), () => {
+          const cssContent = Normalize(data.map(cssObj => cssObj.css).join(''));
+          const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
+
+          cssContent.then((cssObj) => {
+            fs.writeFile(path.resolve(config.outputFile), cssObj[0].css, (err) => {
+              if (err) throw err;
+
+              console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
+            });
+
+            fs.writeFile(path.resolve(`${config.outputFile}.classNames.json`), classnameContent, (err) => {
+              if (err) throw err;
+
+              console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
+            });
+          });
+        });
+      }
+    )
+    .catch((e) => {
+      console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
+      console.log(e);
+    });
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
 }
-
-Promise.all(promises)
-  .then(
-    (data) => {
-      fs.mkdir(path.dirname(config.outputFile), () => {
-        const cssContent = Normalize(data.map(cssObj => cssObj.css).join(''));
-        const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
-
-        cssContent.then((cssObj) => {
-          fs.writeFile(path.resolve(config.outputFile), cssObj[0].css, (err) => {
-            if (err) throw err;
-
-            console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
-          });
-
-          fs.writeFile(path.resolve(`${config.outputFile}.classNames.json`), classnameContent, (err) => {
-            if (err) throw err;
-
-            console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
-          });
-        });
-      });
-    }
-  )
-  .catch((e) => {
-    console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
-    console.log(e);
-  });
