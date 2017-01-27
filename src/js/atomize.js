@@ -93,15 +93,12 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
 
       if (!~selector.indexOf(PLACEHOLDER)) {
         //You have been deemed.... unworthy...
+        const orig = get(AST, change.ind.slice(0, -1).map(x => `[${x}]`).join(''), AST);
 
-        console.log(selector);
-        console.log(change.ind);
-        console.log('------------------------');
+        //Remove the dead ruleset
+        orig.splice(change.ind.pop(), 1);
       }
     });
-
-    console.log('===================');
-    console.log(Gonzales.csspToTree(AST));
   }
 
   //Find and process delimited selectors and break them into their own rulesets
@@ -125,8 +122,5 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   processDeadRules(ASTChanges);
 
   //Return Atomized CSS and Placeholder
-  return Promise.all([
-    { css: Gonzales.csspToSrc(AST) },
-    PLACEHOLDER
-  ]);
+  return Promise.all([{ css: Gonzales.csspToSrc(AST) }, PLACEHOLDER]);
 };
