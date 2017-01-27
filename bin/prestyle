@@ -18,6 +18,7 @@ program
   .version(packageJSON.version)
   .option('-c, --config [file]', 'source config file')
   .option('-o, --outputFile [file]', 'generated .css file')
+  .option('-d, --destination <dir>', 'directory to put files processed by PreStyle')
   .option('-p, --prependedFiles <items>', 'comma separated list of files to prepend', list => list.split(','))
   .parse(process.argv);
 
@@ -32,7 +33,13 @@ function preStyleFile(file, config) {
 
   while ((matches = re.exec(fileContents)) !== null) blocks.push(matches[1]);
 
-  return blocks.map(block => PreStyle(block, config));
+  return {
+    file: {
+      path: file,
+      contents: fileContents,
+    },
+    style: blocks.map(block => PreStyle(block, config))
+  };
 }
 
 function processFiles(config) {
@@ -70,6 +77,10 @@ try {
     (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {})
   );
 
+  if (!config.destination) {
+    throw new Error(`You ${chalk.bold('MUST')} specify a destination with ${chalk.italic('-d')}, ${chalk.italic('--destination')}, or via the config file.`);
+  }
+
   if (!config.outputFile) {
     throw new Error(`You ${chalk.bold('MUST')} specify an output file with ${chalk.italic('-o')}, ${chalk.italic('--outputFile')}, or via the config file.`);
   }
@@ -81,6 +92,9 @@ try {
   config.sourceFiles = union(program.args) || [];
 
   //Write!
+  console.log(flattenDeep(processFiles(config)));
+
+  /*
   promises = flattenDeep(processFiles(config));
 
   Promise.all(promises)
@@ -91,13 +105,13 @@ try {
           const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
 
           cssContent.then((cssObj) => {
-            fs.writeFile(path.resolve(config.outputFile), cssObj[0].css, (err) => {
+            fs.writeFile(path.resolve(config.destination, config.outputFile), cssObj[0].css, (err) => {
               if (err) throw err;
 
               console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
             });
 
-            fs.writeFile(path.resolve(`${config.outputFile}.classNames.json`), classnameContent, (err) => {
+            fs.writeFile(path.resolve(config.destination, `${config.outputFile}.classNames.json`), classnameContent, (err) => {
               if (err) throw err;
 
               console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
@@ -110,6 +124,7 @@ try {
       console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
       console.log(e);
     });
+    */
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
