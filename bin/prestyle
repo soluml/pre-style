@@ -33,13 +33,26 @@ function preStyleFile(file, config) {
 
   while ((matches = re.exec(fileContents)) !== null) blocks.push(matches[1]);
 
-  return {
-    file: {
-      path: file,
-      contents: fileContents,
-    },
-    style: blocks.map(block => PreStyle(block, config))
-  };
+  return new Promise((resolve, reject) => {
+    Promise.all(blocks.map(block => PreStyle(block, config)))
+      .then((data) => {
+        let contents = fileContents;
+        let css = '';
+        let classNames = '';
+
+        data.forEach((ps, i) => {
+          css += ps.css;
+          classNames += ` ${ps.classNames}`;
+          contents = contents.replace(blocks[i], ps.classNames);
+        });
+
+        console.log('DATA');
+        console.log(data);
+        console.log({ path: file, contents, css, classNames });
+
+        resolve({ path: file, contents, css, classNames });
+      }, reject);
+  });
 }
 
 function processFiles(config) {
@@ -58,7 +71,6 @@ function processFiles(config) {
   });
 }
 
-let promises = [];
 let config;
 
 try {
@@ -73,6 +85,7 @@ try {
     {},
     require(path.resolve('src/js/config')),
     require(path.resolve(configFileLocation)),
+    (program.destination ? { destination: program.destination || './' } : {}),
     (program.outputFile ? { outputFile: program.outputFile } : {}),
     (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {})
   );
@@ -92,15 +105,14 @@ try {
   config.sourceFiles = union(program.args) || [];
 
   //Write!
-  console.log(flattenDeep(processFiles(config)));
-
-  /*
-  promises = flattenDeep(processFiles(config));
-
-  Promise.all(promises)
+  Promise.all(processFiles(config))
     .then(
       (data) => {
-        fs.mkdir(path.dirname(config.outputFile), () => {
+        console.log('==============');
+        console.log(data);
+
+        /*
+        fs.mkdir(path.dirname(config.destination), () => {
           const cssContent = Normalize(data.map(cssObj => cssObj.css).join(''));
           const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
 
@@ -118,13 +130,13 @@ try {
             });
           });
         });
+        */
       }
     )
     .catch((e) => {
       console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
       console.log(e);
     });
-    */
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
