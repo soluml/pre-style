@@ -19,10 +19,18 @@ export class Wrapper extends React.Component {
           color: blue;
         `
       },
+      button: {
+        className: PreStyle`
+          appearance: none;
+          color: blue;
+        `
+      },
     };
 
     return (
-      <main {...attrs.main}>I'm an example!</main>
+      <main {...attrs.main}>
+        <button {...attrs.button}>I'm an example button!</button>
+      </main>
     );
   }
 }
