@@ -110,27 +110,33 @@ try {
     .then(
       (data) => {
         fs.mkdir(path.resolve(config.destination), () => {
-          data.forEach((processedFile) => {
-            console.log('=========');
-            console.log(processedFile);
-            /*
-            const cssContent = Normalize(data.map(cssObj => cssObj.css).join(''));
-            const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
+          const cssContent = Normalize(data.map(cssObj => cssObj.css).join(''));
+          const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
 
-            cssContent.then((cssObj) => {
-              fs.writeFile(path.resolve(config.destination, config.outputFile), cssObj[0].css, (err) => {
-                if (err) throw err;
+          cssContent.then((cssObj) => {
+            data.forEach((processedFile) => {
+              const filePath = path.resolve(config.destination, processedFile.path);
 
-                console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
-              });
+              fs.mkdir(path.dirname(filePath), () => {
+                fs.writeFile(filePath, processedFile.contents, (err) => {
+                  if (err) throw err;
 
-              fs.writeFile(path.resolve(config.destination, `${config.outputFile}.classNames.json`), classnameContent, (err) => {
-                if (err) throw err;
-
-                console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
+                  console.log(`${chalk.green('File')} ${chalk.cyan(processedFile.path)} ${chalk.green('created.')}`);
+                });
               });
             });
-            */
+
+            fs.writeFile(path.resolve(config.destination, config.outputFile), cssObj[0].css, (err) => {
+              if (err) throw err;
+
+              console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
+            });
+
+            fs.writeFile(path.resolve(config.destination, `${config.outputFile}.classNames.json`), classnameContent, (err) => {
+              if (err) throw err;
+
+              console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
+            });
           });
         });
       }
