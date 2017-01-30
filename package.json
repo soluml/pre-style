@@ -1,6 +1,6 @@
 {
   "name": "pre-style",
-  "version": "0.0.1",
+  "version": "1.0.0-alpha.1",
   "description": "A CSS tool",
   "main": "src/js/prestyle.js",
   "bin": {
