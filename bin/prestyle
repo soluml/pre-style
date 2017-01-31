@@ -28,8 +28,15 @@ function preStyleFile(file, config) {
 
   //Initially, look for PreStyle`...` blocks
   const blocks = [];
-  const re = /PreStyle`\s([\s\S]+?)\s`/gm;
+  let re = /PreStyle`\s*([\s\S]+?)\s*`/gm;
   let matches;
+
+  while ((matches = re.exec(fileContents)) !== null) {
+    const { 0: full, 1: css } = matches;
+    blocks.push({ full, css });
+  }
+
+  re = /<PreStyle>\s*([\s\S]+?)\s*<\/PreStyle>/gm;
 
   while ((matches = re.exec(fileContents)) !== null) {
     const { 0: full, 1: css } = matches;
@@ -46,7 +53,7 @@ function preStyleFile(file, config) {
         data.forEach((ps, i) => {
           css += ps.css;
           classNames += ` ${ps.classNames}`;
-          contents = contents.replace(blocks[i].full, `'${ps.classNames}'`);
+          contents = contents.replace(blocks[i].full, `"${ps.classNames}"`);
         });
 
         classNames = classNames.trim();

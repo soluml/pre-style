@@ -20,10 +20,10 @@ export class Wrapper extends React.Component {
         `
       },
       button: {
-        className: PreStyle`
+        className: <PreStyle>
           appearance: none;
           color: blue;
-        `
+        </PreStyle>
       },
     };
 
