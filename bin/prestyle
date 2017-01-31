@@ -10,9 +10,10 @@ const program = require('commander');
 const chalk = require('chalk');
 const union = require('lodash/union');
 const flattenDeep = require('lodash/flattenDeep');
+
 const packageJSON = require('../package.json');
-const PreStyle = require('../src/js/prestyle');
 const Normalize = require('../src/js/normalize');
+const preStyleFile = require('./processFile');
 
 program
   .version(packageJSON.version)
@@ -21,47 +22,6 @@ program
   .option('-d, --destination <dir>', 'directory to put files processed by PreStyle')
   .option('-p, --prependedFiles <items>', 'comma separated list of files to prepend', list => list.split(','))
   .parse(process.argv);
-
-function preStyleFile(file, config) {
-  console.log(`Processing file ${chalk.cyan(file)}`);
-  const fileContents = fs.readFileSync(file, { encoding: 'utf-8' });
-
-  //Initially, look for PreStyle`...` blocks
-  const blocks = [];
-  let re = /PreStyle`\s*([\s\S]+?)\s*`/gm;
-  let matches;
-
-  while ((matches = re.exec(fileContents)) !== null) {
-    const { 0: full, 1: css } = matches;
-    blocks.push({ full, css });
-  }
-
-  re = /<PreStyle>\s*([\s\S]+?)\s*<\/PreStyle>/gm;
-
-  while ((matches = re.exec(fileContents)) !== null) {
-    const { 0: full, 1: css } = matches;
-    blocks.push({ full, css });
-  }
-
-  return new Promise((resolve, reject) => {
-    Promise.all(blocks.map(block => PreStyle(block.css, config)))
-      .then((data) => {
-        let contents = fileContents;
-        let css = '';
-        let classNames = '';
-
-        data.forEach((ps, i) => {
-          css += ps.css;
-          classNames += ` ${ps.classNames}`;
-          contents = contents.replace(blocks[i].full, `"${ps.classNames}"`);
-        });
-
-        classNames = classNames.trim();
-
-        resolve({ path: file, contents, css, classNames });
-      }, reject);
-  });
-}
 
 function processFiles(config) {
   return config.sourceFiles.map(function processFile(file) {
