@@ -22,8 +22,5 @@ module.exports = function PreStyle(cssstr, config) {
     .then(data => Classify(data[0], data[1], MAP))
 
     //Write CSS to outputFile and replace string with stringified classNames
-    .then(data => Write(data))
-
-    //Was there an error?
-    .catch(console.error);
+    .then(data => Write(data));
 };
