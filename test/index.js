@@ -59,7 +59,7 @@ describe('Pre-Style', () => {
       }
     `, config).then((data) => {
       console.log(data.css);
-      expect(data.classNames).toBe('A B C D E F G H I J K L M N O P Q R S T');
+      expect(Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')).toBe('A B C D E F G H I J K L M N O P Q R S T');
       done();
     });
   });

@@ -1,16 +1,9 @@
 const fs = require('fs');
 
-module.exports = function Adapter(config, cssStr) {
+module.exports = function Adapter(config, cssStr, PLACEHOLDER) {
   //Get all of the prependedFiles and string them together
   const preStr = config.prependedFiles.map(fn => fs.readFileSync(fn).toString()).join('');
 
-  //Determine PLACEHOLDER class
-  let PLACEHOLDER = '✨PLACEHOLDER✨';
-  while (`${preStr} ${cssStr.toString()}`.match(new RegExp(PLACEHOLDER, 'g'))) PLACEHOLDER = `✨PLACEHOLDER✨_${Date.now()}`;
-
   //Pass the CSS string to the adapter
-  return Promise.all([
-    config.adapter(`${preStr} .${PLACEHOLDER} { ${cssStr.toString()} }`),
-    PLACEHOLDER
-  ]);
+  return config.adapter(`${preStr} .${PLACEHOLDER} { ${cssStr.toString()} }`);
 };

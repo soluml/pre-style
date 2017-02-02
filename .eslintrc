@@ -13,6 +13,7 @@
   "rules": {
     "eqeqeq": 1,
     "global-require": 1,
+    "camelcase": 1,
     "max-len": 0,
     "new-cap": 0,
     "no-bitwise": 0,

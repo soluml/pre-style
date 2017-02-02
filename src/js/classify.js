@@ -8,6 +8,8 @@ module.exports = function Sweat(cssObj, PLACEHOLDER, MAP) {
     const mapKey = Gonzales.csspToSrc(token);
     const hadMapKey = MAP.has(mapKey);
     const className = MAP.set(mapKey);
+    const classNameObj = {};
+    classNameObj[mapKey] = className;
 
     //Process AST and replace PLACEHOLDER with new className
     token.forEach(function replacePlaceholder(subToken) {
@@ -24,7 +26,7 @@ module.exports = function Sweat(cssObj, PLACEHOLDER, MAP) {
     const ast = token;
     const css = hadMapKey ? '' : Gonzales.csspToSrc(ast);
 
-    return { ast, css, className };
+    return { ast, css, className: classNameObj };
   });
 
   //Return Classes generated from AST

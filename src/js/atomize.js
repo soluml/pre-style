@@ -122,5 +122,5 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
   processDeadRules(ASTChanges);
 
   //Return Atomized CSS and Placeholder
-  return Promise.all([{ css: Gonzales.csspToSrc(AST) }, PLACEHOLDER]);
+  return { css: Gonzales.csspToSrc(AST) };
 };
