@@ -5,7 +5,9 @@ module.exports = function Sweat(cssObj, PLACEHOLDER, MAP) {
   const AST = Gonzales.srcToCSSP(CSS);
   const classes = AST.slice(1).map((token) => {
     //Stringify token and use as key for SweatMap
-    const className = MAP.set(Gonzales.csspToSrc(token));
+    const mapKey = Gonzales.csspToSrc(token);
+    const hadMapKey = MAP.has(mapKey);
+    const className = MAP.set(mapKey);
 
     //Process AST and replace PLACEHOLDER with new className
     token.forEach(function replacePlaceholder(subToken) {
@@ -20,7 +22,7 @@ module.exports = function Sweat(cssObj, PLACEHOLDER, MAP) {
     });
 
     const ast = token;
-    const css = Gonzales.csspToSrc(ast);
+    const css = hadMapKey ? '' : Gonzales.csspToSrc(ast);
 
     return { ast, css, className };
   });
