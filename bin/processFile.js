@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const chalk = require('chalk');
-const PreStyle = require('../src/js/prestyle');
+const PreStyle = require('../src/module/prestyle');
 
 module.exports = function processFile(file, config) {
   console.log(`Processing file ${chalk.cyan(file)}`);

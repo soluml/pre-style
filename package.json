@@ -2,7 +2,7 @@
   "name": "pre-style",
   "version": "1.0.3-alpha",
   "description": "A CSS tool",
-  "main": "src/js/prestyle.js",
+  "main": "src/module/prestyle.js",
   "bin": {
     "prestyle": "./bin/prestyle"
   },

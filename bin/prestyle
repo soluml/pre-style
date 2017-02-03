@@ -12,7 +12,7 @@ const union = require('lodash/union');
 const flattenDeep = require('lodash/flattenDeep');
 
 const packageJSON = require('../package.json');
-const Normalize = require('../src/js/normalize');
+const Normalize = require('../src/module/normalize');
 const preStyleFile = require('./processFile');
 
 program
