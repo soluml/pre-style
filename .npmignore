@@ -4,7 +4,7 @@
 .travis.yml
 .git
 yarn.lock
-test
 examples
 build
-www
+docs
+src/www
