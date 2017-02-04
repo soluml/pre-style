@@ -1,0 +1,12 @@
+{
+  "name": "Pre-Style-Site",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {},
+  "devDependencies": {
+    "autoprefixer": "6.5.0",
+    "babel-plugin-pre-style": "^1.0.3-alpha",
+    "cssnano": "3.7.5"
+  },
+  "dependencies": {}
+}
