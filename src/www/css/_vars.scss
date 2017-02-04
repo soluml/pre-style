@@ -1,0 +1,12 @@
+/*
+  Variables and mixins to be used by PreStyle go here.
+*/
+
+$gutter: 1.25em;
+
+//For managing Z-Index values
+@function z($layer) {
+  @return map-get($z-layers, $layer);
+}
+
+$z-layers: ();
