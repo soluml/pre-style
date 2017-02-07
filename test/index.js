@@ -1,6 +1,6 @@
 const expect = require('expect');
 const PreStyle = require('../src/module/prestyle');
-const config = Object.assign({}, require('../src/module/config'), require('./PreStyleConfig'));
+const config = Object.assign({}, require('./PreStyleConfig'));
 
 describe('Pre-Style', () => {
   it('Default character limits:', (done) => {
