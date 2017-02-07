@@ -3,7 +3,7 @@
 const path = require('path');
 const spawnSync = require('child_process').spawnSync;
 
-module.exports = function processFile(css, config, classNames) {
+module.exports = function processBlock(css, config, classNames) {
   const existing_strings = JSON.stringify(classNames);
   const data = spawnSync(
     'node',
