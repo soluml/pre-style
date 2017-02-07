@@ -26,7 +26,7 @@
     "space-before-function-paren": 0,
     "no-underscore-dangle": 0,
     "import/no-extraneous-dependencies": 0,
-    "import/no-dynamic-require": 1,
+    "import/no-dynamic-require": 0,
     "quotes": [2, "single", {
       avoidEscape: true,
       allowTemplateLiterals: true
