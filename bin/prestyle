@@ -9,37 +9,77 @@ const path = require('path');
 const program = require('commander');
 const chalk = require('chalk');
 const union = require('lodash/union');
-const flattenDeep = require('lodash/flattenDeep');
-
 const packageJSON = require('../package.json');
-const Normalize = require('../src/module/normalize');
-const preStyleFile = require('./processFile');
+const processBlock = require('./processBlock');
+const writeFiles = require('./writeFiles');
 
 program
   .version(packageJSON.version)
   .option('-c, --config [file]', 'source config file')
   .option('-o, --outputFile [file]', 'generated .css file')
+  .option('-a, --adapter [file]', 'adapter function to process css')
   .option('-d, --destination <dir>', 'directory to put files processed by PreStyle')
   .option('-p, --prependedFiles <items>', 'comma separated list of files to prepend', list => list.split(','))
   .parse(process.argv);
 
+function preStyleFile(file, config, classNames) {
+  console.log(`Processing file ${chalk.cyan(file)}`);
+  let fileContents = fs.readFileSync(file, { encoding: 'utf-8' });
+  const blocks = [];
+
+  //Initially, look for PreStyle`...` blocks
+  let re = /PreStyle`\s*([\s\S]+?)\s*`/gm;
+  let matches;
+
+  while ((matches = re.exec(fileContents)) !== null) {
+    const { 0: full, 1: css } = matches;
+    blocks.push({ full, css });
+  }
+
+  //Then look for <PreStyle>...</PreStyle> blocks
+  re = /<PreStyle>\s*([\s\S]+?)\s*<\/PreStyle>/gm;
+
+  while ((matches = re.exec(fileContents)) !== null) {
+    const { 0: full, 1: css } = matches;
+    blocks.push({ full, css });
+  }
+
+  let css = '';
+
+  //Iterate over blocks, assign classNames, write classnames to content, and add CSS block for that file
+  blocks.forEach((block) => {
+    const data = processBlock(block.css, config, classNames);
+    fileContents = fileContents.replace(block.full, `"${Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')}"`);
+    Object.assign(classNames, data.classNames);
+    css += data.css;
+  });
+
+  //Write destination file
+  fs.writeFile(path.resolve(config.destination, file), fileContents, (err) => {
+    if (err) throw err;
+    console.log(`${chalk.green('File')} ${chalk.cyan(`${config.destination}/${file}`)} ${chalk.green('created.')}`);
+  });
+
+  return css;
+}
+
 function processFiles(config) {
-  return config.sourceFiles.map(function processFile(file) {
+  const classNames = {};
+  let css = '';
+
+  config.sourceFiles.forEach(function getFile(file) {
     const resloc = path.relative(process.cwd(), path.resolve(file));
     const stat = fs.statSync(resloc);
 
-    if (stat.isFile()) {
-      return preStyleFile(resloc, config);
-    } else if (stat.isDirectory()) {
+    if (stat.isFile()) css += preStyleFile(resloc, config, classNames);
+    else if (stat.isDirectory()) {
       console.log(`Looking for files in directory ${chalk.cyan(resloc)}`);
-      return fs.readdirSync(resloc).map(fn => processFile(`${resloc}/${fn}`));
+      fs.readdirSync(resloc).forEach(fn => getFile(`${resloc}/${fn}`));
     }
-
-    return null;
   });
-}
 
-let config;
+  return { css, classNames };
+}
 
 try {
   //Get config info
@@ -49,12 +89,12 @@ try {
     throw new Error(`Configuration file “${chalk.cyan(configFileLocation)}” not found.`);
   }
 
-  config = Object.assign(
+  const config = Object.assign(
     {},
-    require(path.resolve('src/js/config')),
     require(path.resolve(configFileLocation)),
     (program.destination ? { destination: program.destination || './' } : {}),
     (program.outputFile ? { outputFile: program.outputFile } : {}),
+    (program.adapter ? { adapter: program.adapter } : {}),
     (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {})
   );
 
@@ -66,52 +106,19 @@ try {
     throw new Error(`You ${chalk.bold('MUST')} specify an output file with ${chalk.italic('-o')}, ${chalk.italic('--outputFile')}, or via the config file.`);
   }
 
-  if (!config.adapter) {
-    throw new Error(`You ${chalk.bold('MUST')} specify an adapter in the config file or leave it undefined to use the default.`);
+  if (typeof config.adapter !== 'undefined' && typeof config.adapter !== 'string') {
+    throw new Error(`You ${chalk.bold('MUST')} specify a path to your adapter function in the config file or leave it undefined to use the default.`);
   }
 
   config.sourceFiles = union(program.args) || [];
 
-  //Write!
-  Promise.all(flattenDeep(processFiles(config)))
-    .then(
-      (data) => {
-        fs.mkdir(path.resolve(config.destination), () => {
-          const cssContent = Normalize(data.map(cssObj => cssObj.css).join(''));
-          const classnameContent = JSON.stringify(union(flattenDeep(data.map(cssObj => cssObj.classNames.split(' ')))));
+  //Make sure destination folder is written
+  try {
+    fs.mkdirSync(path.resolve(config.destination));
+  } catch (e) {}
 
-          cssContent.then((cssObj) => {
-            data.forEach((processedFile) => {
-              const filePath = path.resolve(config.destination, processedFile.path);
-
-              fs.mkdir(path.dirname(filePath), () => {
-                fs.writeFile(filePath, processedFile.contents, (err) => {
-                  if (err) throw err;
-
-                  console.log(`${chalk.green('File')} ${chalk.cyan(processedFile.path)} ${chalk.green('created.')}`);
-                });
-              });
-            });
-
-            fs.writeFile(path.resolve(config.destination, config.outputFile), cssObj[0].css, (err) => {
-              if (err) throw err;
-
-              console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(config.outputFile))} ${chalk.green('created.')}`);
-            });
-
-            fs.writeFile(path.resolve(config.destination, `${config.outputFile}.classNames.json`), classnameContent, (err) => {
-              if (err) throw err;
-
-              console.log(`${chalk.green('File')} ${chalk.cyan(path.basename(`${config.outputFile}.classNames.json`))} ${chalk.green('created.')}`);
-            });
-          });
-        });
-      }
-    )
-    .catch((e) => {
-      console.log(chalk.underline.red('PreStyle ran into errors processing your files:'));
-      console.log(e);
-    });
+  //Write the css and js classname files
+  writeFiles(processFiles(config), config, false);
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
