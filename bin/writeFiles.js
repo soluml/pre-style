@@ -7,7 +7,6 @@ const util = require('util');
 
 module.exports = function writeFiles(data, config, hasWritten) {
   const { css, classNames } = data;
-  console.log(css, classNames);
 
   try {
     fs.mkdirSync(path.resolve(config.destination));
