@@ -14,7 +14,8 @@ module.exports = function processFile(css, config, classNames) {
       env: Object.assign({}, process.env, { css, config: JSON.stringify(config), existing_strings })
     }
   );
+  const err = data.stderr.toString();
 
-  if (data.stderr) throw new Error(data.stderr.toString());
-  else return JSON.parse(data.stdout.toString());
+  if (err) throw new Error(err);
+  return JSON.parse(data.stdout.toString());
 };
