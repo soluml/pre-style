@@ -83,15 +83,12 @@ function processFiles(config) {
 
 try {
   //Get config info
-  const configFileLocation = program.config || 'PreStyleConfig.js';
-
-  if (!fs.existsSync(path.resolve(configFileLocation))) {
-    throw new Error(`Configuration file “${chalk.cyan(configFileLocation)}” not found.`);
-  }
+  let configFileLocation = program.config || 'PreStyleConfig.js';
+  if (!fs.existsSync(path.resolve(configFileLocation))) configFileLocation = null;
 
   const config = Object.assign(
     {},
-    require(path.resolve(configFileLocation)),
+    (configFileLocation ? require(path.resolve(configFileLocation)) : {}),
     (program.destination ? { destination: program.destination || './' } : {}),
     (program.outputFile ? { outputFile: program.outputFile } : {}),
     (program.adapter ? { adapter: program.adapter } : {}),
