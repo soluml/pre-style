@@ -55,9 +55,12 @@ function preStyleFile(file, config, classNames) {
   });
 
   //Write destination file
-  fs.writeFile(path.resolve(config.destination, file), fileContents, (err) => {
-    if (err) throw err;
-    console.log(`${chalk.green('File')} ${chalk.cyan(`${config.destination}/${file}`)} ${chalk.green('created.')}`);
+  const fileDest = path.resolve(config.destination, file);
+  fs.mkdir(path.dirname(fileDest), () => {
+    fs.writeFile(fileDest, fileContents, (err) => {
+      if (err) throw err;
+      console.log(`${chalk.green('File')} ${chalk.cyan(`${config.destination}/${file}`)} ${chalk.green('created.')}`);
+    });
   });
 
   return css;
