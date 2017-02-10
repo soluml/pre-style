@@ -19,7 +19,7 @@
 
 html {
   color: #333;
-  font: 1em/1.4 sans-serif;
+  font: 1em/1.4 "Roboto","Helvetica Neue",Helvetica,Arial,sans-serif;
   height: 100%;
 }
 
@@ -29,6 +29,10 @@ body {
   margin: 0;
   -ms-overflow-style: -ms-autohiding-scrollbar;
   padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Catamaran', sans-serif;
 }
 
 /*
@@ -83,24 +87,8 @@ a {
   text-decoration-skip: ink;
 }
 
-li a,
-dt a {
+li a {
   color: currentColor;
-  display: block;
-}
-
-form a {
-  color: currentColor;
-  text-decoration: underline;
-}
-
-
-/*
- * Allow only vertical resizing of textareas.
- */
-
-textarea {
-  resize: none;
 }
 
 /*

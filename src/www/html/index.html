@@ -11,15 +11,37 @@
   </head>
   <body>
     <header class=PreStyle`
-      height: 30px;
-      display: flex;
+      background-color: #444;
+      color: #fff;
+      text-align: right;
     `>
       <nav>
-        <ul>
-          <li><a href="/">Wordmark</a></li>
+        <ul class=PreStyle`
+          padding: 0 $gutter/2;
+
+          li {
+            display: inline-block;
+
+            &::after {
+              content: '\b7';
+              display: inline-block;
+              padding: $gutter/2;
+            }
+
+            &:last-child::after {
+              display: none;
+            }
+          }
+        `>
+          <li><a href="https://github.com/soluml/pre-style">Github</a></li>
+          <li><a href="https://github.com/soluml/babel-plugin-pre-style">Babel-Plugin Github</a></li>
+          <li><a href="https://www.npmjs.com/package/pre-style">NPM</a></li>
+          <li><a href="https://www.npmjs.com/package/babel-plugin-pre-style">Babel-Plugin NPM</a></li>
         </ul>
       </nav>
     </header>
-    Documentation Coming Soon!
+    <h1 class=PreStyle`
+      text-align: center;
+    `>Documentation Coming Soon!</h1>
   </body>
 </html>
