@@ -5,16 +5,16 @@
   "scripts": {
     "style": "prestyle html -d '../../tmp' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
     "sass": "node-sass css --output '../../docs' --output-style compressed",
+    "autoprefixer": "autoprefixer-cli -o '../../docs/s.css' '../../docs/s.css'",
     "html": "html-minifier --input-dir '../../tmp/html' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace --html5",
     "clean": "rimraf ../../tmp",
-    "build": "npm run style && npm run sass && npm run html && npm run clean",
+    "build": "npm run style && npm run sass && npm run autoprefixer && npm run html && npm run clean",
     "server": "browser-sync start --config 'bs-config.js'",
     "prestart": "npm run build",
     "start": "npm run server"
   },
   "devDependencies": {
-    "autoprefixer": "6.5.0",
-    "cssnano": "3.7.5",
+    "autoprefixer-cli": "^1.0.0",
     "html-minifier": "^3.3.1",
     "node-sass": "^4.5.0",
     "pre-style": "^1.0.7-alpha",
