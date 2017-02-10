@@ -8,7 +8,9 @@
     "html": "html-minifier --input-dir '../../tmp/html' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace --html5",
     "clean": "rimraf ../../tmp",
     "build": "npm run style && npm run sass && npm run html && npm run clean",
-    "start": "npm run build"
+    "server": "browser-sync start --config 'bs-config.js'",
+    "prestart": "npm run build",
+    "start": "npm run server"
   },
   "devDependencies": {
     "autoprefixer": "6.5.0",
