@@ -3,9 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "style": "prestyle -d '../../docs' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
+    "style": "prestyle html -d '../../tmp' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
     "sass": "node-sass css --output '../../docs' --output-style compressed",
-    "html": "html-minifier --input-dir '../../docs' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace --html5",
+    "html": "html-minifier --input-dir '../../tmp/html' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace --html5",
     "build": "npm run style && npm run sass && npm run html",
     "start": "npm run build"
   },
@@ -14,6 +14,6 @@
     "cssnano": "3.7.5",
     "html-minifier": "^3.3.1",
     "node-sass": "^4.5.0",
-    "pre-style": "^1.0.6-alpha"
+    "pre-style": "^1.0.7-alpha"
   }
 }

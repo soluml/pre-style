@@ -1343,8 +1343,8 @@ postcss@^5.0.10, postcss@^5.0.11, postcss@^5.0.12, postcss@^5.0.13, postcss@^5.0
     supports-color "^3.2.3"
 
 pre-style:
-  version "1.0.6-alpha"
-  resolved "https://registry.yarnpkg.com/pre-style/-/pre-style-1.0.6-alpha.tgz#6d1d86ef45b1eddc825b0622685cf3c700166c49"
+  version "1.0.7-alpha"
+  resolved "https://registry.yarnpkg.com/pre-style/-/pre-style-1.0.7-alpha.tgz#8b10463a55d4469e1bb6680eabc7bc97831fa765"
   dependencies:
     chalk "^1.1.3"
     commander "^2.9.0"
