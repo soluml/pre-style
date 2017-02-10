@@ -4,6 +4,7 @@
 .travis.yml
 .git
 yarn.lock
+node_modules
 examples
 build
 docs
