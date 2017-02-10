@@ -975,7 +975,7 @@ node-gyp@^3.3.1:
     tar "^2.0.0"
     which "1"
 
-node-sass@^4.1.1:
+node-sass, node-sass@^4.1.1:
   version "4.5.0"
   resolved "https://registry.yarnpkg.com/node-sass/-/node-sass-4.5.0.tgz#532e37bad0ce587348c831535dbc98ea4289508b"
   dependencies:
@@ -1343,8 +1343,8 @@ postcss@^5.0.10, postcss@^5.0.11, postcss@^5.0.12, postcss@^5.0.13, postcss@^5.0
     supports-color "^3.2.3"
 
 pre-style:
-  version "1.0.5-alpha"
-  resolved "https://registry.yarnpkg.com/pre-style/-/pre-style-1.0.5-alpha.tgz#3077e4211f90ef97c041428e6afda9dba908dfa1"
+  version "1.0.6-alpha"
+  resolved "https://registry.yarnpkg.com/pre-style/-/pre-style-1.0.6-alpha.tgz#6d1d86ef45b1eddc825b0622685cf3c700166c49"
   dependencies:
     chalk "^1.1.3"
     commander "^2.9.0"

@@ -6,3 +6,5 @@ npm-debug.log*
 # Dependency directories
 node_modules
 build
+_prestyle.scss
+_prestyle.scss.classNames.js

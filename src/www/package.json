@@ -3,14 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "style": "pre-style -d '../../docs' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
-    "sass": "",
-    "minifyHTML": "html-minifier --input-dir '../../docs' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace --html5"
+    "style": "prestyle -d '../../docs' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
+    "sass": "node-sass css --output '../../docs' --output-style compressed",
+    "html": "html-minifier --input-dir '../../docs' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace --html5",
+    "build": "npm run style && npm run sass && npm run html",
+    "start": "npm run build"
   },
   "devDependencies": {
     "autoprefixer": "6.5.0",
     "cssnano": "3.7.5",
     "html-minifier": "^3.3.1",
-    "pre-style": "^1.0.5-alpha"
+    "node-sass": "^4.5.0",
+    "pre-style": "^1.0.6-alpha"
   }
 }
