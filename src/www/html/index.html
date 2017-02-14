@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Pre-Style: A build tool for outputting ultra-lightweight CSS while being highly maintainable!</title>
-    <meta name="description" content="Pre-Style is a build tool for outputting ultra-lightweight CSS while being highly maintainable. Perfect for Front-End devs of all types!">
+    <title>Pre-Style: A build tool for outputting ultra-lightweight, component-based CSS with a focus on maintainability</title>
+    <meta name="description" content="Pre-Style is a build tool for outputting ultra-lightweight, component-based CSS while being highly maintainable. Perfect for Front-End devs of all types!">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/s.css" rel="stylesheet">
   </head>
@@ -71,9 +71,14 @@
         @include fluid-type(font-size, 320px, 1920px, 20px, 40px);
         font-weight: normal;
         margin: 0;
-        padding: $gutter*1.25 $gutter/2 calc(#{$gutter} + 100px);
+        padding: $gutter*1.25 0 calc(#{$gutter} + 100px);
         text-shadow: .075em .0625em 0 rgba(#000, 0.2);
-      `>Pre-Style is a build tool for ultra-lightweight and highly maintainable CSS.</h1>
+      `>
+        <div class=PreStyle`
+          border-top: 1px solid rgba(#fff, .45);
+          padding: 0 $gutter/2;
+        `>Pre-Style is a build tool for ultra-lightweight, component-based CSS.</div>
+      </h1>
     </section>
     <p class=PreStyle`
       font-size: 1.25em;
