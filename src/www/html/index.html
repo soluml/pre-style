@@ -40,9 +40,45 @@
         </ul>
       </nav>
     </header>
-    <h1 class=PreStyle`
+    <section class=PreStyle`
+      background-color: #da5b06;
+      background-image: linear-gradient(165deg, #ffe62c, #da5b06);
+      color: #fff;
+      margin-bottom: $gutter;
+      position: relative;
       text-align: center;
-    `>Pre-Style is a build tool for outputting ultra-lightweight CSS while being highly maintainable!</h1>
+
+      &:before {
+        background-color: #000;
+        bottom: 40px;
+        content: '';
+        height: 1px;
+        left: 0;
+        opacity: 0.05;
+        position: absolute;
+        width: 100%;
+      }
+    `>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" role="presentation" class=PreStyle`
+        bottom: 0;
+        height: 100px;
+        left: 0;
+        position: absolute;
+        min-width: 700px;
+        width: 100%;
+      `>
+        <polygon fill="black" opacity="0.2" points="0,0 15.75,100 33,21 45.75,100 50,75 55.75,100 72,20 85.75,100 95,50 100.75,80 100,100 0.75,100" />
+        <polygon fill="white" points="0,0 15,100 33,21 45,100 50,75 55,100 72,20 85,100 95,50 100,80 100,100 0,100" />
+      </svg>
+      <h1 class=PreStyle`
+        font-size: 2.75em;
+        margin: 0;
+        padding: 2em 0 calc(1.5em + 100px);
+        text-shadow: 3px 2px 0 rgba(#000, 0.2);
+        width: 100%;
+      `>Pre-Style is a build tool for outputting ultra-lightweight CSS while being highly maintainable!</h1>
+    </section>
+
     <p class=PreStyle`
       text-align: center;
     `>Documentation Coming Soon!</p>
