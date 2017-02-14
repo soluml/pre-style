@@ -6,18 +6,22 @@
     <title>Pre-Style: A build tool for outputting ultra-lightweight CSS while being highly maintainable!</title>
     <meta name="description" content="Pre-Style is a build tool for outputting ultra-lightweight CSS while being highly maintainable. Perfect for Front-End devs of all types!">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://fonts.googleapis.com/css?family=Catamaran:700" rel="stylesheet">
     <link href="/s.css" rel="stylesheet">
   </head>
   <body>
     <header class=PreStyle`
+      @include fluid-type(font-size, 320px, 768px, 0.75em, 1em);
       background-color: #444;
       color: #fff;
-      text-align: right;
+      text-align: center;
+
+      @media (min-width: 25em) {
+        text-align: right;
+      }
     `>
       <nav>
         <ul class=PreStyle`
-          padding: 0 $gutter/2;
+          padding: 0 $gutter/4;
 
           li {
             display: inline-block;
@@ -25,7 +29,7 @@
             &::after {
               content: '\b7';
               display: inline-block;
-              padding: $gutter/2;
+              padding: $gutter/4;
             }
 
             &:last-child::after {
@@ -45,19 +49,10 @@
       background-image: linear-gradient(165deg, #ffe62c, #da5b06);
       color: #fff;
       margin-bottom: $gutter;
+      overflow: hidden;
       position: relative;
       text-align: center;
-
-      &:before {
-        background-color: #000;
-        bottom: 40px;
-        content: '';
-        height: 1px;
-        left: 0;
-        opacity: 0.05;
-        position: absolute;
-        width: 100%;
-      }
+      width: 100%;
     `>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" role="presentation" class=PreStyle`
         bottom: 0;
@@ -71,14 +66,13 @@
         <polygon fill="white" points="0,0 15,100 33,21 45,100 50,75 55,100 72,20 85,100 95,50 100,80 100,100 0,100" />
       </svg>
       <h1 class=PreStyle`
-        font-size: 2.75em;
+        @include fluid-type(font-size, 320px, 1920px, 1.3125em, 2.625em);
+        font-weight: normal;
         margin: 0;
-        padding: 2em 0 calc(1.5em + 100px);
-        text-shadow: 3px 2px 0 rgba(#000, 0.2);
-        width: 100%;
-      `>Pre-Style is a build tool for outputting ultra-lightweight CSS while being highly maintainable!</h1>
+        padding: $gutter $gutter/2 calc(#{$gutter} + 100px);
+        text-shadow: 2px 2px 0 rgba(#000, 0.15);
+      `>Pre-Style is a build tool for ultra-lightweight and highly maintainable CSS.</h1>
     </section>
-
     <p class=PreStyle`
       text-align: center;
     `>Documentation Coming Soon!</p>
