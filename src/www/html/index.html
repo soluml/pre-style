@@ -6,6 +6,7 @@
     <title>Pre-Style: A build tool for outputting ultra-lightweight, component-based CSS with a focus on maintainability</title>
     <meta name="description" content="Pre-Style is a build tool for outputting ultra-lightweight, component-based CSS while being highly maintainable. Perfect for Front-End devs of all types!">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Catamaran:500" rel="stylesheet">
     <link href="/s.css" rel="stylesheet">
   </head>
   <body>
@@ -52,6 +53,7 @@
       color: #fff;
       margin-bottom: $gutter;
       overflow: hidden;
+      padding-bottom: 100px;
       position: relative;
       text-align: center;
       width: 100%;
@@ -68,17 +70,31 @@
         <polygon fill="white" points="0,0 15,100 33,21 45,100 50,75 55,100 72,20 85,100 95,50 100,80 100,100 0,100" />
       </svg>
       <h1 class=PreStyle`
+        @include fluid-type(font-size, 320px, 1920px, 40px, 80px);
+        font-family: 'Catamaran', sans-serif;
+        font-weight: 500;
+        margin: 0 auto;
+        padding: $gutter*1.25/2 0 0;
+        text-shadow: .0375em .03125em 0 rgba(#000, 0.2);
+      `>Pre-Style</h1>
+      <h2 class=PreStyle`
         @include fluid-type(font-size, 320px, 1920px, 20px, 40px);
+        border-top: 1px solid rgba(#fff, 0.45);
+        display: inline-block;
         font-weight: normal;
-        margin: 0;
-        padding: $gutter*1.25 0 calc(#{$gutter} + 100px);
+        margin: 0 auto;
+        padding: 0 0 $gutter;
         text-shadow: .075em .0625em 0 rgba(#000, 0.2);
-      `>
-        <div class=PreStyle`
-          border-top: 1px solid rgba(#fff, .45);
-          padding: 0 $gutter/2;
-        `>Pre-Style is a build tool for ultra-lightweight, component-based CSS.</div>
-      </h1>
+      `>A build tool for ultra-lightweight, component-based CSS.</h2>
+      <div>
+        <a href="https://github.com/soluml/pre-style" class=PreStyle`
+          border: 1px solid #fff;
+          border-radius: 6px;
+          color: #fff;
+          font-size: 1.25em;
+          padding: 0.75em 1.5em;
+        `>Get Started</a>
+      </div>
     </section>
     <p class=PreStyle`
       font-size: 1.25em;
