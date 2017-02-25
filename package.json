@@ -1,6 +1,6 @@
 {
   "name": "pre-style",
-  "version": "1.0.7-alpha",
+  "version": "1.0.8-alpha",
   "description": "A CSS tool",
   "main": "src/module/prestyle.js",
   "bin": {
@@ -33,6 +33,7 @@
     "cssnano": "^3.10.0",
     "gonzales": "^1.0.7",
     "lodash": "^4.17.4",
+    "mkdirp": "^0.5.1",
     "node-sass": "^4.1.1",
     "sweatmap": "^0.1.0"
   },

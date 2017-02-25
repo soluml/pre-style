@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const program = require('commander');
 const chalk = require('chalk');
+const mkdirp = require('mkdirp');
 const union = require('lodash/union');
 const packageJSON = require('../package.json');
 const processBlock = require('./processBlock');
@@ -56,7 +57,7 @@ function preStyleFile(file, config, classNames) {
 
   //Write destination file
   const fileDest = path.resolve(config.destination, file);
-  fs.mkdir(path.dirname(fileDest), () => {
+  mkdirp(path.dirname(fileDest), () => {
     fs.writeFile(fileDest, fileContents, (err) => {
       if (err) throw err;
       console.log(`${chalk.green('File')} ${chalk.cyan(`${config.destination}/${file}`)} ${chalk.green('created.')}`);
@@ -114,7 +115,7 @@ try {
 
   //Make sure destination folder is written
   try {
-    fs.mkdirSync(path.resolve(config.destination));
+    mkdirp.sync(path.resolve(config.destination));
   } catch (e) {}
 
   //Write the css and js classname files
