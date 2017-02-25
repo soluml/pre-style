@@ -21,29 +21,25 @@ program
   .option('-a, --adapter [file]', 'adapter function to process css')
   .option('-d, --destination <dir>', 'directory to put files processed by PreStyle')
   .option('-p, --prependedFiles <items>', 'comma separated list of files to prepend', list => list.split(','))
+  .option('-n, --nameSpaces <items>', 'comma separated list of identifiers to use aside from `PreStyle`', list => list.split(','))
   .parse(process.argv);
 
 function preStyleFile(file, config, classNames) {
   console.log(`Processing file ${chalk.cyan(file)}`);
   let fileContents = fs.readFileSync(file, { encoding: 'utf-8' });
   const blocks = [];
+  const nameSpaces = ['PreStyle'].concat(config.nameSpaces);
 
-  //Initially, look for PreStyle`...` blocks
-  let re = /PreStyle`\s*([\s\S]+?)\s*`/gm;
-  let matches;
+  nameSpaces.forEach((ns) => {
+    //Initially, look for PreStyle`...` type blocks
+    const re = new RegExp(`${ns}\`\\s*([\\s\\S]+?)\\s*\``, 'gm');
+    let matches;
 
-  while ((matches = re.exec(fileContents)) !== null) {
-    const { 0: full, 1: css } = matches;
-    blocks.push({ full, css });
-  }
-
-  //Then look for <PreStyle>...</PreStyle> blocks
-  re = /<PreStyle>\s*([\s\S]+?)\s*<\/PreStyle>/gm;
-
-  while ((matches = re.exec(fileContents)) !== null) {
-    const { 0: full, 1: css } = matches;
-    blocks.push({ full, css });
-  }
+    while ((matches = re.exec(fileContents)) !== null) {
+      const { 0: full, 1: css } = matches;
+      blocks.push({ full, css });
+    }
+  });
 
   let css = '';
 
@@ -96,7 +92,8 @@ try {
     (program.destination ? { destination: program.destination || './' } : {}),
     (program.outputFile ? { outputFile: program.outputFile } : {}),
     (program.adapter ? { adapter: program.adapter } : {}),
-    (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {})
+    (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {}),
+    (program.nameSpaces ? { nameSpaces: program.nameSpaces } : { nameSpaces: [] })
   );
 
   if (!config.destination) {
