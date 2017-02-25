@@ -28,7 +28,7 @@ function preStyleFile(file, config, classNames) {
   console.log(`Processing file ${chalk.cyan(file)}`);
   let fileContents = fs.readFileSync(file, { encoding: 'utf-8' });
   const blocks = [];
-  const nameSpaces = ['PreStyle'].concat(config.nameSpaces);
+  const nameSpaces = union(['PreStyle'], config.nameSpaces);
 
   nameSpaces.forEach((ns) => {
     //Initially, look for PreStyle`...` type blocks
