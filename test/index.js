@@ -3,7 +3,7 @@ const PreStyle = require('../src/module/prestyle');
 const config = Object.assign({}, require('./PreStyleConfig'));
 
 /*
-  PreStyle `
+  PreStyle`
     color: blue;
   `
 */
