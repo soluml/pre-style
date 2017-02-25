@@ -2,6 +2,12 @@ const expect = require('expect');
 const PreStyle = require('../src/module/prestyle');
 const config = Object.assign({}, require('./PreStyleConfig'));
 
+/*
+  PreStyle `
+    color: blue;
+  `
+*/
+
 describe('Pre-Style', () => {
   it('Default character limits:', (done) => {
     PreStyle(`
