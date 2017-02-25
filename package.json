@@ -34,7 +34,7 @@
     "gonzales": "^1.0.7",
     "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
-    "node-sass": "^4.1.1",
+    "node-sass": "^4.5.0",
     "sweatmap": "^0.1.0"
   },
   "devDependencies": {
