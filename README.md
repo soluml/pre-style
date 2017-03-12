@@ -18,7 +18,7 @@ Unlike many of the other projects from which this project takes inspiration in m
 
 The following syntax uses Pre-Style's [built in Sass adapter](./src/module/adapter.js#L3). You don't have to use Sass, though! You can use any language you like.
 
-```jsx
+```JSX
 //SASS. IN. YOUR. REACT!!!!
 <button
   className={PreStyle`
@@ -63,3 +63,22 @@ And will be treated as this in your markup file (in this case our JSX):
 ```
 
 Your initial Pre-Style code block will never exist in any output file. The end-user will only get the tiny atomic bits necessary for styling. In essence, Pre-Style gives you the specificity handling of named conventions like [BEM](http://getbem.com/), the maintainability of [Inline CSS (Radium)](http://formidable.com/open-source/radium/), and the reusability and minuscule CSS/DOM footprint that only [Atomic](https://acss.io/) can provide.
+
+### Adapting to JS variables
+
+Often times we'll want to change styles in reaction to a JavaScript event. We can do so like so:
+
+```JSX
+const MyBox = ({isVisible}) => (
+  <div className={
+    PreStyle`
+      background-color: blue;
+      height: 100px;
+      margin: 1em;
+      padding: 1em;
+      width: 100px;
+    ` + ' ' + (isVisible ? '' : PreStyle` display: none; `)
+  }>Talking 'bout, my box!</div>
+);
+```
+For merging class names together, the [classnames module](https://www.npmjs.com/package/classnames) makes this whole process a lot nicer!
