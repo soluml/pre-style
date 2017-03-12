@@ -61,3 +61,5 @@ And will be treated as this in your markup file (in this case our JSX):
 ```html
 <button class="A B C D E F G H">Click me!</button>
 ```
+
+Your initial Pre-Style code block will never exist in any output file. The end-user will only get the tiny atomic bits necessary for styling.
