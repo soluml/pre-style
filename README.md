@@ -41,7 +41,7 @@ The following syntax uses Pre-Style's [built in Sass adapter](./src/module/adapt
 </button>
 ```
 
-During your build, Pre-Style will process `PreStyle` template strings and generate atomic classes for each CSS property used in your declaration. Don't worry about specifying properties twice. Don't worry about normalizing values. Pre-Style's got you, and in true atomic fashion always just add the CSS you want applied for any given element.
+During your build, Pre-Style will process `PreStyle` template strings and generate atomic classes for each CSS property used in your declaration. Don't worry about specifying properties twice. Don't worry about normalizing values. Pre-Style's got you and in true atomic fashion you just add the CSS you want applied for any given element.
 
 The preceding code block will produce something like this in the generated CSS file:
 
@@ -63,3 +63,5 @@ And will be treated as this in your markup file (in this case our JSX):
 ```
 
 Your initial Pre-Style code block will never exist in any output file. The end-user will only get the tiny atomic bits necessary for styling.
+
+In essence, Pre-Style gives you the specificity handling of named conventions like [BEM](http://getbem.com/), the maintainability of [Inline CSS (Radium)](http://formidable.com/open-source/radium/), and the reusability and minuscule CSS/DOM footprint that only [Atomic](https://acss.io/) can provide.
