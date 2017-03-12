@@ -18,7 +18,7 @@ Unlike many of the other projects from which this project takes inspiration in m
 
 The following syntax uses Pre-Style's [built in Sass adapter](./src/module/adapter.js#L3). You don't have to use Sass, though! You can use any language you like.
 
-```
+```JSX
 //SASS. IN. YOUR. REACT!!!!
 <button
   className={PreStyle`
