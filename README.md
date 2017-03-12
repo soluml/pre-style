@@ -62,6 +62,4 @@ And will be treated as this in your markup file (in this case our JSX):
 <button class="A B C D E F G H">Click me!</button>
 ```
 
-Your initial Pre-Style code block will never exist in any output file. The end-user will only get the tiny atomic bits necessary for styling.
-
-In essence, Pre-Style gives you the specificity handling of named conventions like [BEM](http://getbem.com/), the maintainability of [Inline CSS (Radium)](http://formidable.com/open-source/radium/), and the reusability and minuscule CSS/DOM footprint that only [Atomic](https://acss.io/) can provide.
+Your initial Pre-Style code block will never exist in any output file. The end-user will only get the tiny atomic bits necessary for styling. In essence, Pre-Style gives you the specificity handling of named conventions like [BEM](http://getbem.com/), the maintainability of [Inline CSS (Radium)](http://formidable.com/open-source/radium/), and the reusability and minuscule CSS/DOM footprint that only [Atomic](https://acss.io/) can provide.
