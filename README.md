@@ -18,7 +18,7 @@ Unlike many of the other projects from which this project takes inspiration in m
 
 The following syntax uses Pre-Style's [built in Sass adapter](./src/module/adapter.js#L3). You don't have to use Sass, though! You can use any language you like.
 
-```JSX
+```jsx
 //SASS. IN. YOUR. REACT!!!!
 <button
   className={PreStyle`
@@ -45,7 +45,7 @@ During your build, Pre-Style will process `PreStyle` template strings and genera
 
 The preceding code block will produce something like this in the generated CSS file:
 
-```
+```css
 .A{background-color:#0071ba}
 .B{border:1px solid currentColor}
 .C{border-radius:3px}
@@ -58,6 +58,6 @@ The preceding code block will produce something like this in the generated CSS f
 
 And will be treated as this in your markup file (in this case our JSX):
 
-```
+```html
 <button class="A B C D E F G H">Click me!</button>
 ```
