@@ -11,10 +11,10 @@ npm install --save pre-style
 Pre-Style is a tool that lets you author CSS-in-JS (or CSS-in-Markup) while outputting highly efficient CSS. In essence, Pre-Style gives you the specificity handling of named conventions like [BEM](http://getbem.com/), the maintainability of [Inline CSS (Radium)](http://formidable.com/open-source/radium/), and the reusability and minuscule CSS/DOM footprint that only [Atomic](https://acss.io/) can provide.
 
 ### Another [CSS-in-JS](https://github.com/MicheleBertoli/css-in-js) tool... why?
-Unlike many of the other projects from which this project takes inspiration in many areas, Pre-Style places a priority on end-user performance while maintaining great usability for it's developers. Your end-user's don't care what your classes look like. They just want to use your app as soon as possible. Developers don't want to learn another proprietary syntax to author CSS. You won't have too.
+Unlike many of the other projects from which this project takes inspiration in many areas, Pre-Style places a priority on end-user performance while maintaining great usability for it's developers. Your end-user's don't care what your classes look like. They just want to use your app as soon as possible. Developers don't want to learn another proprietary syntax to author CSS. You won't need too.
 
 ### Using React or another JS-based templating framework?
-Use the [Babel Plugin](https://github.com/soluml/babel-plugin-pre-style) instead of the root project to save yourself some hassle!
+Use the [Babel Plugin](https://github.com/soluml/babel-plugin-pre-style) instead of the root project to save yourself some hassle when working with JS templating projects!
 
 ## Usage
 ### Basic
@@ -33,7 +33,7 @@ The following syntax uses Pre-Style's [built in Sass adapter](./src/module/adapt
     color: white;
     font-size: 1em;
     margin: 1em;
-    padding: $gutter/2 1em; //$gutter is defined in sass partial specified by the config
+    padding: $gutter/2 1em; //$gutter is defined in a sass partial prepended with the prependedFiles option in the config
 
     &:hover {
       background-color: darken($btnBgc, 30%);
@@ -84,7 +84,7 @@ Usage: prestyle [options] [path]
   -n, --nameSpaces <items>      comma separated list of identifiers to use aside from `PreStyle`
 ```
 
-#### Example
+#### Example:
 ```
 prestyle -o _prestyle.scss -d src/css -p src/css/_vars.scss
 ```
@@ -94,14 +94,14 @@ prestyle -o _prestyle.scss -d src/css -p src/css/_vars.scss
 Often times we'll want to change styles in reaction to a JavaScript event. We can do so like so:
 
 ```JSX
-function CSS(...strs) {
+function joinCSSClasses(...strs) {
   return strs
     .filter(str => str)
     .join(' ');
 }
 
 const MyBox = ({isVisible}) => (
-  <div className={CSS(
+  <div className={joinCSSClasses(
     PreStyle`
       background-color: blue;
       height: 100px;
@@ -114,3 +114,8 @@ const MyBox = ({isVisible}) => (
   )}>Talking 'bout, my box!</div>
 );
 ```
+
+### Plugins
+
+   * Babel      : [babel-plugin-pre-style](https://github.com/soluml/babel-plugin-pre-style)
+     * If you're using Pre-Style in a React (or any other JS based templating) project, use this to save yourself from outputting generated JS files. This replaces PreStyle code-blocks when Babel runs.
