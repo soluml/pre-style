@@ -13,8 +13,8 @@ Pre-Style is a tool that lets you author CSS-in-JS (or CSS-in-Markup) while outp
 ### Another [CSS-in-JS](https://github.com/MicheleBertoli/css-in-js) tool... why?
 Unlike many of the other projects from which this project takes inspiration in many areas, Pre-Style places a priority on end-user performance while maintaining great usability for it's developers. Your end-user's don't care what your classes look like. They just want to use your app as soon as possible. Developers don't want to learn another proprietary syntax to author CSS. You won't need too.
 
-### Using React or another JS-based templating framework?
-Use the [Babel Plugin](https://github.com/soluml/babel-plugin-pre-style) instead of the root project to save yourself some hassle when working with JS templating projects!
+### How does it work?
+Pre-Style walks your source files in search of PreStyle (or other namespaces) code-blocks. For each code-block found, the CSS is processed, normalized, then written to a CSS file as atomic CSS classes for maximum reusability. Once it's done, it replaces your source files with the generated class names inserted in place of the original code-block and saves the new files in the output folder.
 
 ## Usage
 ### Basic
@@ -118,4 +118,12 @@ const MyBox = ({isVisible}) => (
 ### Plugins
 
    * Babel      : [babel-plugin-pre-style](https://github.com/soluml/babel-plugin-pre-style)
-     * If you're using Pre-Style in a React (or any other JS based templating) project, use this to save yourself from outputting generated JS files. This replaces PreStyle code-blocks when Babel runs.
+     * _Using React or another JS-based templating framework?_ Use this plugin instead of the root project to save yourself some hassle when working with JS templating projects!
+
+## Configuration
+
+#### --config [-c]
+Path to a configuration file. The config file can contain all of the CLI options except for help, version, and config.
+
+#### --outputFile [-o]
+The CSS file written by Pre-Style from the code-blocks. This contains all of the atomic classes and is just vanilla CSS, but you can save this file as any type. Commonly the outputFile is set to `_atomic.scss` or `_prestyle.scss` for use with Sass based projects.
