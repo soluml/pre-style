@@ -138,4 +138,4 @@ The destination directory. Your outputFile will be in here. Also, all of your pr
 Files that will be prepended to each processed code-block. This is where you let Pre-Style know that you have variables, mixins, etc. that you want to use with your code-block syntax. Avoid sticking entire libraries here, as it'll be slow and muck up your output. Instead use varables, mixins, placeholders, etc. that won't impact the final output.
 
 #### --nameSpaces [-n]
-Want to use something other that `PreStyle\` \`` to denote your code-blocks? You can specify those namespaces here. A common namespace used is `styled` to take advantage of tooling available for [styled-components](https://github.com/styled-components/styled-components#syntax-highlighting).
+Want to use something other than `PreStyle` to denote your code-blocks? You can specify those namespaces here. A common namespace used is `styled` to take advantage of tooling available for [styled-components](https://github.com/styled-components/styled-components#syntax-highlighting).
