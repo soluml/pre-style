@@ -125,5 +125,17 @@ const MyBox = ({isVisible}) => (
 #### --config [-c]
 Path to a configuration file. The config file can contain all of the CLI options except for help, version, and config.
 
-#### --outputFile [-o]
-The CSS file written by Pre-Style from the code-blocks. This contains all of the atomic classes and is just vanilla CSS, but you can save this file as any type. Commonly the outputFile is set to `_atomic.scss` or `_prestyle.scss` for use with Sass based projects.
+#### --outputFile [-o] (required)
+The CSS file written by Pre-Style. This contains all of the atomic classes and is just vanilla CSS, but you can save this file as any type. Commonly the outputFile is set to `_atomic.scss` or `_prestyle.scss` for use with Sass based projects.
+
+#### --adapter [-a]
+A path to a exported JS module (or NPM module) used to process our code-blocks. The module must return an object with a css property where the css property is assigned to the processed CSS: i.e. `{ css: '.class1 { color: blue; }' }`. If this property isn't set, Pre-Style uses its internal node-sass adapter and you should use Sass syntax in your code-blocks.
+
+#### --destination [-d] (required)
+The destination directory. Your outputFile will be in here. Also, all of your processed source files will be spit out into this directory (when using the base project and not a plugin).
+
+#### --prependedFiles [-p]
+Files that will be prepended to each processed code-block. This is where you let Pre-Style know that you have variables, mixins, etc. that you want to use with your code-block syntax. Avoid sticking entire libraries here, as it'll be slow and muck up your output. Instead use varables, mixins, placeholders, etc. that won't impact the final output.
+
+#### --nameSpaces [-n]
+Want to use something other that `PreStyle\` \`` to denote your code-blocks? You can specify those namespaces here. A common namespace used is `styled` to take advantage of tooling available for [styled-components](https://github.com/styled-components/styled-components#syntax-highlighting).
