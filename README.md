@@ -126,7 +126,7 @@ const MyBox = ({isVisible}) => (
 Path to a configuration file. The config file can contain all of the CLI options except for help, version, and config.
 
 #### --outputFile [-o] (required)
-The CSS file written by Pre-Style. This contains all of the atomic classes and is just vanilla CSS, but you can save this file as any type. Commonly the outputFile is set to `_atomic.scss` or `_prestyle.scss` for use with Sass based projects.
+The path to the CSS file written by Pre-Style, relative to the destination. This contains all of the atomic classes and is just vanilla CSS, but you can save this file as any type. Commonly the outputFile is set to `_atomic.scss` or `_prestyle.scss` for use with Sass based projects.
 
 #### --adapter [-a]
 A path to a exported JS module (or NPM module) used to process our code-blocks. The module must return an object with a css property where the css property is assigned to the processed CSS: i.e. `{ css: '.class1 { color: blue; }' }`. If this property isn't set, Pre-Style uses its internal node-sass adapter and you should use Sass syntax in your code-blocks.
