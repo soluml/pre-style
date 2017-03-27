@@ -146,4 +146,4 @@ Want to use something other than `PreStyle` to denote your code-blocks? You can 
 - We're using Pre-Style for our Github site at [pre.style](http://pre.style/). It's just HTML and CSS. You can see the source for that [here](/src/www).
 
 #### With React:
-- Babel Plugin Example
+- [Babel Plugin Example](/babel-plugin-pre-style#with-react)
