@@ -140,5 +140,6 @@ Files that will be prepended to each processed code-block. This is where you let
 #### --nameSpaces [-n]
 Want to use something other than `PreStyle` to denote your code-blocks? You can specify those namespaces here. A common namespace used is `styled` to take advantage of tooling available for [styled-components](https://github.com/styled-components/styled-components#syntax-highlighting).
 
-## Example
-We're using Pre-Style for our Github site at [pre.style](http://pre.style/). You can see the source for that [here](/src/www).
+## Examples
+  *Static HTML & CSS
+  We're using Pre-Style for our Github site at [pre.style](http://pre.style/). It's just HTML and CSS. You can see the source for that [here](/src/www).
