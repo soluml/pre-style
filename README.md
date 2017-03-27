@@ -1,4 +1,4 @@
-#Pre-Style
+# Pre-Style
 
 ```
 npm install --save pre-style
@@ -7,11 +7,14 @@ npm install --save pre-style
 [![npm version](https://badge.fury.io/js/pre-style.svg)](http://badge.fury.io/js/pre-style)
 [![Build Status](https://travis-ci.org/soluml/pre-style.svg?branch=master)](https://travis-ci.org/soluml/pre-style)
 
-### Using React or another JS-based templating framework?
-Use the [Babel Plugin](https://github.com/soluml/babel-plugin-pre-style) instead of the root project to save yourself some hassle!
+## Overview
+Pre-Style is a tool that lets you author CSS-in-JS (or CSS-in-Markup) while outputting highly efficient CSS. In essence, Pre-Style gives you the specificity handling of named conventions like [BEM](http://getbem.com/), the maintainability of [Inline CSS (Radium)](http://formidable.com/open-source/radium/), and the reusability and minuscule CSS/DOM footprint that only [Atomic](https://acss.io/) can provide.
 
 ### Another [CSS-in-JS](https://github.com/MicheleBertoli/css-in-js) tool... why?
 Unlike many of the other projects from which this project takes inspiration in many areas, Pre-Style places a priority on end-user performance while maintaining great usability for it's developers. Your end-user's don't care what your classes look like. They just want to use your app as soon as possible. Developers don't want to learn another proprietary syntax to author CSS. You won't have too.
+
+### Using React or another JS-based templating framework?
+Use the [Babel Plugin](https://github.com/soluml/babel-plugin-pre-style) instead of the root project to save yourself some hassle!
 
 ## Usage
 ### Basic
@@ -62,23 +65,52 @@ And will be treated as this in your markup file (in this case our JSX):
 <button class="A B C D E F G H">Click me!</button>
 ```
 
-Your initial Pre-Style code block will never exist in any output file. The end-user will only get the tiny atomic bits necessary for styling. In essence, Pre-Style gives you the specificity handling of named conventions like [BEM](http://getbem.com/), the maintainability of [Inline CSS (Radium)](http://formidable.com/open-source/radium/), and the reusability and minuscule CSS/DOM footprint that only [Atomic](https://acss.io/) can provide.
+Your initial Pre-Style code block will never exist in any output file. The end-user will only get the tiny atomic bits necessary for styling.
+
+### CLI
+
+```
+Usage: prestyle [options] [path]
+
+  Options:
+
+  -h, --help                    output usage information
+  -V, --version                 output the version number
+  -c, --config [file]           source config file
+  -o, --outputFile [file]       generated .css file
+  -a, --adapter [file]          adapter function to process css
+  -d, --destination <dir>       directory to put files processed by PreStyle
+  -p, --prependedFiles <items>  comma separated list of files to prepend
+  -n, --nameSpaces <items>      comma separated list of identifiers to use aside from `PreStyle`
+```
+
+#### Example
+```
+prestyle -o _prestyle.scss -d src/css -p src/css/_vars.scss
+```
 
 ### Adapting to JS variables
 
 Often times we'll want to change styles in reaction to a JavaScript event. We can do so like so:
 
 ```JSX
+function CSS(...strs) {
+  return strs
+    .filter(str => str)
+    .join(' ');
+}
+
 const MyBox = ({isVisible}) => (
-  <div className={
+  <div className={CSS(
     PreStyle`
       background-color: blue;
       height: 100px;
       margin: 1em;
       padding: 1em;
       width: 100px;
-    ` + ' ' + (isVisible ? '' : PreStyle` display: none; `)
-  }>Talking 'bout, my box!</div>
+    `,
+    (!isVisible && PreStyle` display: none; `),
+    (isPrimary ? PreStyle` font-weight: 700; ` : PreStyle` font-weight: 400; ` )
+  )}>Talking 'bout, my box!</div>
 );
 ```
-For merging class names together, the [classnames module](https://www.npmjs.com/package/classnames) makes this whole process a lot nicer!
