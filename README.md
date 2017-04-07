@@ -145,5 +145,5 @@ Want to use something other than `PreStyle` to denote your code-blocks? You can 
 #### Static HTML & CSS:
 - We're using Pre-Style for our Github site at [pre.style](http://pre.style/). It's just HTML and CSS. You can see the source for that [here](/src/www).
 
-#### With React:
-- [Babel Plugin Example](https://github.com/soluml/babel-plugin-pre-style#with-react)
+#### With React, Babel, and Webpack:
+- [Babel Plugin Example](https://github.com/soluml/babel-plugin-pre-style#with-react-webpack-and-hot-module-reloading)
