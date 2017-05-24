@@ -16,6 +16,8 @@ Unlike many of the other projects from which this project takes inspiration in m
 ### How does it work?
 Pre-Style walks your source files in search of PreStyle (or other namespaces) code-blocks. For each code-block found, the CSS is processed, normalized, then written to a CSS file as atomic CSS classes for maximum reusability. Once it's done, it replaces your source files with the generated class names inserted in place of the original code-block and saves the new files in the output folder.
 
+Exactly zero bytes of JavaScript and only the smallest amount of CSS necessary are written by Pre-Style. No JS bundle bloat here!
+
 ## Usage
 ### Basic
 
