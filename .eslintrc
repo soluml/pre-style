@@ -21,6 +21,7 @@
     "no-plusplus": 0,
     "no-empty": 1,
     "no-unused-vars": 1,
+    "prefer-arrow-callback": 1,
     "comma-dangle": 0,
     "spaced-comment": 0,
     "padded-blocks": 1,
