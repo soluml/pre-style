@@ -126,7 +126,6 @@ describe('Pre-Style', () => {
       }
     `, Object.assign(config, { blockMode: true })).then((data) => {
       console.log(data.css);
-
       expect(Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')).toBe('A');
       done();
     });
