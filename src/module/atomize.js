@@ -1,7 +1,7 @@
 const Gonzales = require('gonzales');
 const get = require('lodash/get');
 
-module.exports = function Atomize(cssObj, PLACEHOLDER) {
+module.exports = function Atomize(cssObj, PLACEHOLDER, blockMode) {
   const CSS = cssObj.css;
   const AST = Gonzales.srcToCSSP(CSS);
   let ASTChanges;
@@ -101,20 +101,22 @@ module.exports = function Atomize(cssObj, PLACEHOLDER) {
     });
   }
 
-  //Find and process delimited selectors and break them into their own rulesets
-  ASTChanges = [];
-  AST.map((token, i) => splitOutDelim(token, [i]));
-  processDelim(ASTChanges);
+  if (!blockMode) {
+    //Find and process delimited selectors and break them into their own rulesets
+    ASTChanges = [];
+    AST.map((token, i) => splitOutDelim(token, [i]));
+    processDelim(ASTChanges);
 
-  //Find and process ruleset changes that are needed for the AST
-  ASTChanges = [];
-  AST.map((token, i) => seekOutToken('ruleset', token, [i]));
-  processChanges(ASTChanges);
+    //Find and process ruleset changes that are needed for the AST
+    ASTChanges = [];
+    AST.map((token, i) => seekOutToken('ruleset', token, [i]));
+    processChanges(ASTChanges);
 
-  //Find and process ruleset changes that are needed for the AST
-  ASTChanges = [];
-  AST.map((token, i) => seekOutToken('atruler', token, [i]));
-  processChanges(ASTChanges);
+    //Find and process ruleset changes that are needed for the AST
+    ASTChanges = [];
+    AST.map((token, i) => seekOutToken('atruler', token, [i]));
+    processChanges(ASTChanges);
+  }
 
   //Eliminate selectors without a PLACEHOLDER class in them
   ASTChanges = [];
