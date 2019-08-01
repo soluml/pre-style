@@ -1,7 +1,7 @@
 /* eslint no-console: 0, no-cond-assign: 0 */
 
 const path = require('path');
-const spawnSync = require('child_process').spawnSync;
+const { spawnSync } = require('child_process');
 
 module.exports = function processBlock(css, config, classNames) {
   const existing_strings = JSON.stringify(classNames);

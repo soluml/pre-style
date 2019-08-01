@@ -1,7 +1,7 @@
+const Sweatmap = require('sweatmap');
 const Adapter = require('./adapter');
 const Normalize = require('./normalize');
 const Atomize = require('./atomize');
-const Sweatmap = require('sweatmap');
 const Classify = require('./classify');
 const Write = require('./write');
 

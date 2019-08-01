@@ -19,9 +19,20 @@ program
   .option('-c, --config [file]', 'source config file')
   .option('-o, --outputFile [file]', 'generated .css file')
   .option('-a, --adapter [file]', 'adapter function to process css')
-  .option('-d, --destination <dir>', 'directory to put files processed by PreStyle')
-  .option('-p, --prependedFiles <items>', 'comma separated list of files to prepend', list => list.split(','))
-  .option('-n, --nameSpaces <items>', 'comma separated list of identifiers to use aside from `PreStyle`', list => list.split(','))
+  .option(
+    '-d, --destination <dir>',
+    'directory to put files processed by PreStyle'
+  )
+  .option(
+    '-p, --prependedFiles <items>',
+    'comma separated list of files to prepend',
+    list => list.split(',')
+  )
+  .option(
+    '-n, --nameSpaces <items>',
+    'comma separated list of identifiers to use aside from `PreStyle`',
+    list => list.split(',')
+  )
   .parse(process.argv);
 
 function preStyleFile(file, config, classNames) {
@@ -30,7 +41,7 @@ function preStyleFile(file, config, classNames) {
   const blocks = [];
   const nameSpaces = union(['PreStyle'], config.nameSpaces);
 
-  nameSpaces.forEach((ns) => {
+  nameSpaces.forEach(ns => {
     //Initially, look for PreStyle`...` type blocks
     const re = new RegExp(`${ns}\`\\s*([\\s\\S]+?)\\s*\``, 'gm');
     let matches;
@@ -44,9 +55,14 @@ function preStyleFile(file, config, classNames) {
   let css = '';
 
   //Iterate over blocks, assign classNames, write classnames to content, and add CSS block for that file
-  blocks.forEach((block) => {
+  blocks.forEach(block => {
     const data = processBlock(block.css, config, classNames);
-    fileContents = fileContents.replace(block.full, `"${Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')}"`);
+    fileContents = fileContents.replace(
+      block.full,
+      `"${Object.keys(data.classNames)
+        .map(key => data.classNames[key])
+        .join(' ')}"`
+    );
     Object.assign(classNames, data.classNames);
     css += data.css;
   });
@@ -54,9 +70,13 @@ function preStyleFile(file, config, classNames) {
   //Write destination file
   const fileDest = path.resolve(config.destination, file);
   mkdirp(path.dirname(fileDest), () => {
-    fs.writeFile(fileDest, fileContents, (err) => {
+    fs.writeFile(fileDest, fileContents, err => {
       if (err) throw err;
-      console.log(`${chalk.green('File')} ${chalk.cyan(`${config.destination}/${file}`)} ${chalk.green('created.')}`);
+      console.log(
+        `${chalk.green('File')} ${chalk.cyan(
+          `${config.destination}/${file}`
+        )} ${chalk.green('created.')}`
+      );
     });
   });
 
@@ -84,28 +104,46 @@ function processFiles(config) {
 try {
   //Get config info
   let configFileLocation = program.config || 'PreStyleConfig.js';
-  if (!fs.existsSync(path.resolve(configFileLocation))) configFileLocation = null;
+
+  if (!fs.existsSync(path.resolve(configFileLocation))) {
+    configFileLocation = null;
+  }
 
   const config = Object.assign(
     {},
-    (configFileLocation ? require(path.resolve(configFileLocation)) : {}),
-    (program.destination ? { destination: program.destination || './' } : {}),
-    (program.outputFile ? { outputFile: program.outputFile } : {}),
-    (program.adapter ? { adapter: program.adapter } : {}),
-    (program.prependedFiles ? { prependedFiles: program.prependedFiles } : {}),
-    (program.nameSpaces ? { nameSpaces: program.nameSpaces } : { nameSpaces: [] })
+    configFileLocation ? require(path.resolve(configFileLocation)) : {},
+    program.destination ? { destination: program.destination || './' } : {},
+    program.outputFile ? { outputFile: program.outputFile } : {},
+    program.adapter ? { adapter: program.adapter } : {},
+    program.prependedFiles ? { prependedFiles: program.prependedFiles } : {},
+    program.nameSpaces ? { nameSpaces: program.nameSpaces } : { nameSpaces: [] }
   );
 
   if (!config.destination) {
-    throw new Error(`You ${chalk.bold('MUST')} specify a destination with ${chalk.italic('-d')}, ${chalk.italic('--destination')}, or via the config file.`);
+    throw new Error(
+      `You ${chalk.bold('MUST')} specify a destination with ${chalk.italic(
+        '-d'
+      )}, ${chalk.italic('--destination')}, or via the config file.`
+    );
   }
 
   if (!config.outputFile) {
-    throw new Error(`You ${chalk.bold('MUST')} specify an output file with ${chalk.italic('-o')}, ${chalk.italic('--outputFile')}, or via the config file.`);
+    throw new Error(
+      `You ${chalk.bold('MUST')} specify an output file with ${chalk.italic(
+        '-o'
+      )}, ${chalk.italic('--outputFile')}, or via the config file.`
+    );
   }
 
-  if (typeof config.adapter !== 'undefined' && typeof config.adapter !== 'string') {
-    throw new Error(`You ${chalk.bold('MUST')} specify a path to your adapter function in the config file or leave it undefined to use the default.`);
+  if (
+    typeof config.adapter !== 'undefined' &&
+    typeof config.adapter !== 'string'
+  ) {
+    throw new Error(
+      `You ${chalk.bold(
+        'MUST'
+      )} specify a path to your adapter function in the config file or leave it undefined to use the default.`
+    );
   }
 
   config.sourceFiles = union(program.args) || [];
