@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "style": "'../../bin/prestyle' html -d '../../tmp' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
+    "style": "'../../bin/prestyle' html -d '../../tmp' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss' -q 'double'",
     "sass": "node-sass css --output '../../docs' --output-style compressed",
     "autoprefixer": "postcss -o '../../docs/s.css' '../../docs/s.css' -u autoprefixer",
     "html": "html-minifier --input-dir '../../tmp/html' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace",
