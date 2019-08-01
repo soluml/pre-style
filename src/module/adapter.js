@@ -2,7 +2,7 @@ const fs = require('fs');
 
 function builtInAdapter(data) {
   try {
-    const Sass = require('node-sass');
+    const Sass = require('sass');
     return Promise.resolve(Sass.renderSync({ data, outputStyle: 'compressed' }).css);
   } catch (e) {
     return Promise.reject(e);
