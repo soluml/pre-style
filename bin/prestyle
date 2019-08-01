@@ -37,7 +37,7 @@ program
   )
   .option(
     '-q, --quotes <quotes>',
-    'Quotes to use for outputted string',
+    'quotes used to wrap outputted class string',
     new RegExp(`^(${Object.keys(quotesEnum).join('|')})$`, 'i'),
     'double'
   )
