@@ -3,6 +3,10 @@ const CSSNano = require('cssnano');
 module.exports = function Normalize(cssObj) {
   return CSSNano.process(
     cssObj.toString(),
+    {
+      preset: 'advanced',
+      from: 'undefined'
+    },
     { //CSS Nano Config -> http://cssnano.co/optimisations/
       autoprefixer: false,
       calc: true,

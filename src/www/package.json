@@ -3,8 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "style": "prestyle html -d '../../tmp' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
-    "sass": "sass css --output '../../docs' --output-style compressed",
+    "style": "'../../bin/prestyle' html -d '../../tmp' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss'",
+    "sass": "node-sass css --output '../../docs' --output-style compressed",
     "autoprefixer": "autoprefixer-cli -o '../../docs/s.css' '../../docs/s.css'",
     "html": "html-minifier --input-dir '../../tmp/html' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace --html5",
     "clean": "rimraf ../../tmp",
@@ -16,8 +16,7 @@
   "devDependencies": {
     "autoprefixer-cli": "^1.0.0",
     "html-minifier": "^3.3.1",
-    "sass": "1.22.9",
-    "pre-style": "^1.0.7-alpha",
+    "node-sass": "4.12.0",
     "rimraf": "^2.5.4"
   }
 }
