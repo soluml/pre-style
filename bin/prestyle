@@ -14,6 +14,13 @@ const packageJSON = require('../package.json');
 const processBlock = require('./processBlock');
 const writeFiles = require('./writeFiles');
 
+const quotesEnum = {
+  double: '"',
+  single: `'`,
+  backtick: '`',
+  none: ''
+};
+
 program
   .version(packageJSON.version)
   .option('-c, --config [file]', 'source config file')
@@ -27,6 +34,12 @@ program
     '-p, --prependedFiles <items>',
     'comma separated list of files to prepend',
     list => list.split(',')
+  )
+  .option(
+    '-q, --quotes <quotes>',
+    'quotes used to wrap outputted class string',
+    new RegExp(`^(${Object.keys(quotesEnum).join('|')})$`, 'i'),
+    'double'
   )
   .option(
     '-n, --nameSpaces <items>',
@@ -57,11 +70,13 @@ function preStyleFile(file, config, classNames) {
   //Iterate over blocks, assign classNames, write classnames to content, and add CSS block for that file
   blocks.forEach(block => {
     const data = processBlock(block.css, config, classNames);
+    const quoteChar = config.quotes;
+
     fileContents = fileContents.replace(
       block.full,
-      `"${Object.keys(data.classNames)
+      `${quoteChar}${Object.keys(data.classNames)
         .map(key => data.classNames[key])
-        .join(' ')}"`
+        .join(' ')}${quoteChar}`
     );
     Object.assign(classNames, data.classNames);
     css += data.css;
@@ -110,7 +125,12 @@ try {
   }
 
   const config = Object.assign(
-    {},
+    {
+      quotes:
+        quotesEnum[program.quotes] === undefined
+          ? '"'
+          : quotesEnum[program.quotes]
+    },
     configFileLocation ? require(path.resolve(configFileLocation)) : {},
     program.destination ? { destination: program.destination || './' } : {},
     program.outputFile ? { outputFile: program.outputFile } : {},

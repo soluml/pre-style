@@ -104,6 +104,7 @@ Usage: prestyle [options] [path]
   -d, --destination <dir>       directory to put files processed by PreStyle
   -p, --prependedFiles <items>  comma separated list of files to prepend
   -n, --nameSpaces <items>      comma separated list of identifiers to use aside from `PreStyle`
+  -q, --quotes <quotes>         quotes used to wrap outputted class string
 ```
 
 #### Example:
@@ -168,6 +169,15 @@ Files that will be prepended to each processed code-block. This is where you let
 #### --nameSpaces [-n]
 
 Want to use something other than `PreStyle` to denote your code-blocks? You can specify those namespaces here. A common namespace used is `styled` to take advantage of tooling available for [styled-components](https://github.com/styled-components/styled-components#syntax-highlighting).
+
+#### --quotes [-q]
+
+When the block of CSS is processed it wraps the new classes in quotes. This allows you to choose which quote is used. By default, **double** is used. The options are:
+
+- double
+- single
+- backtick
+- none
 
 ## Examples
 
