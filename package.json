@@ -1,7 +1,7 @@
 {
   "name": "pre-style",
   "version": "1.0.0",
-  "description": "A CSS tool",
+  "description": "Pre-Style is a tool that lets you author CSS-in-JS (or CSS-in-Markup) while outputting highly efficient CSS.",
   "main": "src/module/prestyle.js",
   "bin": {
     "prestyle": "./bin/prestyle"
@@ -28,13 +28,13 @@
   "license": "MIT",
   "dependencies": {
     "chalk": "2.4.2",
-    "commander": "^2.9.0",
+    "commander": "2.20.0",
     "css-mqpacker": "7.0.0",
     "cssnano": "4.1.10",
-    "cssnano-preset-advanced": "^4.0.7",
-    "gonzales": "^1.0.7",
+    "cssnano-preset-advanced": "4.0.7",
+    "gonzales": "1.0.7",
     "lodash": "4.17.15",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "0.5.1",
     "sass": "1.22.9",
     "sweatmap": "0.2.1"
   },
