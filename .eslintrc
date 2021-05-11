@@ -29,6 +29,7 @@
     "space-in-parens": 0,
     "space-before-function-paren": 0,
     "no-underscore-dangle": 0,
+    "prefer-object-spread": 1,
     "import/no-extraneous-dependencies": 0,
     "import/no-dynamic-require": 0,
     "quotes": [

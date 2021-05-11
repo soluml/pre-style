@@ -23,7 +23,7 @@
     "url": "http://soluml.com"
   },
   "engines": {
-    "node": ">=8.16.0"
+    "node": ">=12.0.0"
   },
   "license": "MIT",
   "dependencies": {
@@ -33,16 +33,16 @@
     "cssnano": "4.1.10",
     "cssnano-preset-advanced": "4.0.7",
     "gonzales": "1.0.7",
-    "lodash": "4.17.19",
+    "lodash": "4.17.21",
     "mkdirp": "0.5.1",
     "sass": "1.22.9",
-    "sweatmap": "0.2.1"
+    "sweatmap": "0.3.4"
   },
   "devDependencies": {
-    "eslint": "^6.1.0",
-    "eslint-config-airbnb": "^17.1.1",
-    "eslint-plugin-import": "^2.18.2",
-    "expect": "^24.8.0",
-    "mocha": "^6.2.0"
+    "eslint": "^7.26.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.22.1",
+    "expect": "^26.6.2",
+    "mocha": "^8.4.0"
   }
 }
