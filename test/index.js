@@ -12,6 +12,7 @@ describe('Pre-Style', () => {
   it('Default character limits:', (done) => {
     PreStyle(`
       /* TEST */
+      --my-var: #fff;
 
       font-weight: bold;
       color: $color;
@@ -62,10 +63,11 @@ describe('Pre-Style', () => {
 
       &:hover {
         color: white;
+        color: var(--my-var, white);
       }
     `, config).then((data) => {
-      console.log(data.css);
-      expect(Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')).toBe('A B C D E F G H I J K L M N O P Q R S T');
+      console.log(data);
+      expect(Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')).toBe('A B C D E F G H I J K L M N O P Q R S T U');
       done();
     });
   });
