@@ -13,25 +13,22 @@ export default function cache(filepath: string, cacheTime: number = THIRTY_DAYS,
   let map: CacheMap;
   
   stream.on('data', (line) => {
-    fs.appendFile(filepath, line + EOL, { encoding }, (err) => {
+    fs.appendFile(filepath, line, { encoding }, (err) => {
       if (err) {
         throw new Error('Could not write to cache');
       }
     });
   });
 
-  function getter(block: string, skip?: boolean): string | undefined {
-    return map.get(skip ? block : replaceAllWhiteSpace(block))?.[0];
+  function getter(block: string): string | undefined {
+    return map.get(replaceAllWhiteSpace(block))?.[0];
   }
 
   function writer(block: string, classes: string) {
     const wsb = replaceAllWhiteSpace(block);
+    const line: CacheArray = [wsb, [classes, timestamp]];
 
-    if (!getter(wsb, true)) {
-      const line: CacheArray = [wsb, [classes, timestamp]];
-
-      stream.write(line);
-    }
+    stream.write(line);
   }
 
   return new Promise((resolve) => {

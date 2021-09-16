@@ -13,14 +13,15 @@ function defaultAdapter(data: string, config: Config) {
   }
 }
 
-export default async function Adapt(this: PreStyle, classblock: string) {
-  // TODO: 
-
+export default async function Adapt(classblock: string) {
   //Get all of the prependedFiles and string them together
+  // @ts-ignore
   const preStr = ((this.config as Config).prependedFiles || []).map(fn => fs.readFileSync(fn).toString()).join('');
 
   //Pass the CSS string to the adapter
+  // @ts-ignore
   const adapter = (this.config as Config).adapter || defaultAdapter;
 
-  return '';
+  // @ts-ignore
+  return adapter(`${preStr} .${this.placeholder} { ${classblock.toString()} }`);
 }

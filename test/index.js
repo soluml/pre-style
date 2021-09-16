@@ -1,6 +1,7 @@
 const PreStyle = require("../dist/src").default;
-
-const config = {};
+const config = {
+  prependedFiles: ['test/test.scss']
+};
 
 
 describe('Pre-Style', () => {
@@ -61,7 +62,7 @@ describe('Pre-Style', () => {
         color: white;
         color: var(--my-var, white);
       }
-    `);
+    `, true);
     
     console.log(data);
     expect(Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')).toBe('A B C D E F G H I J K L M N O P Q R S T U');
