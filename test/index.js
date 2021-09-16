@@ -1,16 +1,12 @@
-const expect = require('expect');
-const PreStyle = require('../src/module/prestyle');
-const config = Object.assign({}, require('./PreStyleConfig'));
+const PreStyle = require("../dist/src").default;
 
-/*
-  PreStyle`
-    color: blue;
-  `
-*/
+const config = {};
+
 
 describe('Pre-Style', () => {
-  it('Default character limits:', (done) => {
-    PreStyle(`
+  it('Default character limits:', async () => {
+    const PS = new PreStyle(config);
+    const data = await PS.process(`
       /* TEST */
       --my-var: #fff;
 
@@ -65,10 +61,9 @@ describe('Pre-Style', () => {
         color: white;
         color: var(--my-var, white);
       }
-    `, config).then((data) => {
-      console.log(data);
-      expect(Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')).toBe('A B C D E F G H I J K L M N O P Q R S T U');
-      done();
-    });
+    `);
+    
+    console.log(data);
+    expect(Object.keys(data.classNames).map(key => data.classNames[key]).join(' ')).toBe('A B C D E F G H I J K L M N O P Q R S T U');
   });
 });
