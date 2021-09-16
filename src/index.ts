@@ -16,7 +16,7 @@ class PreStyle {
   adapt: (block: string) => Promise<string>;
 
   constructor (config: Config) {
-    this.placeholder = config.placeholder || '✨PLACEHOLDER✨';
+    this.placeholder = config.placeholder || '✝️PLACEHOLDER✝️';
     this.config = config;
     this.timestamp = Date.now();
 
