@@ -1,11 +1,9 @@
 import fs from 'fs';
-import {EOL} from 'os';
 import ndjson from 'ndjson';
 
 const THIRTY_DAYS = 2.592e+9;
 const encoding = 'utf8';
-const re = new RegExp(EOL, "g");
-const replaceAllWhiteSpace = (str: string) => str.trim().replace(re, '');
+const cleanBlock = (str: string) => str.trim();
 
 export default function cache(filepath: string, cacheTime: number = THIRTY_DAYS, timestamp: number): Promise<[CacheGetter, CacheWriter]> {
   const stream = ndjson.stringify();
@@ -21,11 +19,11 @@ export default function cache(filepath: string, cacheTime: number = THIRTY_DAYS,
   });
 
   function getter(block: string): string | undefined {
-    return map.get(replaceAllWhiteSpace(block))?.[0];
+    return map.get(cleanBlock(block))?.[0];
   }
 
   function writer(block: string, classes: string) {
-    const wsb = replaceAllWhiteSpace(block);
+    const wsb = cleanBlock(block);
     const line: CacheArray = [wsb, [classes, timestamp]];
 
     stream.write(line);
