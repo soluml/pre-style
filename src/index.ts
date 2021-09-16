@@ -1,6 +1,7 @@
 import findCacheDir from 'find-cache-dir';
 import cache from './cache';
 import Adapt from './adapt';
+import Normalize from './normalize';
 
 class PreStyle {
   config: Config;
@@ -30,8 +31,10 @@ class PreStyle {
     if (skipCheck || !classes) {
       const processedCss = await this.adapt(block);
 
+      const normalizedCss = Normalize(processedCss as string);
 
-      console.log({processedCss});
+
+      console.log({normalizedCss});
 
 
 

@@ -23,6 +23,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/csso": "^4.2.0",
     "@types/find-cache-dir": "^3.2.1",
     "@types/mocha": "^9.0.0",
     "@types/ndjson": "^2.0.1",
