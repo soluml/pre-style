@@ -16,7 +16,7 @@ class PreStyle {
   adapt: (block: string) => Promise<string>;
 
   constructor (config: Config) {
-    this.placeholder = config.placeholder || '✝️PLACEHOLDER✝️';
+    this.placeholder = config.placeholder || '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️';
     this.config = config;
     this.timestamp = Date.now();
 
@@ -27,7 +27,7 @@ class PreStyle {
 
   async process(block: string, skipCheck?: boolean) {
     if (~block.indexOf(this.placeholder)) {
-      throw new Error(`The placeholder (${this.placeholder}) was used in the raw css. Please set the placeholder value in the config to a string you'd NEVER use!`);
+      throw new Error(`The placeholder (${this.placeholder}) was used in the raw css. Please set the placeholder value in the config to a string you'd NEVER use in production!`);
     }
 
     const [getter, writer] = await this.styleCache;
