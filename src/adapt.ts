@@ -1,5 +1,8 @@
 import type PreStyle from './';
 import fs from 'fs';
+import util from 'util';
+
+const readFile = util.promisify(fs.readFile);
 
 function defaultAdapter(data: string, config?: Config) {
     const Sass = require('sass');
@@ -15,16 +18,16 @@ export default async function Adapt(this: PreStyle, classblock: string) {
   if (this.config.prependedFiles) {
     const [getFile, writeFile] = await this.prependedFilesCache;
 
-    prependedFilesString = this.config.prependedFiles.map((filePath: string) => {
+    prependedFilesString = (await Promise.all(this.config.prependedFiles.map(async (filePath: string) => {
       let file = getFile(filePath);
 
       if (!file) {
-        file = fs.readFileSync(filePath).toString();
+        file = await readFile(filePath, 'utf8');
         writeFile(filePath, file);
       }
 
       return file;
-    }).join('');
+    }))).join('');
   }
 
   //Pass the CSS string to the adapter
