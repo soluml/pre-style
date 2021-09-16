@@ -2,18 +2,13 @@ import fs from 'fs';
 import type PreStyle from './';
 
 function defaultAdapter(data: string, config?: Config) {
-  try {
     const Sass = require('sass');
     const options: AdapterOptions = { data, outputStyle: 'compressed', ...config };
-    const css: string = Sass.renderSync(options).css;
-
-    return Promise.resolve(css);
-  } catch (e) {
-    return Promise.reject(e as Error);
-  }
+    
+    return Sass.renderSync(options).css;
 }
 
-export default async function Adapt(this: PreStyle, classblock: string) {
+export default function Adapt(this: PreStyle, classblock: string) {
   //Get all of the prependedFiles and string them together
   const preStr = ((this.config as Config).prependedFiles || []).map(fn => fs.readFileSync(fn).toString()).join('');
 

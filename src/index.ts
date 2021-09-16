@@ -9,7 +9,7 @@ class PreStyle {
   timestamp: number;
   styleCache: Promise<[CacheGetter, CacheWriter]>;
   // @ts-ignore
-  adapt: (block: string) => Promise<string | Error>;
+  adapt: (block: string) => string;
 
   constructor (config: Config) {
     this.placeholder = config.placeholder || '✨PLACEHOLDER✨';
@@ -29,9 +29,9 @@ class PreStyle {
     let classes = getter(block);
 
     if (skipCheck || !classes) {
-      const processedCss = await this.adapt(block);
+      const processedCss = this.adapt(block);
 
-      const normalizedCss = Normalize(processedCss as string);
+      const normalizedCss = Normalize(processedCss);
 
 
       console.log({normalizedCss});
