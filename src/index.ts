@@ -3,13 +3,17 @@ import cache from './cache';
 import Adapt from './adapt';
 import Normalize from './normalize';
 
+const styleCacheFile = '/style.ndjson';
+const prependedFilesCacheFile = '/prependedFiles.ndjson';
+
 class PreStyle {
   config: Config;
   placeholder: string;
   timestamp: number;
   styleCache: Promise<[CacheGetter, CacheWriter]>;
+  prependedFilesCache: Promise<[CacheGetter, CacheWriter]>;
   // @ts-ignore
-  adapt: (block: string) => string;
+  adapt: (block: string) => Promise<string>;
 
   constructor (config: Config) {
     this.placeholder = config.placeholder || '✨PLACEHOLDER✨';
@@ -17,7 +21,8 @@ class PreStyle {
     this.timestamp = Date.now();
 
     const cacheDir = findCacheDir({name: 'pre-style', create: true}) as string;
-    this.styleCache = cache(cacheDir + '/style.ndjson', this.config.cache as number, this.timestamp);
+    this.styleCache = cache(cacheDir + styleCacheFile, this.config.cache as number, this.timestamp);
+    this.prependedFilesCache = cache(cacheDir + prependedFilesCacheFile, this.config.cache as number, this.timestamp)
   }
 
   async process(block: string, skipCheck?: boolean) {
@@ -29,7 +34,7 @@ class PreStyle {
     let classes = getter(block);
 
     if (skipCheck || !classes) {
-      const processedCss = this.adapt(block);
+      const processedCss = await this.adapt(block);
 
       const normalizedCss = Normalize(processedCss);
 
