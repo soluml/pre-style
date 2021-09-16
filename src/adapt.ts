@@ -9,22 +9,26 @@ function defaultAdapter(data: string, config?: Config) {
 }
 
 export default async function Adapt(this: PreStyle, classblock: string) {
-  const [getFile, writeFile] = await this.prependedFilesCache;
+  let prependedFilesString = '';
 
-  //Get all of the prependedFiles and string them together
-  const preStr = ((this.config as Config).prependedFiles || []).map((filePath: string) => {
-    let file = getFile(filePath);
+  //Get all of the prependedFiles and string them together, if any
+  if (this.config.prependedFiles) {
+    const [getFile, writeFile] = await this.prependedFilesCache;
 
-    if (!file) {
-      file = fs.readFileSync(filePath).toString();
-      writeFile(filePath, file);
-    }
+    prependedFilesString = this.config.prependedFiles.map((filePath: string) => {
+      let file = getFile(filePath);
 
-    return file;
-  }).join('');
+      if (!file) {
+        file = fs.readFileSync(filePath).toString();
+        writeFile(filePath, file);
+      }
+
+      return file;
+    }).join('');
+  }
 
   //Pass the CSS string to the adapter
-  const adapter = (this.config as Config).adapter || defaultAdapter;
+  const adapter = this.config.adapter || defaultAdapter;
 
-  return adapter(`${preStr} .${this.placeholder} { ${classblock.toString()} }`);
+  return adapter(`${prependedFilesString} .${this.placeholder} { ${classblock.toString()} }`);
 }
