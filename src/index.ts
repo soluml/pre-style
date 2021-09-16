@@ -8,7 +8,7 @@ class PreStyle {
   timestamp: number;
   styleCache: Promise<[CacheGetter, CacheWriter]>;
   // @ts-ignore
-  adapt: (block: string) => Promise<string>;
+  adapt: (block: string) => Promise<string | Error>;
 
   constructor (config: Config) {
     this.placeholder = config.placeholder || '✨PLACEHOLDER✨';
@@ -35,14 +35,13 @@ class PreStyle {
 
 
 
-      writer(block, 'aasdasdasd');
+      // writer(block, 'aasdasdasd');
     }
 
     return classes;
   }
 }
 
-// @ts-ignore
 PreStyle.prototype.adapt = Adapt;
 
 export default PreStyle;
