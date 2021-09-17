@@ -9,7 +9,6 @@ interface AST {
 
 const deepClone = (obj: object) => JSON.parse(JSON.stringify(obj));
 
-
 export default function Atomize(this: PreStyle, normalizedCss: string) {
   const ast = csstree.parse(normalizedCss) as any as AST;
   const atomizedAst: AST = {
@@ -27,6 +26,15 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     .extraClassFilter,
     .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
       column-count: 5
+    }
+
+    @media (max-width:600px) {
+      .extraClassFilter,
+      .asd > .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️:hover {
+        height: 30px;
+        font-size: .9em;
+        color: rgba(255, 255, 255, .3)
+      }
     }
   `) as any as AST;
   //
