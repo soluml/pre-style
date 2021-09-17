@@ -25,22 +25,8 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   const fakeAst = csstree.parse(`
     .extraClassFilter,
     .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
-      column-count: 5
-    }
-
-    @media (max-width:600px) {
-      .extraClassFilter,
-      .asd > .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️:hover {
-        height: 30px;
-        font-size: .9em;
-        color: rgba(255, 255, 255, .3)
-      }
-
-      @supports not ((text-align-last:justify)) {
-        .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
-          text-align: center
-        }
-      }
+      column-count: 5;
+      color: white;
     }
   `) as any as AST;
   //
@@ -48,23 +34,56 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
 
 
 
+
   const processRule = (rule: csstree.Rule) => {
     // Create a new atom class for each selector piece
     const prelude = rule.prelude as any as csstree.AtrulePrelude;
+    const block = rule.block as any as csstree.Block;
     const arr: any[] = [];
 
-    prelude.children.forEach((pc) => {
-      const clone = deepClone(rule);
+    let p = prelude.children.getSize();
+    let b = block.children.getSize();
 
-      clone.prelude.children = [pc];
-      placeholderFound(clone) && arr.push(clone);
-    });
+    for (; p > 0; p--) {
+      for (; b > 0; b--) {
+        const clone = deepClone(rule);
+
+        clone.prelude.children = [clone.prelude.children[p-1]];
+        clone.block.children = [clone.block.children[b-1]];
+
+        placeholderFound(clone) && arr.push(clone);
+      }
+    }
 
     return arr;
   }
 
   const processAtrule = (atrule: csstree.Atrule) => {
+    if (!atrule.block?.children) return [];
+
+    const clone = deepClone(atrule);
+
+    clone.block.children = [];
+
+    atrule.block?.children.forEach((child) => {
+      switch(child.type) {
+        case 'Rule':
+          clone.block.children.push(processRule(child));
+          break;
+        case 'Atrule':
+          clone.block.children.push(processAtrule(child));
+          break;
+      }
+    });
+
+    clone.block.children = clone.block.children.flat();
+  
+  
+  
+
     
+
+    return clone;
   }
 
 
@@ -77,7 +96,7 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
         atomizedAst.children.push(processRule(child) as any);
         break;
       case 'Atrule':
-        console.log('Atrule');
+        atomizedAst.children.push(processAtrule(child) as any);
         break;
     }
   });
