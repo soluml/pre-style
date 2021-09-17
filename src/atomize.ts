@@ -28,6 +28,15 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
       column-count: 5;
       color: white;
     }
+
+    @media (max-width:600px) {
+      .extraClassFilter,
+      .asd > .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️:hover {
+        height: 30px;
+        font-size: .9em;
+        color: rgba(255, 255, 255, .3)
+      }
+    }
   `) as any as AST;
   //
 
