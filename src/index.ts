@@ -3,6 +3,7 @@ import findCacheDir from 'find-cache-dir';
 import cache from './cache';
 import Adapt from './adapt';
 import Normalize from './normalize';
+import Atomize from './atomize';
 
 const styleCacheFile = '/style.ndjson';
 const prependedFilesCacheFile = '/prependedFiles.ndjson';
@@ -15,6 +16,8 @@ class PreStyle {
   prependedFilesCache: Promise<[CacheGetter, CacheWriter, CacheMap]>;
   // @ts-ignore
   adapt: (block: string) => Promise<string>;
+  // @ts-ignore
+  atomize: (block: string) => Promise<string>;
 
   constructor (config: Config) {
     this.placeholder = config.placeholder || '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️';
@@ -48,8 +51,10 @@ class PreStyle {
 
       const normalizedCss = Normalize(processedCss);
 
+      const atomizedCss = await this.atomize(normalizedCss);
 
-      console.log({normalizedCss});
+
+      // console.log({normalizedCss, atomizedCss});
 
 
 
@@ -61,5 +66,6 @@ class PreStyle {
 }
 
 PreStyle.prototype.adapt = Adapt;
+PreStyle.prototype.atomize = Atomize;
 
 export default PreStyle;
