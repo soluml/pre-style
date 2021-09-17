@@ -35,6 +35,12 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
         font-size: .9em;
         color: rgba(255, 255, 255, .3)
       }
+
+      @supports not ((text-align-last:justify)) {
+        .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
+          text-align: center
+        }
+      }
     }
   `) as any as AST;
   //
@@ -42,7 +48,7 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
 
 
 
-  function processRule(rule: csstree.Rule) {
+  const processRule = (rule: csstree.Rule) => {
     // Create a new atom class for each selector piece
     const prelude = rule.prelude as any as csstree.AtrulePrelude;
     const arr: any[] = [];
@@ -57,11 +63,21 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     return arr;
   }
 
+  const processAtrule = (atrule: csstree.Atrule) => {
+    
+  }
+
+
+
+
   // Process AST children
   fakeAst.children.forEach((child) => {
     switch(child.type) {
       case 'Rule':
         atomizedAst.children.push(processRule(child) as any);
+        break;
+      case 'Atrule':
+        console.log('Atrule');
         break;
     }
   });
