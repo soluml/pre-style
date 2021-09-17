@@ -5,7 +5,7 @@ const THIRTY_DAYS = 2.592e+9;
 const encoding = 'utf8';
 const cleanBlock = (str: string) => str.trim();
 
-export default function cache(filepath: string, cacheTime: number = THIRTY_DAYS, timestamp: number): Promise<[CacheGetter, CacheWriter]> {
+export default function cache(filepath: string, cacheTime: number = THIRTY_DAYS, timestamp: number): Promise<[CacheGetter, CacheWriter, CacheMap]> {
   const stream = ndjson.stringify();
   const arr: CacheArray[] = [];
   let map: CacheMap;
@@ -23,16 +23,18 @@ export default function cache(filepath: string, cacheTime: number = THIRTY_DAYS,
   }
 
   function writer(block: string, classes: string) {
-    const wsb = cleanBlock(block);
-    const line: CacheArray = [wsb, [classes, timestamp]];
+    const wsb: string = cleanBlock(block);
+    const wsv: [string, number] = [classes, timestamp];
+    const line: CacheArray = [wsb, wsv];
 
+    map.set(wsb, wsv);
     stream.write(line);
   }
 
   return new Promise((resolve) => {
     function done () {
       map = new Map(arr);
-      resolve([getter, writer]);
+      resolve([getter, writer, map]);
     }
 
     if (fs.existsSync(filepath)) {

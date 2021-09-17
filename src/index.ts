@@ -1,4 +1,5 @@
 import findCacheDir from 'find-cache-dir';
+// import SweatMap from 'sweatmap';
 import cache from './cache';
 import Adapt from './adapt';
 import Normalize from './normalize';
@@ -10,8 +11,8 @@ class PreStyle {
   config: Config;
   placeholder: string;
   timestamp: number;
-  styleCache: Promise<[CacheGetter, CacheWriter]>;
-  prependedFilesCache: Promise<[CacheGetter, CacheWriter]>;
+  styleCache: Promise<[CacheGetter, CacheWriter, CacheMap]>;
+  prependedFilesCache: Promise<[CacheGetter, CacheWriter, CacheMap]>;
   // @ts-ignore
   adapt: (block: string) => Promise<string>;
 
@@ -30,7 +31,16 @@ class PreStyle {
       throw new Error(`The placeholder (${this.placeholder}) was used in the raw css. Please set the placeholder value in the config to a string you'd NEVER use in production!`);
     }
 
-    const [getter, writer] = await this.styleCache;
+    const [getter, writer, map] = await this.styleCache;
+    //TODO: pull out map values and add to existing strings
+    // const mapValues = {};
+    // const sweatmap = new SweatMap({ cssSafe: true, existing_strings: { ...this.config.existingStrings, ...mapValues} });
+    const classWriter = () => {
+      // write to sweatmap
+      // writer();
+    }
+
+
     let classes = getter(block);
 
     if (skipCheck || !classes) {
