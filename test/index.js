@@ -45,6 +45,7 @@ describe('Pre-Style', () => {
       @media (max-width: 600px) {
         height: 30px;
         font-size: 0.9em;
+        font-weight: normal;
         color: rgba(255,255,255,.3)
       }
 
