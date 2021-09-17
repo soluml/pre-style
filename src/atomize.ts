@@ -35,8 +35,8 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
 
 
 
+  
   const processRule = (rule: csstree.Rule) => {
-    // Create a new atom class for each selector piece
     const prelude = rule.prelude as any as csstree.AtrulePrelude;
     const block = rule.block as any as csstree.Block;
     const arr: any[] = [];
@@ -44,6 +44,7 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     let p = prelude.children.getSize();
     let b = block.children.getSize();
 
+    // Create a new atom class for each prelude and block piece
     for (; p > 0; p--) {
       for (; b > 0; b--) {
         const clone = deepClone(rule);
