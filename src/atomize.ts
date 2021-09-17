@@ -36,6 +36,19 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
         font-size: .9em;
         color: rgba(255, 255, 255, .3)
       }
+
+      @supports not ((text-align-last:justify)) {
+        .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
+          color: white;
+          text-align: center;
+        }
+      }
+      
+      @supports not ((text-align-last:justify)) {
+        .another {
+          text-align: center
+        }
+      }
     }
   `) as any as AST;
   //
@@ -117,7 +130,7 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
 
 
 
-  //TODO: support @atrules
+  
 
 
   console.log({atomizedAst: csstree.generate(atomizedAst as any as csstree.CssNode)});
