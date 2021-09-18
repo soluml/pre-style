@@ -1,10 +1,10 @@
-import type PreStyle from './';
-import csstree from 'css-tree';
+import type PreStyle from "./";
+import csstree from "css-tree";
 
 export interface AST {
-  type: 'StyleSheet';
-  loc: csstree.CssLocation|null;
-  children: (csstree.Atrule|csstree.Rule)[];
+  type: "StyleSheet";
+  loc: csstree.CssLocation | null;
+  children: (csstree.Atrule | csstree.Rule)[];
 }
 
 const deepClone = (obj: object) => JSON.parse(JSON.stringify(obj));
@@ -14,9 +14,10 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   const atomizedAst: AST = {
     type: "StyleSheet",
     loc: null,
-    children: []
+    children: [],
   };
-  const placeholderFound = (obj: object) => !!~JSON.stringify(obj).indexOf(this.placeholder);
+  const placeholderFound = (obj: object) =>
+    !!~JSON.stringify(obj).indexOf(this.placeholder);
 
   const processRule = (rule: csstree.Rule) => {
     const prelude = rule.prelude as any as csstree.AtrulePrelude;
@@ -24,15 +25,15 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     const arr: any[] = [];
 
     let p = prelude.children.getSize();
-    let b = block.children.getSize();
+    const b = block.children.getSize();
 
     // Create a new atom class for each prelude and block piece
     for (; p > 0; p--) {
-      for (; b > 0; b--) {
+      for (let i = b; i > 0; i--) {
         const clone = deepClone(rule);
 
-        clone.prelude.children = [clone.prelude.children[p-1]];
-        clone.block.children = [clone.block.children[b-1]];
+        clone.prelude.children = [clone.prelude.children[p - 1]];
+        clone.block.children = [clone.block.children[i - 1]];
 
         placeholderFound(clone) && arr.push(clone);
       }
@@ -49,11 +50,11 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     clone.block.children = [];
 
     atrule.block?.children.forEach((child) => {
-      switch(child.type) {
-        case 'Rule':
+      switch (child.type) {
+        case "Rule":
           clone.block.children.push(processRule(child));
           break;
-        case 'Atrule':
+        case "Atrule":
           clone.block.children.push(processAtrule(child));
           break;
       }
@@ -61,18 +62,16 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
 
     clone.block.children = clone.block.children.flat();
 
-    return clone.block.children.length
-      ? clone
-      : [];
+    return clone.block.children.length ? clone : [];
   };
 
   // Process AST children
   ast.children.forEach((child) => {
-    switch(child.type) {
-      case 'Rule':
+    switch (child.type) {
+      case "Rule":
         atomizedAst.children.push(processRule(child) as any);
         break;
-      case 'Atrule':
+      case "Atrule":
         atomizedAst.children.push(processAtrule(child) as any);
         break;
     }
