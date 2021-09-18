@@ -81,5 +81,5 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   // Flatten a single level
   atomizedAst.children = atomizedAst.children.flat();
 
-  return atomizedAst;
+  return atomizedAst as any as csstree.CssNode;
 }

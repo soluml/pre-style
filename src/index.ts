@@ -1,4 +1,4 @@
-import type { AST } from './atomize';
+import type {CssNode} from 'css-tree';
 import findCacheDir from 'find-cache-dir';
 // import SweatMap from 'sweatmap';
 import cache from './cache';
@@ -20,7 +20,7 @@ class PreStyle {
   // @ts-ignore
   adapt: (block: string) => Promise<string>;
   // @ts-ignore
-  atomize: (normalizedCss: string) => AST;
+  atomize: (normalizedCss: string) => CssNode;
 
   constructor (config: Config) {
     this.placeholder = config.placeholder || defaultPlaceholder;
@@ -57,7 +57,6 @@ class PreStyle {
       const atomizedAst = this.atomize(normalizedCss);
 
 
-      // console.log({normalizedCss, atomizedAst});
 
 
 
