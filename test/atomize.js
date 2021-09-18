@@ -62,7 +62,23 @@ describe("Atomizer", () => {
     );
   });
 
-  // it('Should handle classes correctly:', async () => {
+  it("Should handle @rules", () => {
+    const css = `
+      @media (max-width:600px) {
+        .asd > .${placeholder}:hover {
+          height: 30px;
+          font-size: .9em;
+          color: rgba(255, 255, 255, .3)
+        }
+      }
+    `;
+
+    expect(csstree.generate(Atomize(css))).toBe(
+      `@media (max-width:600px){.asd>.${placeholder}:hover{color:rgba(255,255,255,.3)}}@media (max-width:600px){.asd>.${placeholder}:hover{font-size:.9em}}@media (max-width:600px){.asd>.${placeholder}:hover{height:30px}}`
+    );
+  });
+
+  // it("Should handle classes correctly:", async () => {
   //   const css = `
   //     .extraClassFilter,
   //     .${placeholder} {
@@ -100,6 +116,8 @@ describe("Atomizer", () => {
 
   //   const atomizedCss = csstree.generate(Atomize(css));
 
-  //   expect(atomizedCss).toBe(`.${placeholder}{color:white}.${placeholder}{column-count:5}.${placeholder} .test{width:var(--my-var, min(50vw, calc(10px * 2)))}.${placeholder} .test{--my-var: #fff}@media (max-width:600px){.asd>.${placeholder}:hover{color:rgba(255,255,255,.3)}.asd>.${placeholder}:hover{font-size:.9em}.asd>.${placeholder}:hover{height:30px}@supports not ((text-align-last:justify)){.${placeholder}{text-align:center}.${placeholder}{color:white}}}`);
+  //   expect(atomizedCss).toBe(
+  //     `.${placeholder}{color:white}.${placeholder}{column-count:5}.${placeholder} .test{width:var(--my-var, min(50vw, calc(10px * 2)))}.${placeholder} .test{--my-var: #fff}@media (max-width:600px){.asd>.${placeholder}:hover{color:rgba(255,255,255,.3)}.asd>.${placeholder}:hover{font-size:.9em}.asd>.${placeholder}:hover{height:30px}@supports not ((text-align-last:justify)){.${placeholder}{text-align:center}.${placeholder}{color:white}}}`
+  //   );
   // });
 });
