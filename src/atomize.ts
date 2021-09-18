@@ -1,7 +1,7 @@
 import type PreStyle from './';
 import csstree from 'css-tree';
 
-interface AST {
+export interface AST {
   type: 'StyleSheet';
   loc: csstree.CssLocation|null;
   children: (csstree.Atrule|csstree.Rule)[];
@@ -18,54 +18,6 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   };
   const placeholderFound = (obj: object) => !!~JSON.stringify(obj).indexOf(this.placeholder);
 
-
-
-
-
-
-
-  //
-  const fakeAst = csstree.parse(`
-    .extraClassFilter,
-    .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
-      column-count: 5;
-      color: white;
-    }
-
-    .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ .test {
-      --my-var: #fff;
-      width: var(--my-var, min(50vw, calc(10px * 2)));
-    }
-
-    @media (max-width:600px) {
-      .extraClassFilter,
-      .asd > .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️:hover {
-        height: 30px;
-        font-size: .9em;
-        color: rgba(255, 255, 255, .3)
-      }
-
-      @supports not ((text-align-last:justify)) {
-        .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
-          color: white;
-          text-align: center;
-        }
-      }
-      
-      @supports not ((text-align-last:justify)) {
-        .another {
-          text-align: center
-        }
-      }
-    }
-  `) as any as AST;
-  //
-
-
-
-
-
-  
   const processRule = (rule: csstree.Rule) => {
     const prelude = rule.prelude as any as csstree.AtrulePrelude;
     const block = rule.block as any as csstree.Block;
@@ -115,7 +67,7 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   };
 
   // Process AST children
-  fakeAst.children.forEach((child) => {
+  ast.children.forEach((child) => {
     switch(child.type) {
       case 'Rule':
         atomizedAst.children.push(processRule(child) as any);
@@ -129,12 +81,5 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   // Flatten a single level
   atomizedAst.children = atomizedAst.children.flat();
 
-
-
-
-  // TODO: Do things with the now accurate AST
-
-  console.log({atomizedAst: csstree.generate(atomizedAst as any as csstree.CssNode)});
-
-  return Promise.resolve('');
+  return atomizedAst;
 }

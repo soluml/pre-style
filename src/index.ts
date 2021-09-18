@@ -1,9 +1,12 @@
+import type { AST } from './atomize';
 import findCacheDir from 'find-cache-dir';
 // import SweatMap from 'sweatmap';
 import cache from './cache';
 import Adapt from './adapt';
 import Normalize from './normalize';
 import Atomize from './atomize';
+
+export const defaultPlaceholder = '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️';
 
 const styleCacheFile = '/style.ndjson';
 const prependedFilesCacheFile = '/prependedFiles.ndjson';
@@ -17,10 +20,10 @@ class PreStyle {
   // @ts-ignore
   adapt: (block: string) => Promise<string>;
   // @ts-ignore
-  atomize: (block: string) => Promise<string>;
+  atomize: (normalizedCss: string) => AST;
 
   constructor (config: Config) {
-    this.placeholder = config.placeholder || '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️';
+    this.placeholder = config.placeholder || defaultPlaceholder;
     this.config = config;
     this.timestamp = Date.now();
 
@@ -51,10 +54,10 @@ class PreStyle {
 
       const normalizedCss = Normalize(processedCss);
 
-      const atomizedCss = await this.atomize(normalizedCss);
+      const atomizedAst = this.atomize(normalizedCss);
 
 
-      // console.log({normalizedCss, atomizedCss});
+      // console.log({normalizedCss, atomizedAst});
 
 
 
