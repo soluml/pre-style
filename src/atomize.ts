@@ -21,12 +21,20 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
 
 
 
+
+
+
   //
   const fakeAst = csstree.parse(`
     .extraClassFilter,
     .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ {
       column-count: 5;
       color: white;
+    }
+
+    .✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️ .test {
+      --my-var: #fff;
+      width: var(--my-var, min(50vw, calc(10px * 2)));
     }
 
     @media (max-width:600px) {
@@ -79,7 +87,7 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     }
 
     return arr;
-  }
+  };
 
   const processAtrule = (atrule: csstree.Atrule) => {
     if (!atrule.block?.children) return [];
@@ -100,17 +108,11 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     });
 
     clone.block.children = clone.block.children.flat();
-  
-  
-  
 
-    
-
-    return clone;
-  }
-
-
-
+    return clone.block.children.length
+      ? clone
+      : [];
+  };
 
   // Process AST children
   fakeAst.children.forEach((child) => {
@@ -130,22 +132,9 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
 
 
 
-  
-
+  // TODO: Do things with the now accurate AST
 
   console.log({atomizedAst: csstree.generate(atomizedAst as any as csstree.CssNode)});
-
-
-
-
-
-
-  
-  
-
-  
-
-
 
   return Promise.resolve('');
 }
