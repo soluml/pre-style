@@ -1,10 +1,11 @@
 import type {CssNode} from 'css-tree';
 import findCacheDir from 'find-cache-dir';
-// import SweatMap from 'sweatmap';
+import SweatMap from 'sweatmap';
 import cache from './cache';
 import Adapt from './adapt';
 import Normalize from './normalize';
 import Atomize from './atomize';
+import Classify from './classify';
 
 export const defaultPlaceholder = '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️';
 
@@ -17,10 +18,13 @@ class PreStyle {
   timestamp: number;
   styleCache: Promise<[CacheGetter, CacheWriter, CacheMap]>;
   prependedFilesCache: Promise<[CacheGetter, CacheWriter, CacheMap]>;
+  sweatmap: any;
   // @ts-ignore
   adapt: (block: string) => Promise<string>;
   // @ts-ignore
   atomize: (normalizedCss: string) => CssNode;
+  // @ts-ignore
+  classify: (atomizedAst: CssNode) => void;
 
   constructor (config: Config) {
     this.placeholder = config.placeholder || defaultPlaceholder;
@@ -39,8 +43,8 @@ class PreStyle {
 
     const [getter, writer, map] = await this.styleCache;
     //TODO: pull out map values and add to existing strings
-    // const mapValues = {};
-    // const sweatmap = new SweatMap({ cssSafe: true, existing_strings: { ...this.config.existingStrings, ...mapValues} });
+    const mapValues = {};
+    this.sweatmap = new SweatMap({ cssSafe: true, existing_strings: { ...this.config.existingStrings, ...mapValues} });
     const classWriter = () => {
       // write to sweatmap
       // writer();
@@ -56,6 +60,8 @@ class PreStyle {
 
       const atomizedAst = this.atomize(normalizedCss);
 
+      this.classify(atomizedAst);
+
 
 
 
@@ -69,5 +75,6 @@ class PreStyle {
 
 PreStyle.prototype.adapt = Adapt;
 PreStyle.prototype.atomize = Atomize;
+PreStyle.prototype.classify = Classify;
 
 export default PreStyle;
