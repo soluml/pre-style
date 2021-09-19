@@ -5,7 +5,7 @@ import type PreStyle from '.';
 const readFile = util.promisify(fs.readFile);
 
 function defaultAdapter(data: string, config?: Config) {
-  const Sass = require('sass'); // eslint-disable-line global-require @typescript-eslint/no-var-requires
+  const Sass = require('sass'); // eslint-disable-line
   const options: AdapterOptions = {data, outputStyle: 'compressed', ...config};
 
   return Sass.renderSync(options).css;

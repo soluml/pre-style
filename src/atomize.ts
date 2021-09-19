@@ -35,7 +35,9 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
         clone.prelude.children = [clone.prelude.children[p - 1]];
         clone.block.children = [clone.block.children[i - 1]];
 
-        placeholderFound(clone) && arr.push(clone);
+        if (placeholderFound(clone)) {
+          arr.push(clone);
+        }
       }
     }
 
