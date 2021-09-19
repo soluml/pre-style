@@ -1,10 +1,10 @@
-const PreStyle = require("../dist/src").default;
+const PreStyle = require('../dist/src').default;
 const config = {
-  prependedFiles: ["test/test.scss"],
+  prependedFiles: ['test/test.scss'],
 };
 
-describe.skip("Pre-Style", () => {
-  it("Default character limits:", async () => {
+describe('Pre-Style', () => {
+  it('Default character limits:', async () => {
     const PS = new PreStyle(config);
     const data = await PS.process(
       `
@@ -71,7 +71,7 @@ describe.skip("Pre-Style", () => {
     expect(
       Object.keys(data.classNames)
         .map((key) => data.classNames[key])
-        .join(" ")
-    ).toBe("A B C D E F G H I J K L M N O P Q R S T U");
+        .join(' ')
+    ).toBe('A B C D E F G H I J K L M N O P Q R S T U');
   });
 });
