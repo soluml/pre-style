@@ -48,26 +48,25 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
     if (!atrule.block?.children) return atRuleClones;
 
     atrule.block?.children.forEach((child) => {
+      let typeRule: any[] = [];
+
       switch (child.type) {
         case "Rule": {
-          processRule(child).forEach((newrule) => {
-            const clone = deepClone(atrule);
-
-            clone.block.children = [newrule];
-            atRuleClones.push(clone);
-          });
+          typeRule = processRule(child);
           break;
         }
         case "Atrule": {
-          processAtrule(child).forEach((newrule) => {
-            const clone = deepClone(atrule);
-
-            clone.block.children = [newrule];
-            atRuleClones.push(clone);
-          });
+          typeRule = processAtrule(child);
           break;
         }
       }
+
+      typeRule.forEach((newrule) => {
+        const clone = deepClone(atrule);
+
+        clone.block.children = [newrule];
+        atRuleClones.push(clone);
+      });
     });
 
     return atRuleClones;
