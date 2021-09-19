@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/src/index.js",
   "scripts": {
-    "lint": "eslint **/*.js bin/prestyle",
+    "lint": "eslint src/*.[tj]s test/*.[tj]s",
     "test": "jest",
     "start": "tsc --outDir dist"
   },
@@ -29,7 +29,16 @@
     "@types/mocha": "^9.0.0",
     "@types/ndjson": "^2.0.1",
     "@types/node": "^16.9.1",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-jest": "^24.4.2",
+    "eslint-plugin-prettier": "^4.0.0",
     "jest": "^27.2.0",
+    "prettier": "^2.4.1",
     "typescript": "^4.4.3"
   },
   "dependencies": {
