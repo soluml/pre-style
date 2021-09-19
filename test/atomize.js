@@ -100,46 +100,48 @@ describe("Atomizer", () => {
     );
   });
 
-  // it("Should handle classes correctly:", async () => {
-  //   const css = `
-  //     .extraClassFilter,
-  //     .${placeholder} {
-  //       column-count: 5;
-  //       color: white;
-  //     }
+  it("Should handle deeply nested @rules", () => {
+    const css = `
+      @media (max-width:600px) {
+        .${placeholder} {
+          color: white;
+          aspect-ratio: 1;
+        }
 
-  //     .${placeholder} .test {
-  //       --my-var: #fff;
-  //       width: var(--my-var, min(50vw, calc(10px * 2)));
-  //     }
+        @media (max-width: 600px), (min-width: 200px) {
+          .${placeholder}, .test {
+            background-color: yellow;
+            font-weight: normal;
+          }
 
-  //     @media (max-width:600px) {
-  //       .extraClassFilter,
-  //       .asd > .${placeholder}:hover {
-  //         height: 30px;
-  //         font-size: .9em;
-  //         color: rgba(255, 255, 255, .3)
-  //       }
+          @supports not ((text-align-last:justify) or (-moz-text-align-last:justify)) {
+            .${placeholder}:hover,
+            .${placeholder}:link,
+            .${placeholder}:active {
+              color: green;
+            }
 
-  //       @supports not ((text-align-last:justify)) {
-  //         .${placeholder} {
-  //           color: white;
-  //           text-align: center;
-  //         }
-  //       }
+            @container (min-width: 650px){
+              .card {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+              }
+            }
 
-  //       @supports not ((text-align-last:justify)) {
-  //         .another {
-  //           text-align: center
-  //         }
-  //       }
-  //     }
-  //   `;
+            @container (min-width: 650px){
+              .${placeholder} {
+                container-type: inline-size;
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+              }
+            }
+          }
+        }
+      }
+    `;
 
-  //   const atomizedCss = csstree.generate(Atomize(css));
-
-  //   expect(atomizedCss).toBe(
-  //     `.${placeholder}{color:white}.${placeholder}{column-count:5}.${placeholder} .test{width:var(--my-var, min(50vw, calc(10px * 2)))}.${placeholder} .test{--my-var: #fff}@media (max-width:600px){.asd>.${placeholder}:hover{color:rgba(255,255,255,.3)}.asd>.${placeholder}:hover{font-size:.9em}.asd>.${placeholder}:hover{height:30px}@supports not ((text-align-last:justify)){.${placeholder}{text-align:center}.${placeholder}{color:white}}}`
-  //   );
-  // });
+    expect(csstree.generate(Atomize(css))).toBe(
+      `@media (max-width:600px){.${placeholder}{aspect-ratio:1}}@media (max-width:600px){.${placeholder}{color:white}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){.${placeholder}{font-weight:normal}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){.${placeholder}{background-color:yellow}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){.${placeholder}:active{color:green}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){.${placeholder}:link{color:green}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){.${placeholder}:hover{color:green}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){@container (min-width: 650px){.${placeholder}{grid-template-columns:2fr 1fr}}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){@container (min-width: 650px){.${placeholder}{display:grid}}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){@container (min-width: 650px){.${placeholder}{container-type:inline-size}}}}}`
+    );
+  });
 });
