@@ -43,26 +43,32 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   };
 
   const processAtrule = (atrule: csstree.Atrule) => {
-    if (!atrule.block?.children) return [];
+    const atRuleClones: any[] = [];
 
-    const clone = deepClone(atrule);
-
-    clone.block.children = [];
+    if (!atrule.block?.children) return atRuleClones;
 
     atrule.block?.children.forEach((child) => {
       switch (child.type) {
-        case "Rule":
-          clone.block.children.push(processRule(child));
+        case "Rule": {
+          processRule(child).forEach((newrule) => {
+            const clone = deepClone(atrule);
+
+            clone.block.children = [newrule];
+            atRuleClones.push(clone);
+          });
           break;
-        case "Atrule":
-          clone.block.children.push(processAtrule(child));
+        }
+        case "Atrule": {
+          const clone = deepClone(atrule);
+
+          clone.block.children = [processAtrule(child)];
+          atRuleClones.push(clone);
           break;
+        }
       }
     });
 
-    clone.block.children = clone.block.children.flat();
-
-    return clone.block.children.length ? clone : [];
+    return atRuleClones;
   };
 
   // Process AST children

@@ -78,6 +78,26 @@ describe("Atomizer", () => {
     );
   });
 
+  it("Should handle nested @rules", () => {
+    const css = `
+      @media (max-width:600px) {
+        .${placeholder} {
+          fill: currentColor;
+          height: fit-content;
+        }
+
+        @supports not ((text-align-last:justify)) {
+          .${placeholder} {
+            color: white;
+            text-align: center;
+          }
+        }
+      }
+    `;
+
+    expect(csstree.generate(Atomize(css))).toBe(``);
+  });
+
   // it("Should handle classes correctly:", async () => {
   //   const css = `
   //     .extraClassFilter,
