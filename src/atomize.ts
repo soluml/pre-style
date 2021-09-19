@@ -59,10 +59,12 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
           break;
         }
         case "Atrule": {
-          const clone = deepClone(atrule);
+          processAtrule(child).forEach((newrule) => {
+            const clone = deepClone(atrule);
 
-          clone.block.children = [processAtrule(child)];
-          atRuleClones.push(clone);
+            clone.block.children = [newrule];
+            atRuleClones.push(clone);
+          });
           break;
         }
       }

@@ -95,7 +95,9 @@ describe("Atomizer", () => {
       }
     `;
 
-    expect(csstree.generate(Atomize(css))).toBe(``);
+    expect(csstree.generate(Atomize(css))).toBe(
+      `@media (max-width:600px){.${placeholder}{height:fit-content}}@media (max-width:600px){.${placeholder}{fill:currentColor}}@media (max-width:600px){@supports not ((text-align-last:justify)){.${placeholder}{text-align:center}}}@media (max-width:600px){@supports not ((text-align-last:justify)){.${placeholder}{color:white}}}`
+    );
   });
 
   // it("Should handle classes correctly:", async () => {
