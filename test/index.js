@@ -1,4 +1,5 @@
 const PreStyle = require('../dist/src').default;
+
 const config = {
   prependedFiles: ['test/test.scss'],
 };
