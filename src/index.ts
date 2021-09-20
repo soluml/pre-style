@@ -61,48 +61,49 @@ class PreStyle {
     this.placeholderRegex = new RegExp(this.placeholder, "g");
   }
 
-  async process(block: string, skipCheck?: boolean) {
+  async process(block: string, skipCache?: boolean) {
     if (~block.indexOf(this.placeholder)) {
       throw new Error(
         `The placeholder (${this.placeholder}) was used in the raw css. Please set the placeholder value in the config to a string you'd NEVER use in production!`
       );
     }
 
-    const [getter, writer] = await this.styleCache;
-    const serializedClasses = getter(block);
-    const parsedClassNames = serializedClasses
-      ? (JSON.parse(serializedClasses) as ClassifyResponse["classNames"])
-      : undefined;
+    if (skipCache) {
+      this.sweatmap = new SweatMap({
+        cssSafe: true,
+        existing_strings: {
+          ...this.config.existingStrings,
+        },
+      });
+    } else {
+      var [getter, writer] = await this.styleCache;
+      const serializedClassifyResponse = getter(block);
+      var classifyResponse = serializedClassifyResponse
+        ? (JSON.parse(serializedClassifyResponse) as ClassifyResponse)
+        : undefined;
 
-    this.sweatmap = new SweatMap({
-      cssSafe: true,
-      existing_strings: {
-        ...this.config.existingStrings,
-        ...parsedClassNames,
-      },
-    });
+      this.sweatmap = new SweatMap({
+        cssSafe: true,
+        existing_strings: {
+          ...this.config.existingStrings,
+          ...classifyResponse?.classNames,
+        },
+      });
+    }
 
-    if (skipCheck || !parsedClassNames) {
+    if (!classifyResponse) {
       const processedCss = await this.adapt(block);
 
       const normalizedCss = Normalize(processedCss);
 
       const atomizedAst = this.atomize(normalizedCss);
 
-      var { classNames, css } = this.classify(atomizedAst);
-      writer(block, JSON.stringify(classNames));
-    } else {
-      classNames = parsedClassNames;
+      classifyResponse = this.classify(atomizedAst);
 
-      css = Object.entries(parsedClassNames).reduce(
-        (acc, [rule, cls]) => acc + rule.replace(this.placeholderRegex, cls),
-        ""
-      );
+      writer?.(block, JSON.stringify(classifyResponse));
     }
 
-    console.log({ classNames, css });
-
-    return "";
+    return classifyResponse;
   }
 }
 
