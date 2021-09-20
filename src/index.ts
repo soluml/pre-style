@@ -70,16 +70,19 @@ class PreStyle {
 
     const [getter, writer] = await this.styleCache;
     const serializedClasses = getter(block);
+    const parsedClassNames = serializedClasses
+      ? (JSON.parse(serializedClasses) as ClassifyResponse["classNames"])
+      : undefined;
 
     this.sweatmap = new SweatMap({
       cssSafe: true,
       existing_strings: {
         ...this.config.existingStrings,
-        ...(serializedClasses ? JSON.parse(serializedClasses) : undefined),
+        ...parsedClassNames,
       },
     });
 
-    if (skipCheck || !serializedClasses) {
+    if (skipCheck || !parsedClassNames) {
       const processedCss = await this.adapt(block);
 
       const normalizedCss = Normalize(processedCss);
@@ -89,9 +92,15 @@ class PreStyle {
       var { classNames, css } = this.classify(atomizedAst);
       writer(block, JSON.stringify(classNames));
     } else {
+      classNames = parsedClassNames;
+
+      css = Object.entries(parsedClassNames).reduce(
+        (acc, [rule, cls]) => acc + rule.replace(this.placeholderRegex, cls),
+        ""
+      );
     }
 
-    console.log({ serializedClasses, classNames, css });
+    console.log({ classNames, css });
 
     return "";
   }
