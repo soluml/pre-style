@@ -1,9 +1,12 @@
-declare type Adapter = (css:string, config?: Config) => Promise<string | Error>;
+declare type Adapter = (
+  css: string,
+  config?: Config
+) => Promise<string | Error>;
 declare type AdapterOptions = { [x: string]: any };
 
 declare type CacheMap = Map<string, [string, number]>;
 declare type CacheArray = [string, [string, number]];
-declare type CacheGetter = (block: string) => string | undefined
+declare type CacheGetter = (block: string) => string | undefined;
 declare type CacheWriter = (block: string, classes: string) => void;
 
 declare interface Config {
@@ -20,10 +23,15 @@ declare interface Config {
   existingStrings?: {
     [x: string]: string;
   };
-  
+
   // A string used as a placeholder when processing. Should be a value NEVER used in any CSS
   placeholder?: string;
 
   // An array of paths to files each css block should be prepended with
   prependedFiles?: string[];
+}
+
+declare interface ClassifyResponse {
+  classNames: { [x: string]: string };
+  css: string;
 }

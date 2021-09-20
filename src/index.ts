@@ -1,21 +1,23 @@
-import type {CssNode} from 'css-tree';
-import findCacheDir from 'find-cache-dir';
-import SweatMap from 'sweatmap';
-import cache from './cache';
-import Adapt from './adapt';
-import Normalize from './normalize';
-import Atomize from './atomize';
-import Classify from './classify';
+import type { CssNode } from "css-tree";
+import findCacheDir from "find-cache-dir";
+import SweatMap from "sweatmap";
+import cache from "./cache";
+import Adapt from "./adapt";
+import Normalize from "./normalize";
+import Atomize from "./atomize";
+import Classify from "./classify";
 
-export const defaultPlaceholder = '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️';
+export const defaultPlaceholder = "✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️";
 
-const styleCacheFile = '/style.ndjson';
-const prependedFilesCacheFile = '/prependedFiles.ndjson';
+const styleCacheFile = "/style.ndjson";
+const prependedFilesCacheFile = "/prependedFiles.ndjson";
 
 class PreStyle {
   config: Config;
 
   placeholder: string;
+
+  placeholderRegex: RegExp;
 
   timestamp: number;
 
@@ -32,14 +34,16 @@ class PreStyle {
   atomize: (normalizedCss: string) => CssNode;
 
   // @ts-ignore
-  classify: (atomizedAst: CssNode) => void;
+  classify: (atomizedAst: CssNode) => ClassifyResponse;
 
   constructor(config: Config) {
-    this.placeholder = config.placeholder || defaultPlaceholder;
     this.config = config;
     this.timestamp = Date.now();
 
-    const cacheDir = findCacheDir({name: 'pre-style', create: true}) as string;
+    const cacheDir = findCacheDir({
+      name: "pre-style",
+      create: true,
+    }) as string;
     this.styleCache = cache(
       cacheDir + styleCacheFile,
       this.config.cache as number,
@@ -50,6 +54,9 @@ class PreStyle {
       this.config.cache as number,
       this.timestamp
     );
+
+    this.placeholder = config.placeholder || defaultPlaceholder;
+    this.placeholderRegex = new RegExp(this.placeholder, "g");
   }
 
   async process(block: string, skipCheck?: boolean) {
@@ -64,7 +71,7 @@ class PreStyle {
     const mapValues = {};
     this.sweatmap = new SweatMap({
       cssSafe: true,
-      existing_strings: {...this.config.existingStrings, ...mapValues},
+      existing_strings: { ...this.config.existingStrings, ...mapValues },
     });
     const classWriter = () => {
       // write to sweatmap
@@ -80,7 +87,9 @@ class PreStyle {
 
       const atomizedAst = this.atomize(normalizedCss);
 
-      this.classify(atomizedAst);
+      const { classNames, css } = this.classify(atomizedAst);
+
+      console.log({ classNames, css });
 
       // writer(block, 'aasdasdasd');
     }
