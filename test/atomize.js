@@ -1,10 +1,12 @@
-const csstree = require('css-tree');
-const placeholder = require('../dist/src').defaultPlaceholder;
-const Atomize = require('../dist/src/atomize').default.bind({placeholder});
+const csstree = require("css-tree");
+const placeholder = require("../dist/src").defaultPlaceholder;
+const Atomize = require("../dist/src/atomize").default.bind({ placeholder });
 
-describe('Atomizer', () => {
-  it('Should atomize rules', () => {
+describe("Atomizer", () => {
+  it("Should atomize rules", () => {
     const css = `
+      /* Comment */
+
       .${placeholder} {
         column-count: 5;
         color: white;
@@ -16,7 +18,7 @@ describe('Atomizer', () => {
     );
   });
 
-  it('Should disregard extraneous rules', () => {
+  it("Should disregard extraneous rules", () => {
     const css = `
       .extraClassFilter,
       .${placeholder} .test {
@@ -30,7 +32,7 @@ describe('Atomizer', () => {
     );
   });
 
-  it('Should disregard nested extraneous rules', () => {
+  it("Should disregard nested extraneous rules", () => {
     const css = `
       .extraClassFilter .hello,
       .${placeholder}::before {
@@ -49,7 +51,7 @@ describe('Atomizer', () => {
     );
   });
 
-  it('Should handle nested placeholder rules', () => {
+  it("Should handle nested placeholder rules", () => {
     const css = `
       .${placeholder},
       .another .${placeholder} .test {
@@ -62,7 +64,7 @@ describe('Atomizer', () => {
     );
   });
 
-  it('Should handle @rules', () => {
+  it("Should handle @rules", () => {
     const css = `
       @media (max-width:600px) {
         .asd > .${placeholder}:hover {
@@ -78,7 +80,7 @@ describe('Atomizer', () => {
     );
   });
 
-  it('Should handle nested @rules', () => {
+  it("Should handle nested @rules", () => {
     const css = `
       @media (max-width:600px) {
         .${placeholder} {
@@ -100,7 +102,7 @@ describe('Atomizer', () => {
     );
   });
 
-  it('Should handle deeply nested @rules', () => {
+  it("Should handle deeply nested @rules", () => {
     const css = `
       @media (max-width:600px) {
         .${placeholder} {

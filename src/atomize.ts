@@ -1,8 +1,8 @@
-import csstree from 'css-tree';
-import type PreStyle from '.';
+import csstree from "css-tree";
+import type PreStyle from ".";
 
 export interface AST {
-  type: 'StyleSheet';
+  type: "StyleSheet";
   loc: csstree.CssLocation | null;
   children: (csstree.Atrule | csstree.Rule)[];
 }
@@ -12,7 +12,7 @@ const deepClone = (obj: object) => JSON.parse(JSON.stringify(obj));
 export default function Atomize(this: PreStyle, normalizedCss: string) {
   const ast = csstree.parse(normalizedCss) as any as AST;
   const atomizedAst: AST = {
-    type: 'StyleSheet',
+    type: "StyleSheet",
     loc: null,
     children: [],
   };
@@ -53,11 +53,11 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
       let typeRule: any[] = [];
 
       switch (child.type) {
-        case 'Rule': {
+        case "Rule": {
           typeRule = processRule(child);
           break;
         }
-        case 'Atrule': {
+        case "Atrule": {
           typeRule = processAtrule(child);
           break;
         }
@@ -77,11 +77,14 @@ export default function Atomize(this: PreStyle, normalizedCss: string) {
   // Process AST children
   ast.children.forEach((child) => {
     switch (child.type) {
-      case 'Rule':
+      case "Rule":
         atomizedAst.children.push(processRule(child) as any);
         break;
-      case 'Atrule':
+      case "Atrule":
         atomizedAst.children.push(processAtrule(child) as any);
+        break;
+      default:
+        atomizedAst.children.push(child);
         break;
     }
   });
