@@ -7,4 +7,5 @@ yarn.lock
 node_modules
 docs
 tmp
-src/www
+test
+www
