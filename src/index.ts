@@ -1,5 +1,4 @@
 import type { CssNode } from "css-tree";
-import csstree from "css-tree";
 import findCacheDir from "find-cache-dir";
 import SweatMap from "sweatmap";
 import cache from "./cache";
@@ -7,7 +6,6 @@ import Adapt from "./adapt";
 import Normalize from "./normalize";
 import Atomize from "./atomize";
 import Classify from "./classify";
-import { addAbortSignal } from "stream";
 
 export const defaultPlaceholder = "✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️";
 
@@ -38,25 +36,25 @@ class PreStyle {
   // @ts-ignore
   classify: (atomizedAst: CssNode) => ClassifyResponse;
 
+  static cacheDirName = findCacheDir({
+    name: "pre-style",
+    create: true,
+    thunk: true,
+  }) as (k: string) => string;
+
   constructor(config: Config) {
     this.config = config;
     this.timestamp = Date.now();
-
-    const cacheDir = findCacheDir({
-      name: "pre-style",
-      create: true,
-    }) as string;
     this.styleCache = cache(
-      cacheDir + styleCacheFile,
+      PreStyle.cacheDirName(styleCacheFile),
       this.config.cache as number,
       this.timestamp
     );
     this.prependedFilesCache = cache(
-      cacheDir + prependedFilesCacheFile,
+      PreStyle.cacheDirName(prependedFilesCacheFile),
       this.config.cache as number,
       this.timestamp
     );
-
     this.placeholder = config.placeholder || defaultPlaceholder;
     this.placeholderRegex = new RegExp(this.placeholder, "g");
   }
