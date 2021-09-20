@@ -1,4 +1,5 @@
 import type { CssNode } from "css-tree";
+import csstree from "css-tree";
 import findCacheDir from "find-cache-dir";
 import SweatMap from "sweatmap";
 import cache from "./cache";
@@ -6,6 +7,7 @@ import Adapt from "./adapt";
 import Normalize from "./normalize";
 import Atomize from "./atomize";
 import Classify from "./classify";
+import { addAbortSignal } from "stream";
 
 export const defaultPlaceholder = "✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️";
 
@@ -21,9 +23,9 @@ class PreStyle {
 
   timestamp: number;
 
-  styleCache: Promise<[CacheGetter, CacheWriter, CacheMap]>;
+  styleCache: Promise<[CacheGetter, CacheWriter]>;
 
-  prependedFilesCache: Promise<[CacheGetter, CacheWriter, CacheMap]>;
+  prependedFilesCache: Promise<[CacheGetter, CacheWriter]>;
 
   sweatmap: any;
 
@@ -66,35 +68,32 @@ class PreStyle {
       );
     }
 
-    const [getter, writer, map] = await this.styleCache;
-    // TODO: pull out map values and add to existing strings
-    const mapValues = {};
+    const [getter, writer] = await this.styleCache;
+    const serializedClasses = getter(block);
+
     this.sweatmap = new SweatMap({
       cssSafe: true,
-      existing_strings: { ...this.config.existingStrings, ...mapValues },
+      existing_strings: {
+        ...this.config.existingStrings,
+        ...(serializedClasses ? JSON.parse(serializedClasses) : undefined),
+      },
     });
-    const classWriter = () => {
-      // write to sweatmap
-      // writer();
-    };
 
-    const classes = getter(block);
-
-    if (skipCheck || !classes) {
+    if (skipCheck || !serializedClasses) {
       const processedCss = await this.adapt(block);
 
       const normalizedCss = Normalize(processedCss);
 
       const atomizedAst = this.atomize(normalizedCss);
 
-      const { classNames, css } = this.classify(atomizedAst);
-
-      console.log({ classNames, css });
-
-      // writer(block, 'aasdasdasd');
+      var { classNames, css } = this.classify(atomizedAst);
+      writer(block, JSON.stringify(classNames));
+    } else {
     }
 
-    return classes;
+    console.log({ serializedClasses, classNames, css });
+
+    return "";
   }
 }
 

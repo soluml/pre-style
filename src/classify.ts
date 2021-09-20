@@ -10,12 +10,9 @@ export default function Classify(
   return (atomizedAst as any as AST).children.reduce(
     (acc: ClassifyResponse, child) => {
       const key = csstree.generate(child);
-
-      if (this.sweatmap.has(key)) {
-        return acc;
-      }
-
-      const value = this.sweatmap.set(key);
+      const value = this.sweatmap.has(key)
+        ? this.sweatmap.get(key)
+        : this.sweatmap.set(key);
 
       acc.classNames[key] = value;
       acc.css += key.replace(this.placeholderRegex, value);
