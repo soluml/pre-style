@@ -52,7 +52,7 @@
   "jest": {
     "rootDir": ".",
     "testMatch": [
-      "**/test/*.js"
+      "**/test/**/*.js"
     ]
   }
 }

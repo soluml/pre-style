@@ -1,11 +1,11 @@
-const PreStyle = require('../dist/src').default;
+const PreStyle = require('../../dist/src').default;
 
 const config = {
   prependedFiles: ['test/test.scss'],
 };
 
 describe('Pre-Style', () => {
-  it('Default character limits:', async () => {
+  it('Produces the proper classes:', async () => {
     const PS = new PreStyle(config);
     const data = await PS.process(
       `
@@ -68,7 +68,6 @@ describe('Pre-Style', () => {
       true
     );
 
-    console.log(data);
     expect(
       Object.keys(data.classNames)
         .map((key) => data.classNames[key])

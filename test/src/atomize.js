@@ -1,6 +1,6 @@
 const csstree = require('css-tree');
-const placeholder = require('../dist/src').defaultPlaceholder;
-const Atomize = require('../dist/src/atomize').default.bind({placeholder});
+const placeholder = require('../../dist/src').defaultPlaceholder;
+const Atomize = require('../../dist/src/atomize').default.bind({placeholder});
 
 describe('Atomizer', () => {
   it('Should atomize rules', () => {
