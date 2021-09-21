@@ -1,16 +1,16 @@
-import type { CssNode } from "css-tree";
-import findCacheDir from "find-cache-dir";
-import SweatMap from "sweatmap";
-import cache from "./cache";
-import Adapt from "./adapt";
-import Normalize from "./normalize";
-import Atomize from "./atomize";
-import Classify from "./classify";
+import type {CssNode} from 'css-tree';
+import findCacheDir from 'find-cache-dir';
+import SweatMap from 'sweatmap';
+import cache from './cache';
+import Adapt from './adapt';
+import Normalize from './normalize';
+import Atomize from './atomize';
+import Classify from './classify';
 
-export const defaultPlaceholder = "✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️";
+export const defaultPlaceholder = '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ✝️';
 
-const styleCacheFile = "/style.ndjson";
-const prependedFilesCacheFile = "/prependedFiles.ndjson";
+const styleCacheFile = '/style.ndjson';
+const prependedFilesCacheFile = '/prependedFiles.ndjson';
 
 class PreStyle {
   config: Config;
@@ -37,7 +37,7 @@ class PreStyle {
   classify: (atomizedAst: CssNode) => ClassifyResponse;
 
   static cacheDirName = findCacheDir({
-    name: "pre-style",
+    name: 'pre-style',
     create: true,
     thunk: true,
   }) as (k: string) => string;
@@ -56,7 +56,7 @@ class PreStyle {
       this.timestamp
     );
     this.placeholder = config.placeholder || defaultPlaceholder;
-    this.placeholderRegex = new RegExp(this.placeholder, "g");
+    this.placeholderRegex = new RegExp(this.placeholder, 'g');
   }
 
   async process(block: string, skipCache?: boolean) {

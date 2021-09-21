@@ -1,8 +1,8 @@
-import fs from "fs";
-import ndjson from "ndjson";
+import fs from 'fs';
+import ndjson from 'ndjson';
 
 const THIRTY_DAYS = 2.592e9;
-const encoding = "utf8";
+const encoding = 'utf8';
 const cleanBlock = (str: string) => str.trim();
 
 export default function cache(
@@ -14,10 +14,10 @@ export default function cache(
   const arr: CacheArray[] = [];
   let map: CacheMap;
 
-  stream.on("data", (line) => {
-    fs.appendFile(filepath, line, { encoding }, (err) => {
+  stream.on('data', (line) => {
+    fs.appendFile(filepath, line, {encoding}, (err) => {
       if (err) {
-        throw new Error("Could not write to cache");
+        throw new Error('Could not write to cache');
       }
     });
   });
@@ -45,10 +45,10 @@ export default function cache(
       fs.createReadStream(filepath, encoding)
         .pipe(ndjson.parse())
         .on(
-          "data",
+          'data',
           (d: CacheArray) => d[1][1] > timestamp - cacheTime && arr.push(d)
         )
-        .on("end", done);
+        .on('end', done);
     } else {
       done();
     }

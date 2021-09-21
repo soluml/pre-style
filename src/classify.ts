@@ -1,13 +1,14 @@
-import type { CssNode } from "css-tree";
-import csstree from "css-tree";
-import type PreStyle from ".";
-import type { AST } from "./atomize";
+import type {CssNode} from 'css-tree';
+import csstree from 'css-tree';
+import ATP from 'at-rule-packer';
+import type PreStyle from '.';
+import type {AST} from './atomize';
 
 export default function Classify(
   this: PreStyle,
   atomizedAst: CssNode
 ): ClassifyResponse {
-  return (atomizedAst as any as AST).children.reduce(
+  const res = (atomizedAst as any as AST).children.reduce(
     (acc: ClassifyResponse, child) => {
       const key = csstree.generate(child);
       const value = this.sweatmap.has(key)
@@ -21,7 +22,11 @@ export default function Classify(
     },
     {
       classNames: {},
-      css: "",
+      css: '',
     }
   );
+
+  res.css = ATP(res.css);
+
+  return res;
 }

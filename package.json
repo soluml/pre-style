@@ -41,6 +41,7 @@
     "typescript": "^4.4.3"
   },
   "dependencies": {
+    "at-rule-packer": "^0.0.2",
     "css-tree": "^1.1.3",
     "csso": "^4.2.0",
     "find-cache-dir": "^3.3.2",
@@ -50,6 +51,8 @@
   },
   "jest": {
     "rootDir": ".",
-    "testMatch": ["**/test/*.js"]
+    "testMatch": [
+      "**/test/*.js"
+    ]
   }
 }

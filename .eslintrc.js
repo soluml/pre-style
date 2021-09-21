@@ -33,6 +33,8 @@ module.exports = {
     'eol-last': 1,
     'func-style': ['error', 'declaration', {allowArrowFunctions: true}],
     semi: 1,
+    'vars-on-top': 1,
+    'block-scoped-var': 0,
     'no-var': 0,
     'no-plusplus': 0,
     'func-names': 0,
