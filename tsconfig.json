@@ -17,5 +17,5 @@
     "declaration": true,
     "typeRoots": ["node_modules/@types"]
   },
-  "include": ["src", "types"]
+  "include": ["src", "bin", "types"]
 }
