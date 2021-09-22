@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable no-console */
+
 import fs from 'fs';
 import path from 'path';
 import {Command} from 'commander';
@@ -14,4 +16,9 @@ program
   .option('-c, --config [file]', 'source config file')
   .parse(process.argv);
 
-console.log(program.opts());
+try {
+  //
+} catch (e) {
+  console.log(chalk.underline.red('Error:'));
+  console.log(e);
+}
