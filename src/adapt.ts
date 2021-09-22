@@ -6,7 +6,11 @@ const readFile = util.promisify(fs.readFile);
 
 function defaultAdapter(data: string, config?: Config) {
   const Sass = require('sass'); // eslint-disable-line
-  const options: AdapterOptions = {data, outputStyle: 'compressed', ...config};
+  const options: AdapterOptions = {
+    data,
+    outputStyle: 'compressed',
+    ...config?.adapterOptions,
+  };
 
   return Sass.renderSync(options).css;
 }
@@ -41,6 +45,7 @@ export default async function Adapt(
   const adapter = this.config.adapter || defaultAdapter;
 
   return adapter(
-    `${prependedFilesString} .${this.placeholder} { ${classblock.toString()} }`
+    `${prependedFilesString} .${this.placeholder} { ${classblock.toString()} }`,
+    this.config.adapterOptions
   );
 }

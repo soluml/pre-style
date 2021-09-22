@@ -2,7 +2,7 @@ declare type Adapter = (
   css: string,
   config?: Config
 ) => Promise<string | Error>;
-declare type AdapterOptions = { [x: string]: any };
+declare type AdapterOptions = {[x: string]: any};
 
 declare type CacheMap = Map<string, [string, number]>;
 declare type CacheArray = [string, [string, number]];
@@ -32,6 +32,6 @@ declare interface Config {
 }
 
 declare interface ClassifyResponse {
-  classNames: { [x: string]: string };
+  classNames: {[x: string]: string};
   css: string;
 }
