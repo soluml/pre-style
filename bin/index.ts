@@ -14,6 +14,11 @@ program
     require(path.resolve(process.cwd(), 'package.json')).version //eslint-disable-line
   )
   .option('-c, --config [file]', 'source config file')
+  .option('-o, --outputFile [file]', 'generated .css file')
+  .option(
+    '-d, --destination <dir>',
+    'directory to put files processed by PreStyle'
+  )
   .parse(process.argv);
 
 try {

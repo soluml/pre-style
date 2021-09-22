@@ -9,6 +9,13 @@ declare type CacheArray = [string, [string, number]];
 declare type CacheGetter = (block: string) => string | undefined;
 declare type CacheWriter = (block: string, classes: string) => void;
 
+declare enum Quotes {
+  Double = '"',
+  Single = `'`,
+  Backtick = '`',
+  None = '',
+}
+
 declare interface Config {
   // A function that processes the initial blob of CSS to be passed down into the normalizer
   adapter?: Adapter;
@@ -29,6 +36,16 @@ declare interface Config {
 
   // An array of paths to files each css block should be prepended with
   prependedFiles?: string[];
+
+  // Destination
+
+  // outputFile
+
+  // Namespaces
+  namespaces?: string[];
+
+  // Output quote type
+  quotes?: Quotes;
 }
 
 declare interface ClassifyResponse {
