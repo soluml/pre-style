@@ -3,6 +3,9 @@ logs
 *.log
 npm-debug.log*
 
+# ide
+.vscode
+
 # Dependency directories
 node_modules
 _prestyle.scss

@@ -21,6 +21,7 @@ module.exports = {
     '@typescript-eslint/ban-ts-comment': [0],
     '@typescript-eslint/no-var-requires': [0],
     '@typescript-eslint/ban-types': [0],
+    '@typescript-eslint/no-unused-vars': [2],
     'prettier/prettier': 2, // Means error
     'ordered-imports': [0],
     'object-literal-sort-keys': [0],
@@ -39,7 +40,10 @@ module.exports = {
     'no-plusplus': 0,
     'func-names': 0,
     'consistent-return': 1,
+    'global-require': 1,
     'import/no-unresolved': 0,
+    'import/no-dynamic-require': 0,
     'import/extensions': 0,
+    'import/prefer-default-export': 1,
   },
 };
