@@ -10,7 +10,7 @@ function cli(args) {
 
 describe('Bin', () => {
   it('Gets the options', async () => {
-    const result = cli(['-c', 'configfile.js']);
+    const result = cli(['-c', 'test/bin/prestyle.config.js']);
     const stdout = result.stdout.toString();
     const stderr = result.stderr.toString();
 
