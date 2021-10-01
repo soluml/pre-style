@@ -1,3 +1,4 @@
+import type {Config, CacheGetter, CacheWriter, ClassifyResponse} from 'global';
 import type {CssNode} from 'css-tree';
 import findCacheDir from 'find-cache-dir';
 import SweatMap from 'sweatmap';

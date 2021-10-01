@@ -1,3 +1,4 @@
+import type {ClassifyResponse} from 'global';
 import type {CssNode} from 'css-tree';
 import csstree from 'css-tree';
 import ATP from 'at-rule-packer';

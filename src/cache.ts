@@ -1,3 +1,4 @@
+import type {CacheGetter, CacheWriter, CacheArray, CacheMap} from 'global';
 import fs from 'fs';
 import ndjson from 'ndjson';
 

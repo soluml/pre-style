@@ -6,9 +6,10 @@
 import path from 'path';
 import {Command} from 'commander';
 import chalk from 'chalk';
+import type {OutputConfig, Config} from 'global';
 import Quotes from './quotes';
 
-export const defaultConfig: OutputConfig = {
+export const defaultConfig = {
   quotes: Quotes.Double,
   filename: 'prestyle.css',
 };
@@ -27,21 +28,22 @@ program
 try {
   const options = program.opts();
   const configFileLocation = options.config.trim();
-  const config = {
+  const config: OutputConfig = {
     ...defaultConfig,
-    ...(configFileLocation ? require(path.resolve(configFileLocation)) : {}),
+    ...((configFileLocation
+      ? require(path.resolve(configFileLocation))
+      : {}) as Config),
   };
 
-  console.log({config});
+  if (!options.destination) {
+    throw new Error(
+      `You ${chalk.bold('MUST')} specify a destination with ${chalk.italic(
+        '-d'
+      )} or ${chalk.italic('--destination')}.`
+    );
+  }
 
-  // if (!config.outputFile) {
-  //   throw new Error(
-  //     `You ${chalk.bold('MUST')} specify an output file with ${chalk.italic(
-  //       '-o'
-  //     )}, ${chalk.italic('--outputFile')}, or via the config file.`
-  //   );
-  // }
-  //
+  console.log({config});
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);

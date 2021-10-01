@@ -1,3 +1,4 @@
+import type {Config, AdapterOptions} from 'global';
 import fs from 'fs';
 import util from 'util';
 import type PreStyle from '.';
