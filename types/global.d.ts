@@ -1,8 +1,8 @@
-import type Quotes from '../bin/quotes';
+import Quotes from '../bin/quotes';
 
 declare type Adapter = (
   css: string,
-  config?: Config
+  config?: Config // eslint-disable-line no-use-before-define
 ) => Promise<string | Error>;
 declare type AdapterOptions = {[x: string]: any};
 
@@ -31,12 +31,17 @@ declare interface Config {
 
   // An array of paths to files each css block should be prepended with
   prependedFiles?: string[];
+}
 
+declare interface OutputConfig extends Config {
   // Namespaces
   namespaces?: string[];
 
   // Output quote type
   quotes?: Quotes;
+
+  // Output File Name
+  filename?: string;
 }
 
 declare interface ClassifyResponse {

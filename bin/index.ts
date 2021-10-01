@@ -2,30 +2,34 @@
 
 /* eslint-disable no-console */
 
-import fs from 'fs';
+// import fs from 'fs';
 import path from 'path';
 import {Command} from 'commander';
 import chalk from 'chalk';
 import Quotes from './quotes';
 
+export const defaultConfig: OutputConfig = {
+  quotes: Quotes.Double,
+  filename: 'prestyle.css',
+};
+
 const program = new Command();
 
 program
-  .version(
-    require(path.resolve(process.cwd(), 'package.json')).version //eslint-disable-line
-  )
+  .version(require(path.resolve(process.cwd(), 'package.json')).version)
   .option('-c, --config [file]', 'source config file')
-  .option('-o, --output [file]', 'generated .css file')
+  .option(
+    '-d, --destination <dir>',
+    'directory to put files processed by PreStyle'
+  )
   .parse(process.argv);
 
 try {
   const options = program.opts();
   const configFileLocation = options.config.trim();
   const config = {
-    quotes: Quotes.Double,
-    ...(configFileLocation
-      ? require(path.resolve(configFileLocation)) // eslint-disable-line
-      : {}),
+    ...defaultConfig,
+    ...(configFileLocation ? require(path.resolve(configFileLocation)) : {}),
   };
 
   console.log({config});
