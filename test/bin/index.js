@@ -1,10 +1,18 @@
 const path = require('path');
 const {spawnSync} = require('child_process');
+const {cacheDirName} = require('../../dist/src').default;
 
 function cli(args) {
   return spawnSync('node', [
     path.resolve(__dirname, '../../dist/bin/index'),
-    args.join(' '),
+    'sourcefiles',
+    'sourcefiles2',
+    'sourcefiles',
+    ...args,
+    // `-c`,
+    // `test/bin/prestyle.config.json`,
+    // `-d`,
+    // `home/solum/projects/pre-style/node_modules/.cache/pre-style/files`,
   ]);
 }
 
@@ -37,12 +45,13 @@ describe('Bin', () => {
   });
 
   it('Gets the options', async () => {
-    const result = cli(['-c', configPath]);
+    const result = cli(['-c', configPath, '-d', cacheDirName('files')]);
     const stdout = result.stdout.toString();
     const stderr = result.stderr.toString();
 
     console.log({stdout, stderr});
 
-    expect(result.code).toBe(1);
+    expect(stderr).toBe('');
+    expect(stdout.includes('Error: ')).toBe(false);
   });
 });

@@ -26,16 +26,15 @@ program
   .parse(process.argv);
 
 try {
-  const options = program.opts();
-  const configFileLocation = options.config.trim();
+  const {destination, ...options} = program.opts();
   const config: OutputConfig = {
     ...defaultConfig,
-    ...((configFileLocation
-      ? require(path.resolve(configFileLocation))
+    ...((options.config
+      ? require(path.resolve(options.config))
       : {}) as Config),
   };
 
-  if (!options.destination) {
+  if (!destination) {
     throw new Error(
       `You ${chalk.bold('MUST')} specify a destination with ${chalk.italic(
         '-d'
@@ -43,7 +42,13 @@ try {
     );
   }
 
-  console.log({config});
+  const sourceDirectories = [...new Set(program.args)];
+
+  console.log({
+    config,
+    destination,
+    sourceDirectories,
+  });
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
