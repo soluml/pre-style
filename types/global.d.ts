@@ -1,4 +1,4 @@
-import Quotes from '../bin/quotes';
+import Quotes from '../bin/utils/quotes';
 
 declare type Adapter = (
   css: string,

@@ -7,11 +7,6 @@ import PreStyle from '../src';
 
 const readFile = util.promisify(fs.readFile);
 
-interface MatchObject {
-  match: string;
-  ps: Promise<ClassifyResponse>;
-}
-
 export default async function Process(
   config: OutputConfig,
   destination: string,
@@ -29,33 +24,35 @@ export default async function Process(
   }
 
   const fullcss = '';
-  const blocks = (
-    await Promise.all(
-      files.map((file) => {
-        console.log(`Processing file ${chalk.cyan(file)}`);
-        return readFile(file);
-      })
+  const blocks = await Promise.all(
+    (
+      await Promise.all(
+        files.map((file) => {
+          console.log(`Processing file ${chalk.cyan(file)}`);
+          return readFile(file);
+        })
+      )
     )
-  )
-    .map((fileContents) => {
-      const fc = fileContents.toString();
-      const mbs: MatchObject[] = [];
+      .map((fileContents) => {
+        const fc = fileContents.toString();
+        const mbs: Promise<ClassifyResponse & {match: string}>[] = [];
 
-      config.namespaces?.forEach((ns) => {
-        const re = new RegExp(`${ns}\`\\s*([\\s\\S]+?)\\s*\``, 'gmi');
-        let matches;
+        config.namespaces?.forEach((ns) => {
+          const re = new RegExp(`${ns}\`\\s*([\\s\\S]+?)\\s*\``, 'gmi');
+          let matches;
 
-        while ((matches = re.exec(fc)) !== null) {
-          const {0: match, 1: css} = matches;
+          while ((matches = re.exec(fc)) !== null) {
+            const {0: match, 1: css} = matches;
 
-          mbs.push({match, ps: PS.process(css)});
-        }
-      });
+            mbs.push(PS.process(css).then((data) => ({match, ...data})));
+          }
+        });
 
-      return mbs;
-    })
-    .flat()
-    .filter((f) => f);
+        return mbs;
+      })
+      .flat()
+      .filter((f) => f)
+  );
 
   console.log({blocks, fullcss});
 }

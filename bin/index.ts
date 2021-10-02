@@ -7,14 +7,8 @@ import path from 'path';
 import {Command} from 'commander';
 import chalk from 'chalk';
 import type {OutputConfig, Config} from 'global';
-import Quotes from './quotes';
+import defaultConfig from './utils/defaultConfig';
 import processFiles from './process';
-
-export const defaultConfig = {
-  quotes: Quotes.Double,
-  filename: 'prestyle.css',
-  namespaces: ['prestyle', 'styled', 'css'],
-};
 
 const program = new Command();
 

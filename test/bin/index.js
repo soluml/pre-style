@@ -35,7 +35,7 @@ describe('Bin', () => {
     expect(stderr).toBe('');
     expect(
       stdout.includes(
-        'Error: You MUST specify a destination with -d or --destination.'
+        'Error: You \x1B[1mMUST\x1B[22m specify a destination with \x1B[3m-d\x1B[23m or \x1B[3m--destination\x1B[23m.'
       )
     ).toBe(true);
   });
