@@ -1,14 +1,15 @@
-import type {OutputConfig} from 'global';
+import type {OutputConfig, ClassifyResponse} from 'global';
 import fs from 'fs';
 import util from 'util';
 import chalk from 'chalk';
 import glob from 'fast-glob';
+import PreStyle from '../src';
 
 const readFile = util.promisify(fs.readFile);
 
 interface MatchObject {
-  full: string;
-  css: string;
+  match: string;
+  ps: Promise<ClassifyResponse>;
 }
 
 export default async function Process(
@@ -17,6 +18,7 @@ export default async function Process(
   sourceDirectories: string[]
 ) {
   const files = await glob(sourceDirectories);
+  const PS = new PreStyle(config);
 
   if (!files.length) {
     throw new Error(
@@ -26,6 +28,7 @@ export default async function Process(
     );
   }
 
+  const fullcss = '';
   const blocks = (
     await Promise.all(
       files.map((file) => {
@@ -39,14 +42,13 @@ export default async function Process(
       const mbs: MatchObject[] = [];
 
       config.namespaces?.forEach((ns) => {
-        // Initially, look for PreStyle`...` type blocks
         const re = new RegExp(`${ns}\`\\s*([\\s\\S]+?)\\s*\``, 'gmi');
-
         let matches;
 
         while ((matches = re.exec(fc)) !== null) {
-          const {0: full, 1: css} = matches;
-          mbs.push({full, css});
+          const {0: match, 1: css} = matches;
+
+          mbs.push({match, ps: PS.process(css)});
         }
       });
 
@@ -55,5 +57,5 @@ export default async function Process(
     .flat()
     .filter((f) => f);
 
-  console.log({blocks});
+  console.log({blocks, fullcss});
 }
