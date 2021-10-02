@@ -1,5 +1,5 @@
 const processFiles = require('../../dist/bin/process').default;
-const defaultConfig = require('../../dist/bin/utils/defaultConfig');
+const defaultConfig = require('../../dist/bin/utils/defaultConfig').default;
 const {cacheDirName} = require('../../dist/src').default;
 
 const config = {
