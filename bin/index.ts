@@ -44,6 +44,10 @@ try {
 
   const sourceDirectories = [...new Set(program.args)];
 
+  if (!sourceDirectories.length) {
+    throw new Error(`No source files or folders were specified.`);
+  }
+
   console.log({
     config,
     destination,
