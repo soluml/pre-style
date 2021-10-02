@@ -2,9 +2,9 @@
   "name": "pre-style",
   "version": "2.0.0",
   "description": "",
-  "main": "dist/src/index.js",
+  "main": "./dist/src/index.js",
   "bin": {
-    "prestyle": "dist/bin/index.js"
+    "prestyle": "./dist/bin/index.js"
   },
   "scripts": {
     "lint": "eslint src/*.[tj]s test/*.[tj]s",
@@ -25,6 +25,9 @@
     "url": "http://soluml.com"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=12.0.0"
+  },
   "devDependencies": {
     "@types/css-tree": "^1.0.6",
     "@types/csso": "^4.2.0",
@@ -49,6 +52,7 @@
     "commander": "^8.2.0",
     "css-tree": "^1.1.3",
     "csso": "^4.2.0",
+    "fast-glob": "^3.2.7",
     "find-cache-dir": "^3.3.2",
     "ndjson": "^2.0.0",
     "sass": "^1.39.2",

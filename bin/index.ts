@@ -8,10 +8,12 @@ import {Command} from 'commander';
 import chalk from 'chalk';
 import type {OutputConfig, Config} from 'global';
 import Quotes from './quotes';
+import processFiles from './process';
 
 export const defaultConfig = {
   quotes: Quotes.Double,
   filename: 'prestyle.css',
+  namespaces: ['prestyle', 'styled', 'css'],
 };
 
 const program = new Command();
@@ -48,11 +50,7 @@ try {
     throw new Error(`No source files or folders were specified.`);
   }
 
-  console.log({
-    config,
-    destination,
-    sourceDirectories,
-  });
+  processFiles(config, destination, sourceDirectories);
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);

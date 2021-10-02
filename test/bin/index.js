@@ -12,7 +12,8 @@ function cli(args, sources = []) {
 
 describe('Bin', () => {
   const configPath = 'test/bin/prestyle.config.json';
-  const cacheDir = cacheDirName('files');
+  const cacheDir = cacheDirName('testfiles');
+  const sources = ['test/bin/html/*'];
 
   it('Fails with no config file', async () => {
     const config = 'test/bin/bob.config.json';
@@ -51,10 +52,7 @@ describe('Bin', () => {
   });
 
   it('Can write the files!', async () => {
-    const result = cli(
-      ['-c', configPath, '-d', cacheDir],
-      ['source', 'source2.js']
-    );
+    const result = cli(['-c', configPath, '-d', cacheDir], sources);
     const stdout = result.stdout.toString();
     const stderr = result.stderr.toString();
 
