@@ -6,6 +6,10 @@
   "bin": {
     "prestyle": "./dist/bin/index.js"
   },
+  "files": [
+    "README.md",
+    "dist/**/*"
+  ],
   "scripts": {
     "lint": "eslint src/*.ts bin/*.ts test/**/*.js",
     "pretest": "npm run lint && tsc --outDir dist",
