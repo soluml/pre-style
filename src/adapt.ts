@@ -1,9 +1,6 @@
 import type {Config, AdapterOptions} from 'global';
 import fs from 'fs';
-import util from 'util';
 import type PreStyle from '.';
-
-const readFile = util.promisify(fs.readFile);
 
 function defaultAdapter(data: string, config?: Config) {
   const Sass = require('sass'); // eslint-disable-line
@@ -32,7 +29,7 @@ export default async function Adapt(
           let file = getFile(filePath);
 
           if (!file) {
-            file = await readFile(filePath, 'utf8');
+            file = await fs.promises.readFile(filePath, 'utf8');
             writeFile(filePath, file);
           }
 

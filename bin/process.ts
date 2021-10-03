@@ -1,16 +1,12 @@
 import type {OutputConfig, ClassifyResponse} from 'global';
 import path from 'path';
 import fs from 'fs';
-import util from 'util';
 import chalk from 'chalk';
 import glob from 'fast-glob';
 import ATP from 'at-rule-packer';
 import PreStyle from '../src';
 import Noramlize from '../src/normalize';
 import defaultConfig from './utils/defaultConfig';
-
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
 
 export default async function Process(
   config: OutputConfig,
@@ -28,6 +24,9 @@ export default async function Process(
   // Clear Cache
   await PreStyle.clearCache();
 
+  // Create destination directory
+  await fs.promises.mkdir(destination, {recursive: true});
+
   const files = await glob(sourceDirectories);
   const PS = new PreStyle(config);
 
@@ -39,16 +38,13 @@ export default async function Process(
     );
   }
 
-  // Create destination directory
-  await fs.promises.mkdir(destination, {recursive: true});
-
   const [writes, fullcss] = (
     await Promise.all(
       (
         await Promise.all(
           files.map((file) => {
             console.log(`Processing file ${chalk.cyan(file)}`);
-            return readFile(file).then((fileContents) => ({
+            return fs.promises.readFile(file).then((fileContents) => ({
               file,
               fileContents,
             }));
@@ -96,7 +92,7 @@ export default async function Process(
       });
 
       acc[0].push(
-        writeFile(fileDest, newFileContents).then(() => {
+        fs.promises.writeFile(fileDest, newFileContents).then(() => {
           console.log(
             `${chalk.green('File')} ${chalk.cyan(`${fileDest}`)} ${chalk.green(
               'created.'
@@ -115,13 +111,15 @@ export default async function Process(
 
   await Promise.all(
     writes.concat([
-      writeFile(path.resolve(cssFileDest), finalizedCss).then(() => {
-        console.log(
-          `${chalk.green('File')} ${chalk.cyan(`${cssFileDest}`)} ${chalk.green(
-            'created.'
-          )}`
-        );
-      }),
+      fs.promises
+        .writeFile(path.resolve(cssFileDest), finalizedCss)
+        .then(() => {
+          console.log(
+            `${chalk.green('File')} ${chalk.cyan(
+              `${cssFileDest}`
+            )} ${chalk.green('created.')}`
+          );
+        }),
     ])
   );
 }
