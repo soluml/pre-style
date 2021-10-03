@@ -1,7 +1,7 @@
 const PreStyle = require('../../dist/src').default;
 
 const config = {
-  prependedFiles: ['test/test.scss'],
+  prependedFiles: ['test/src/test.scss'],
 };
 
 describe('Pre-Style', () => {

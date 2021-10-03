@@ -7,7 +7,6 @@ import path from 'path';
 import {Command} from 'commander';
 import chalk from 'chalk';
 import type {OutputConfig, Config} from 'global';
-import defaultConfig from './utils/defaultConfig';
 import processFiles from './process';
 
 const program = new Command();
@@ -24,7 +23,6 @@ program
 try {
   const {destination, ...options} = program.opts();
   const config: OutputConfig = {
-    ...defaultConfig,
     ...((options.config
       ? require(path.resolve(options.config))
       : {}) as Config),

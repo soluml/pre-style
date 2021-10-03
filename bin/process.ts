@@ -14,13 +14,16 @@ export default async function Process(
   config: OutputConfig,
   destination: string,
   sourceDirectories: string[]
-) {
+): Promise<void> {
   /* eslint-disable no-param-reassign */
   config = {
     ...defaultConfig,
     ...config,
   };
   /* eslint-enable no-param-reassign */
+
+  // Clear Cache
+  await PreStyle.clearCache();
 
   const files = await glob(sourceDirectories);
   const PS = new PreStyle(config);
@@ -104,7 +107,7 @@ export default async function Process(
     [[], '']
   );
 
-  const cssFileDest = path.resolve(destination, config.filename);
+  const cssFileDest = path.resolve(destination, config.filename as string);
 
   await Promise.all(
     writes.concat([

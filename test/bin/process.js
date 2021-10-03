@@ -8,7 +8,7 @@ describe('Bin Process', () => {
   const sourceDirectories = ['test/bin/html/*'];
 
   it('Can process', async () => {
-    const stuff = await processFiles(config, destination, sourceDirectories);
+    await processFiles(config, destination, sourceDirectories);
 
     expect(true).toBe(true);
   });

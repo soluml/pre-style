@@ -1,5 +1,7 @@
 import type {Config, CacheGetter, CacheWriter, ClassifyResponse} from 'global';
 import type {CssNode} from 'css-tree';
+import fs from 'fs';
+import util from 'util';
 import findCacheDir from 'find-cache-dir';
 import SweatMap from 'sweatmap';
 import cache from './cache';
@@ -12,6 +14,7 @@ export const defaultPlaceholder = '✝️ⓈⓞⓛⓘⒹⓔⓞⒼⓛⓞⓡⓘⓐ
 
 const styleCacheFile = '/style.ndjson';
 const prependedFilesCacheFile = '/prependedFiles.ndjson';
+const rmDir = util.promisify(fs.rm);
 
 class PreStyle {
   config: Config;
@@ -42,6 +45,8 @@ class PreStyle {
     create: true,
     thunk: true,
   }) as (k: string) => string;
+
+  static clearCache = () => rmDir(PreStyle.cacheDirName(''), {recursive: true});
 
   constructor(config: Config) {
     this.config = config;
