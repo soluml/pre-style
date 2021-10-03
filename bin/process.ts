@@ -4,7 +4,9 @@ import fs from 'fs';
 import util from 'util';
 import chalk from 'chalk';
 import glob from 'fast-glob';
+import ATP from 'at-rule-packer';
 import PreStyle from '../src';
+import Noramlize from '../src/normalize';
 import defaultConfig from './utils/defaultConfig';
 
 const readFile = util.promisify(fs.readFile);
@@ -19,6 +21,7 @@ export default async function Process(
   config = {
     ...defaultConfig,
     ...config,
+    cache: Infinity, // Since we're starting fresh every process
   };
   /* eslint-enable no-param-reassign */
 
@@ -108,10 +111,11 @@ export default async function Process(
   );
 
   const cssFileDest = path.resolve(destination, config.filename as string);
+  const finalizedCss = Noramlize(ATP(fullcss));
 
   await Promise.all(
     writes.concat([
-      writeFile(path.resolve(cssFileDest), fullcss).then(() => {
+      writeFile(path.resolve(cssFileDest), finalizedCss).then(() => {
         console.log(
           `${chalk.green('File')} ${chalk.cyan(`${cssFileDest}`)} ${chalk.green(
             'created.'
