@@ -8,10 +8,10 @@
   },
   "scripts": {
     "lint": "eslint src/*.ts bin/*.ts test/**/*.js",
+    "pretest": "npm run lint && tsc --outDir dist",
     "test:src": "jest src",
     "test:bin": "jest bin",
-    "test": "npm run test:src && npm run test:bin",
-    "start": "tsc --outDir dist"
+    "test": "npm run test:src && npm run test:bin"
   },
   "repository": {
     "type": "git",
