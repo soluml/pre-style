@@ -35,13 +35,13 @@ declare interface Config {
 
 declare interface OutputConfig extends Config {
   // Namespaces
-  namespaces?: string[];
+  namespaces: string[];
 
   // Output quote type
-  quotes?: Quotes;
+  quotes: Quotes;
 
   // Output File Name
-  filename?: string;
+  filename: string;
 }
 
 declare interface ClassifyResponse {

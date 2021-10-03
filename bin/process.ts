@@ -1,17 +1,27 @@
 import type {OutputConfig, ClassifyResponse} from 'global';
+import path from 'path';
 import fs from 'fs';
 import util from 'util';
 import chalk from 'chalk';
 import glob from 'fast-glob';
 import PreStyle from '../src';
+import defaultConfig from './utils/defaultConfig';
 
 const readFile = util.promisify(fs.readFile);
+const writeFile = util.promisify(fs.writeFile);
 
 export default async function Process(
   config: OutputConfig,
   destination: string,
   sourceDirectories: string[]
 ) {
+  /* eslint-disable no-param-reassign */
+  config = {
+    ...defaultConfig,
+    ...config,
+  };
+  /* eslint-enable no-param-reassign */
+
   const files = await glob(sourceDirectories);
   const PS = new PreStyle(config);
 
@@ -23,36 +33,88 @@ export default async function Process(
     );
   }
 
-  const fullcss = '';
-  const blocks = await Promise.all(
-    (
-      await Promise.all(
-        files.map((file) => {
-          console.log(`Processing file ${chalk.cyan(file)}`);
-          return readFile(file);
-        })
+  // Create destination directory
+  await fs.promises.mkdir(destination, {recursive: true});
+
+  const [writes, fullcss] = (
+    await Promise.all(
+      (
+        await Promise.all(
+          files.map((file) => {
+            console.log(`Processing file ${chalk.cyan(file)}`);
+            return readFile(file).then((fileContents) => ({
+              file,
+              fileContents,
+            }));
+          })
+        )
       )
+        .map(({file, fileContents}) => {
+          const fc = fileContents.toString();
+          const mbs: Promise<ClassifyResponse & {match: string}>[] = [];
+
+          config.namespaces?.forEach((ns) => {
+            const re = new RegExp(`${ns}\`\\s*([\\s\\S]+?)\\s*\``, 'gmi');
+            let matches;
+
+            while ((matches = re.exec(fc)) !== null) {
+              const {0: match, 1: css} = matches;
+
+              mbs.push(PS.process(css).then((data) => ({match, ...data})));
+            }
+          });
+
+          return Promise.all(mbs).then((changes) => ({
+            file,
+            fileContents: fc,
+            changes,
+          }));
+        })
+        .flat()
+        .filter((f) => f)
     )
-      .map((fileContents) => {
-        const fc = fileContents.toString();
-        const mbs: Promise<ClassifyResponse & {match: string}>[] = [];
+  ).reduce(
+    (acc: [Promise<void>[], string], {file, fileContents, changes}) => {
+      const fileDest = path.resolve(destination, path.basename(file));
+      let newFileContents = fileContents;
 
-        config.namespaces?.forEach((ns) => {
-          const re = new RegExp(`${ns}\`\\s*([\\s\\S]+?)\\s*\``, 'gmi');
-          let matches;
+      changes.forEach(({match, classNames, css}) => {
+        newFileContents = newFileContents.replace(
+          match,
+          `${config.quotes}${Object.values(classNames).join(' ')}${
+            config.quotes
+          }`
+        );
 
-          while ((matches = re.exec(fc)) !== null) {
-            const {0: match, 1: css} = matches;
+        acc[1] += css;
+      });
 
-            mbs.push(PS.process(css).then((data) => ({match, ...data})));
-          }
-        });
+      acc[0].push(
+        writeFile(fileDest, newFileContents).then(() => {
+          console.log(
+            `${chalk.green('File')} ${chalk.cyan(`${fileDest}`)} ${chalk.green(
+              'created.'
+            )}`
+          );
+        })
+      );
 
-        return mbs;
-      })
-      .flat()
-      .filter((f) => f)
+      return acc;
+    },
+    [[], '']
   );
 
-  console.log({blocks, fullcss});
+  const cssFileDest = path.resolve(destination, config.filename);
+
+  await Promise.all(
+    writes.concat([
+      writeFile(path.resolve(cssFileDest), fullcss).then(() => {
+        console.log(
+          `${chalk.green('File')} ${chalk.cyan(`${cssFileDest}`)} ${chalk.green(
+            'created.'
+          )}`
+        );
+      }),
+    ])
+  );
 }

@@ -1,11 +1,7 @@
 const processFiles = require('../../dist/bin/process').default;
-const defaultConfig = require('../../dist/bin/utils/defaultConfig').default;
 const {cacheDirName} = require('../../dist/src').default;
 
-const config = {
-  ...defaultConfig,
-  ...require('./prestyle.config.json'),
-};
+const config = require('./prestyle.config.json');
 
 describe('Bin Process', () => {
   const destination = cacheDirName('testfiles');
