@@ -7,7 +7,7 @@
     "prestyle": "./dist/bin/index.js"
   },
   "scripts": {
-    "lint": "eslint src/*.[tj]s test/*.[tj]s",
+    "lint": "eslint src/*.ts bin/*.ts test/**/*.js",
     "test:src": "jest src",
     "test:bin": "jest bin",
     "test": "npm run test:src && npm run test:bin",
