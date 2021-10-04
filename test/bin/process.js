@@ -22,7 +22,7 @@ describe('Bin Process', () => {
     const cssfile = csstree.parse(files.pop());
 
     expect(files[0].includes('<body class="A B C D"></body>')).toBe(true);
-    expect(files[1].includes('<body class="E A B C F D"></body>')).toBe(true);
+    expect(files[1].includes('<body class="A B C D E F"></body>')).toBe(true);
     expect(cssfile.children.getSize()).toBe(6);
   });
 });

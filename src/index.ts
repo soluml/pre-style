@@ -3,6 +3,7 @@ import type {CssNode} from 'css-tree';
 import fs from 'fs';
 import findCacheDir from 'find-cache-dir';
 import SweatMap from 'sweatmap';
+import type Quotes from '../bin/utils/quotes';
 import cache from './cache';
 import Adapt from './adapt';
 import Normalize from './normalize';
@@ -47,9 +48,14 @@ class PreStyle {
   static clearCache = async (): Promise<void> => {
     const path = PreStyle.cacheDirName('');
 
-    await fs.promises.rmdir(path, {recursive: true});
+    await fs.promises.rm(path, {recursive: true});
     await fs.promises.mkdir(path);
   };
+
+  static getClassString = (
+    classNames: ClassifyResponse['classNames'],
+    quotes: Quotes
+  ): string => quotes + Object.values(classNames).sort().join(' ') + quotes;
 
   constructor(config: Config) {
     this.config = config;

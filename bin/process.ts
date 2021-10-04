@@ -4,6 +4,7 @@ import fs from 'fs';
 import chalk from 'chalk';
 import glob from 'fast-glob';
 import ATP from 'at-rule-packer';
+import type Quotes from './utils/quotes';
 import PreStyle from '../src';
 import Noramlize from '../src/normalize';
 import defaultConfig from './utils/defaultConfig';
@@ -83,9 +84,7 @@ export default async function Process(
       changes.forEach(({match, classNames, css}) => {
         newFileContents = newFileContents.replace(
           match,
-          `${config.quotes}${Object.values(classNames).join(' ')}${
-            config.quotes
-          }`
+          PreStyle.getClassString(classNames, config.quotes as Quotes)
         );
 
         acc[1] += css;
