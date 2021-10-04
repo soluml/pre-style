@@ -44,8 +44,12 @@ class PreStyle {
     thunk: true,
   }) as (k: string) => string;
 
-  static clearCache = (): Promise<void> =>
-    fs.promises.rm(PreStyle.cacheDirName(''), {recursive: true});
+  static clearCache = async (): Promise<void> => {
+    const path = PreStyle.cacheDirName('');
+
+    await fs.promises.rmdir(path, {recursive: true});
+    await fs.promises.mkdir(path);
+  };
 
   constructor(config: Config) {
     this.config = config;
