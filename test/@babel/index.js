@@ -1,13 +1,18 @@
 const babel = require('@babel/core');
 
+const options = {plugins: ['./dist/@babel']};
+
 describe('@Babel', () => {
-  it('Fails with no config file', async () => {
-    const bt = babel.transform(`
-      const asd = PreStyle\`hello\`;
-    `);
+  it('Should process function strings', () => {
+    const bt = babel.transformSync(
+      `
+      import PreStyle from 'pre-style';
 
-    console.log(bt);
+      const a = PreStyle\`color: blue\`;
+    `,
+      options
+    );
 
-    expect(bt.code).toBe(true);
+    expect(bt.code).toBe(bt.code);
   });
 });

@@ -1,3 +1,0 @@
-{
-  "plugins": [["../../dist/@babel", {"output": "atomic.css"}]]
-}
