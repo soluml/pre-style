@@ -12,9 +12,21 @@ describe('@Babel', () => {
     `,
       {plugins}
     );
-    console.log(bt.code);
     expect(bt.code).toBe(bt.code);
   });
+
+  // it('Should support common js imports too', () => {
+  //   const bt = babel.transformSync(
+  //     `
+  //     const PreStyle = require('pre-style');
+
+  //     const a = PreStyle\`color: red\`;
+  //   `,
+  //     {plugins}
+  //   );
+  //   console.log(bt.code);
+  //   expect(bt.code).toBe(bt.code);
+  // });
 
   it('Should handle new namespaces function strings', () => {
     const bt = babel.transformSync(
@@ -25,8 +37,6 @@ describe('@Babel', () => {
     `,
       {plugins: [plugins.concat({importAsCSS: true})]}
     );
-
-    console.log(bt.code);
 
     expect(bt.code).toBe(bt.code);
   });
