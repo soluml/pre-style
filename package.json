@@ -16,7 +16,7 @@
     "pretest": "npm run lint && npm run build",
     "test:src": "jest src",
     "test:bin": "jest bin",
-    "test:@babel": "jest @babel",
+    "test:@babel": "jest @babel --no-cache",
     "test": "npm run test:src && npm run test:bin && npm run test:@babel",
     "prestart": "npm run build",
     "start": "node dist/bin www/404.html -d docs"
