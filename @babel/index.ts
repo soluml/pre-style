@@ -1,4 +1,4 @@
-import type {OutputConfig} from 'global';
+import type {OutputConfig, BabelConfig} from 'global';
 import type {TaggedTemplateExpression, ImportDeclaration} from '@babel/types';
 import type {NodePath} from '@babel/traverse';
 import defaultConfig from '../bin/utils/defaultConfig';
@@ -6,11 +6,12 @@ import PreStyle from '../src';
 
 const projectName = 'pre-style';
 
-export default function BabelPluginPreStyle(babel: any, config: OutputConfig) {
+export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
   /* eslint-disable no-param-reassign */
   config = {...defaultConfig, ...config};
   /* eslint-enable no-param-reassign */
 
+  let {namespaces = []} = config;
   const t = babel.types;
   const PS = new PreStyle(config);
 
@@ -23,10 +24,13 @@ export default function BabelPluginPreStyle(babel: any, config: OutputConfig) {
 
   return {
     pre() {
-      console.log('PRE', {config});
+      // console.log('PRE');
     },
     post() {
-      console.log('POST');
+      // Reset Namespaces between files
+      namespaces = config.namespaces || [];
+
+      // console.log('POST');
     },
     visitor: {
       ImportDeclaration(path: NodePath<ImportDeclaration>) {
@@ -40,7 +44,13 @@ export default function BabelPluginPreStyle(babel: any, config: OutputConfig) {
 
         const newNameSpace = localSpecifier?.local.name;
 
-        if (newNameSpace) config.namespaces!.push(newNameSpace);
+        if (newNameSpace) namespaces!.push(newNameSpace);
+
+        if (config.importAsCSS) {
+          console.log('REPLACE WITH CSS');
+        } else {
+          console.log('REPLACE WITH NOTHING');
+        }
 
         // console.log(
         //   'Import',
@@ -51,7 +61,7 @@ export default function BabelPluginPreStyle(babel: any, config: OutputConfig) {
       TaggedTemplateExpression(path: NodePath<TaggedTemplateExpression>) {
         // Namespaces are case insensitive
         if (
-          !config.namespaces!.some(
+          !namespaces!.some(
             (ns) =>
               ns.toLowerCase() === (path.node.tag as any).name.toLowerCase()
           )

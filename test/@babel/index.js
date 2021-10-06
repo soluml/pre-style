@@ -1,16 +1,16 @@
 const babel = require('@babel/core');
 
-const options = {plugins: ['./dist/@babel']};
+const plugins = ['./dist/@babel'];
 
 describe('@Babel', () => {
   it('Should process function strings', () => {
     const bt = babel.transformSync(
       `
-      import PreStyle, {Other} from 'pre-style';
+      import PreStyle, {Ignored} from 'pre-style';
 
       const a = PreStyle\`color: blue\`;
     `,
-      options
+      {plugins}
     );
 
     expect(bt.code).toBe(bt.code);
@@ -23,7 +23,7 @@ describe('@Babel', () => {
 
       const a = SomethingCustom\`color: green\`;
     `,
-      options
+      {plugins: [plugins.concat({importAsCSS: true})]}
     );
 
     expect(bt.code).toBe(bt.code);

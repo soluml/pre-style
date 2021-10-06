@@ -44,6 +44,21 @@ declare interface OutputConfig extends Config {
   filename?: string;
 }
 
+declare interface BabelConfig extends Config {
+  // Namespaces
+  namespaces?: string[];
+
+  // Output File Name
+  filename?: string;
+
+  // Have Babel change the `pre-style` import to reference the filename css file
+  // i.e.
+  // import PreStyle from 'pre-style';
+  // becomes
+  // import 'prestyle.css';
+  importAsCSS?: boolean;
+}
+
 declare interface ClassifyResponse {
   classNames: {[x: string]: string};
   css: string;
