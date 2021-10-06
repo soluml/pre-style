@@ -12,6 +12,7 @@
     "strict": true,
     "target": "ES2016",
     "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
