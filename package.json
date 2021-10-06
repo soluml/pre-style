@@ -16,7 +16,8 @@
     "pretest": "npm run lint && npm run build",
     "test:src": "jest src",
     "test:bin": "jest bin",
-    "test": "npm run test:src && npm run test:bin",
+    "test:@babel": "jest @babel",
+    "test": "npm run test:src && npm run test:bin && npm run test:@babel",
     "prestart": "npm run build",
     "start": "node dist/bin www/404.html -d docs"
   },
@@ -38,6 +39,7 @@
     "node": ">=12.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.15.5",
     "@types/css-tree": "^1.0.6",
     "@types/csso": "^4.2.0",
     "@types/find-cache-dir": "^3.2.1",

@@ -17,5 +17,5 @@
     "declaration": true,
     "typeRoots": ["node_modules/@types"]
   },
-  "include": ["src", "bin", "types"]
+  "include": ["src", "bin", "@babel", "types"]
 }
