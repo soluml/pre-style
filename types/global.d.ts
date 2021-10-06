@@ -33,24 +33,23 @@ declare interface Config {
   prependedFiles?: string[];
 }
 
-declare interface OutputConfig extends Config {
+interface OutputConfig {
   // Namespaces
   namespaces?: string[];
 
-  // Output quote type
-  quotes?: Quotes;
+  // Destination of output CSS file
+  destination?: string;
 
   // Output File Name
   filename?: string;
 }
 
-declare interface BabelConfig extends Config {
-  // Namespaces
-  namespaces?: string[];
+declare interface BINConfig extends Config, OutputConfig {
+  // Output quote type
+  quotes?: Quotes;
+}
 
-  // Output File Name
-  filename?: string;
-
+declare interface BabelConfig extends Config, OutputConfig {
   // Have Babel change the `pre-style` import to reference the filename css file
   // i.e.
   // import PreStyle from 'pre-style';

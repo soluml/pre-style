@@ -1,6 +1,7 @@
-import type {OutputConfig, BabelConfig} from 'global';
+import type {BabelConfig} from 'global';
 import type {TaggedTemplateExpression, ImportDeclaration} from '@babel/types';
 import type {NodePath} from '@babel/traverse';
+import path from 'path';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
 
@@ -8,15 +9,23 @@ const projectName = 'pre-style';
 
 export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
   /* eslint-disable no-param-reassign */
-  config = {...defaultConfig, ...config};
+  config = {
+    destination: PreStyle.cacheDirName(''),
+    ...defaultConfig,
+    ...config,
+  };
   /* eslint-enable no-param-reassign */
 
   let {namespaces = []} = config;
   const t = babel.types;
   const PS = new PreStyle(config);
+  const cssFileDest = path.resolve(
+    config.destination as string,
+    config.filename as string
+  );
 
   function callPreStyle(
-    path: NodePath<TaggedTemplateExpression>,
+    nodepath: NodePath<TaggedTemplateExpression>,
     cssblock: string
   ) {
     console.log({cssblock});
@@ -33,12 +42,12 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
       // console.log('POST');
     },
     visitor: {
-      ImportDeclaration(path: NodePath<ImportDeclaration>) {
-        const {value: moduleName} = path.node.source;
+      ImportDeclaration(nodepath: NodePath<ImportDeclaration>) {
+        const {value: moduleName} = nodepath.node.source;
 
         if (moduleName !== projectName) return;
 
-        const localSpecifier = path.node.specifiers.find(
+        const localSpecifier = nodepath.node.specifiers.find(
           (specifier) => !!specifier.local
         );
 
@@ -47,29 +56,26 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
         if (newNameSpace) namespaces!.push(newNameSpace);
 
         if (config.importAsCSS) {
-          console.log('REPLACE WITH CSS');
-        } else {
-          console.log('REPLACE WITH NOTHING');
-        }
+          const importNode = babel.template.statement
+            .ast`import "${cssFileDest}";`;
 
-        // console.log(
-        //   'Import',
-        //   // Object.keys(path.node),
-        //   JSON.stringify(path.node, null, 2)
-        // );
+          nodepath.replaceWith(importNode);
+        } else {
+          nodepath.remove();
+        }
       },
-      TaggedTemplateExpression(path: NodePath<TaggedTemplateExpression>) {
+      TaggedTemplateExpression(nodepath: NodePath<TaggedTemplateExpression>) {
         // Namespaces are case insensitive
         if (
           !namespaces!.some(
             (ns) =>
-              ns.toLowerCase() === (path.node.tag as any).name.toLowerCase()
+              ns.toLowerCase() === (nodepath.node.tag as any).name.toLowerCase()
           )
         ) {
           return;
         }
 
-        callPreStyle(path, path.node.quasi.quasis[0].value.raw);
+        callPreStyle(nodepath, nodepath.node.quasi.quasis[0].value.raw);
       },
     },
   };

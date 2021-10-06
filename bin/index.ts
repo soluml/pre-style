@@ -6,7 +6,7 @@
 import path from 'path';
 import {Command} from 'commander';
 import chalk from 'chalk';
-import type {OutputConfig, Config} from 'global';
+import type {BINConfig, Config} from 'global';
 import processFiles from './process';
 
 const program = new Command();
@@ -21,12 +21,16 @@ program
   .parse(process.argv);
 
 try {
-  const {destination, ...options} = program.opts();
-  const config: OutputConfig = {
+  let {destination, ...options} = program.opts();
+  const config: BINConfig = {
     ...((options.config
       ? require(path.resolve(options.config))
       : {}) as Config),
   };
+
+  if (!destination) {
+    destination = config.destination;
+  }
 
   if (!destination) {
     throw new Error(

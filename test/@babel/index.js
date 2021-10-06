@@ -12,7 +12,7 @@ describe('@Babel', () => {
     `,
       {plugins}
     );
-
+    console.log(bt.code);
     expect(bt.code).toBe(bt.code);
   });
 
@@ -25,6 +25,8 @@ describe('@Babel', () => {
     `,
       {plugins: [plugins.concat({importAsCSS: true})]}
     );
+
+    console.log(bt.code);
 
     expect(bt.code).toBe(bt.code);
   });

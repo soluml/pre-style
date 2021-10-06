@@ -1,4 +1,4 @@
-import type {OutputConfig, ClassifyResponse} from 'global';
+import type {BINConfig, ClassifyResponse} from 'global';
 import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
@@ -10,7 +10,7 @@ import Noramlize from '../src/normalize';
 import defaultConfig from './utils/defaultConfig';
 
 export default async function Process(
-  config: OutputConfig,
+  config: BINConfig,
   destination: string,
   sourceDirectories: string[]
 ): Promise<void> {
