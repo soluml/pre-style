@@ -16,7 +16,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
   };
   /* eslint-enable no-param-reassign */
 
-  let {namespaces = []} = config;
+  let namespaces: string[];
   const t = babel.types;
   const PS = new PreStyle(config);
   const cssFileDest = path.resolve(
@@ -33,12 +33,11 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
 
   return {
     pre() {
+      // Reset Namespaces between files
+      namespaces = [...(config.namespaces || [])];
       // console.log('PRE');
     },
     post() {
-      // Reset Namespaces between files
-      namespaces = config.namespaces || [];
-
       // console.log('POST');
     },
     visitor: {
