@@ -7,7 +7,7 @@ describe('@Babel', () => {
     const bt = babel.transformSync(
       `
 import PreStyle, {Ignored} from 'pre-style';
-const a = PreStyle\`color: red\`;
+const a = PreStyle\`font-size: 1em\`;
       `,
       {plugins}
     );
@@ -18,13 +18,19 @@ const a = PreStyle\`color: red\`;
     const bt = babel.transformSync(
       `
 import SomethingCustom from 'pre-style';
-const a = SomethingCustom\`color: white\`;
+const a = SomethingCustom\`font-size: 1em;color: white;\`;
+const b = SomethingCustom\`font-size: 1em;color: white;\`;
       `,
       {plugins: [plugins.concat({importAsCSS: true})]}
     );
 
     expect(bt.code.trim().startsWith('import')).toBe(true);
-    expect(bt.code.trim().endsWith('const a = "A";')).toBe(true);
+
+    expect(
+      bt.code.trim().endsWith(`const a = "A B";
+const b = "A B";`)
+    ).toBe(true);
+
     expect(bt.code.includes('prestyle.css')).toBe(true);
   });
 
