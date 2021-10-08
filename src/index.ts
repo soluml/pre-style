@@ -3,7 +3,7 @@ import type {CssNode} from 'css-tree';
 import fs from 'fs';
 import findCacheDir from 'find-cache-dir';
 import SweatMap from 'sweatmap';
-import type Quotes from '../bin/utils/quotes';
+import Quotes from '../bin/utils/quotes';
 import cache from './cache';
 import Adapt from './adapt';
 import Normalize from './normalize';
@@ -54,7 +54,7 @@ class PreStyle {
 
   static getClassString = (
     classNames: ClassifyResponse['classNames'],
-    quotes: Quotes
+    quotes = Quotes.None
   ): string => quotes + Object.values(classNames).sort().join(' ') + quotes;
 
   constructor(config: Config) {

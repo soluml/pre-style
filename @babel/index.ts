@@ -1,4 +1,4 @@
-import type {BabelConfig} from 'global';
+import type {BabelConfig, ClassifyResponse} from 'global';
 import type {TaggedTemplateExpression, ImportDeclaration} from '@babel/types';
 import type {NodePath} from '@babel/traverse';
 import path from 'path';
@@ -28,7 +28,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
 
   return {
     pre() {
-      // Reset Namespaces between files
+      // Reset Namespaces
       namespaces = [...(config.namespaces || [])];
       blocks = [];
     },
@@ -53,9 +53,18 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
 
       if (err) throw new Error(err);
 
-      const ublocks = data.stdout?.toString();
+      const css = JSON.parse(data.stdout.toString()).reduce(
+        (acc: string, cf: ClassifyResponse, i: number) => {
+          blocks[i].replaceWith(
+            t.StringLiteral(PreStyle.getClassString(cf.classNames))
+          );
 
-      console.log({ublocks});
+          return acc + cf.css;
+        },
+        ''
+      );
+
+      console.log({css});
     },
     visitor: {
       ImportDeclaration(nodepath: NodePath<ImportDeclaration>) {

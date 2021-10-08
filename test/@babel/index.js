@@ -6,26 +6,26 @@ describe('@Babel', () => {
   it('Should process function strings with supplied namespace', () => {
     const bt = babel.transformSync(
       `
-      import PreStyle, {Ignored} from 'pre-style';
-
-      const a = PreStyle\`color: red\`;
-    `,
+import PreStyle, {Ignored} from 'pre-style';
+const a = PreStyle\`color: red\`;
+      `,
       {plugins}
     );
-    expect(bt.code).toBe(bt.code);
+    expect(bt.code.trim()).toBe('const a = "A";');
   });
 
   it('Should handle new namespaces function strings', () => {
     const bt = babel.transformSync(
       `
-      import SomethingCustom from 'pre-style';
-
-      const a = SomethingCustom\`color: white\`;
-    `,
+import SomethingCustom from 'pre-style';
+const a = SomethingCustom\`color: white\`;
+      `,
       {plugins: [plugins.concat({importAsCSS: true})]}
     );
 
-    expect(bt.code).toBe(bt.code);
+    expect(bt.code.trim().startsWith('import')).toBe(true);
+    expect(bt.code.trim().endsWith('const a = "A";')).toBe(true);
+    expect(bt.code.includes('prestyle.css')).toBe(true);
   });
 
   it('Should handle not handle non namespaces function strings', () => {
