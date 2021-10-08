@@ -38,6 +38,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
       const data = spawnSync('node', [path.resolve(__dirname, 'child.js')], {
         timeout: 60000,
         // stdio: 'inherit', // <- For debugging ... will prevent stdout
+        cwd: process.cwd(),
         env: {
           ...process.env,
           ...{
@@ -53,7 +54,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
 
       if (err) throw new Error(err);
 
-      const css = JSON.parse(data.stdout.toString()).reduce(
+      const css = JSON.parse(data.stdout?.toString()).reduce(
         (acc: string, cf: ClassifyResponse, i: number) => {
           blocks[i].replaceWith(
             t.StringLiteral(PreStyle.getClassString(cf.classNames))
