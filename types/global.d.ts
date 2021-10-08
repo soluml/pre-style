@@ -3,7 +3,7 @@ import Quotes from '../bin/utils/quotes';
 declare type Adapter = (
   css: string,
   config?: Config // eslint-disable-line no-use-before-define
-) => Promise<string | Error>;
+) => Promise<string>;
 declare type AdapterOptions = {[x: string]: any};
 
 declare type CacheMap = Map<string, [string, number]>;
@@ -13,7 +13,7 @@ declare type CacheWriter = (block: string, classes: string) => void;
 
 declare interface Config {
   // A function that processes the initial blob of CSS to be passed down into the normalizer
-  adapter?: Adapter;
+  adapter?: string;
 
   // Adapter options object that is merged in
   adapterOptions?: AdapterOptions;

@@ -39,6 +39,7 @@ module.exports = {
     'no-var': 0,
     'no-plusplus': 0,
     'func-names': 0,
+    'prefer-const': 1,
     'consistent-return': 1,
     'global-require': 1,
     'import/no-unresolved': 0,

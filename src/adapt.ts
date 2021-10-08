@@ -1,9 +1,10 @@
-import type {Config, AdapterOptions} from 'global';
+/* eslint-disable global-require */
+import type {Config, AdapterOptions, Adapter} from 'global';
 import fs from 'fs';
 import type PreStyle from '.';
 
 function defaultAdapter(data: string, config?: Config) {
-  const Sass = require('sass'); // eslint-disable-line
+  const Sass = require('sass');
   const options: AdapterOptions = {
     data,
     outputStyle: 'compressed',
@@ -40,7 +41,9 @@ export default async function Adapt(
   }
 
   // Pass the CSS string to the adapter
-  const adapter = this.config.adapter || defaultAdapter;
+  const adapter: Adapter = this.config.adapter
+    ? require(this.config.adapter)
+    : defaultAdapter;
 
   return adapter(
     `${prependedFilesString} .${this.placeholder} { ${classblock.toString()} }`,

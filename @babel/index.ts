@@ -2,6 +2,7 @@ import type {BabelConfig} from 'global';
 import type {TaggedTemplateExpression, ImportDeclaration} from '@babel/types';
 import type {NodePath} from '@babel/traverse';
 import path from 'path';
+import {spawnSync} from 'child_process';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
 
@@ -17,28 +18,44 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
   /* eslint-enable no-param-reassign */
 
   let namespaces: string[];
+  let blocks: NodePath<TaggedTemplateExpression>[];
   const t = babel.types;
-  const PS = new PreStyle(config);
+
   const cssFileDest = path.resolve(
     config.destination as string,
     config.filename as string
   );
 
-  function callPreStyle(
-    nodepath: NodePath<TaggedTemplateExpression>,
-    cssblock: string
-  ) {
-    console.log({cssblock});
-  }
-
   return {
     pre() {
       // Reset Namespaces between files
       namespaces = [...(config.namespaces || [])];
-      // console.log('PRE');
+      blocks = [];
     },
     post() {
-      // console.log('POST');
+      if (!blocks.length) return;
+
+      const data = spawnSync('node', [path.resolve(__dirname, 'child.js')], {
+        timeout: 60000,
+        // stdio: 'inherit', // <- For debugging ... will prevent stdout
+        env: {
+          ...process.env,
+          ...{
+            cssblocks: JSON.stringify(
+              blocks.map((np) => np.node.quasi.quasis[0].value.raw)
+            ),
+            config: JSON.stringify(config),
+          },
+        },
+      });
+
+      const err = data.stderr?.toString();
+
+      if (err) throw new Error(err);
+
+      const ublocks = data.stdout?.toString();
+
+      console.log({ublocks});
     },
     visitor: {
       ImportDeclaration(nodepath: NodePath<ImportDeclaration>) {
@@ -64,17 +81,15 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
         }
       },
       TaggedTemplateExpression(nodepath: NodePath<TaggedTemplateExpression>) {
-        // Namespaces are case insensitive
         if (
-          !namespaces!.some(
+          // Namespaces are case insensitive
+          namespaces!.some(
             (ns) =>
               ns.toLowerCase() === (nodepath.node.tag as any).name.toLowerCase()
           )
         ) {
-          return;
+          blocks.push(nodepath);
         }
-
-        callPreStyle(nodepath, nodepath.node.quasi.quasis[0].value.raw);
       },
     },
   };
