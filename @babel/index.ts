@@ -2,7 +2,9 @@ import type {BabelConfig, ClassifyResponse} from 'global';
 import type {TaggedTemplateExpression, ImportDeclaration} from '@babel/types';
 import type {NodePath} from '@babel/traverse';
 import path from 'path';
+import fs from 'fs';
 import {spawnSync} from 'child_process';
+import chalk from 'chalk';
 import ATP from 'at-rule-packer';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
@@ -71,7 +73,15 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
         ''
       );
 
-      console.log({css: Noramlize(ATP(css))});
+      const finalizedCss = Noramlize(ATP(css));
+
+      fs.writeFileSync(cssFileDest, finalizedCss);
+
+      console.log(
+        `${chalk.green('File')} ${chalk.cyan(cssFileDest)} ${chalk.green(
+          'created.'
+        )}`
+      );
     },
     visitor: {
       ImportDeclaration(nodepath: NodePath<ImportDeclaration>) {
