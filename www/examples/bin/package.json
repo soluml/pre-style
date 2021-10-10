@@ -1,8 +1,11 @@
 {
   "name": "pre-style-bin",
   "private": true,
+  "config": {
+    "outputdir": "./tmp"
+  },
   "scripts": {
-    "pre-start": "node ../../../dist/bin/index -d \"./tmp\" layouts/* pages/* partials/*",
+    "prestart": "rimraf $npm_package_config_outputdir && node ../../../dist/bin/index -d \"$npm_package_config_outputdir\" layouts/* pages/* partials/*",
     "start": "node index"
   },
   "author": {
@@ -13,5 +16,8 @@
   "license": "MIT",
   "dependencies": {
     "liquidjs": "^9.28.0"
+  },
+  "devDependencies": {
+    "rimraf": "^3.0.2"
   }
 }

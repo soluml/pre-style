@@ -1,10 +1,11 @@
 const fs = require('fs');
 const {Liquid} = require('liquidjs');
+const {outputdir} = require('./package.json').config;
 
 const engine = new Liquid({
   extname: '.liquid',
   globals: {title: 'LiquidJS Demo'},
-  root: __dirname,
+  root: `${__dirname}/${outputdir}`,
   layouts: './layouts',
   partials: './partials',
 });
