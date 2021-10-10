@@ -3,15 +3,16 @@
   "private": true,
   "config": {
     "outputdir": "./tmp",
+    "docsdir": "../../../docs",
     "pages": [
       "index",
       "404"
     ]
   },
   "scripts": {
-    "prestart": "rimraf $npm_package_config_outputdir && node ../../../dist/bin/index -d \"$npm_package_config_outputdir\" layouts/* pages/* partials/*",
+    "prestart": "rimraf $npm_package_config_outputdir && node \"../../../dist/bin/index\" -d \"$npm_package_config_outputdir\" layouts/* pages/* partials/*",
     "start": "node index",
-    "poststart": ""
+    "poststart": "copyfiles -u 1 \"./../../*\" \"$npm_package_config_docsdir/test\" && copyfiles -u 1 \"$npm_package_config_outputdir/prestyle.css\" \"$npm_package_config_docsdir\""
   },
   "author": {
     "name": "Benjamin Solum",

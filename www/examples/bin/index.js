@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const {Liquid} = require('liquidjs');
-const {outputdir, pages} = require('./package.json').config;
+const {outputdir, docsdir, pages} = require('./package.json').config;
 
-const docsdir = path.resolve(__dirname, '../../../docs');
+const dd = path.resolve(__dirname, docsdir);
 const engine = new Liquid({
   extname: '.liquid',
   globals: {title: 'LiquidJS Demo'},
@@ -16,6 +16,6 @@ pages.forEach((page) =>
   engine
     .renderFile(`pages/${page}`)
     .then((html) =>
-      fs.promises.writeFile(path.resolve(docsdir, `${page}.html`), html)
+      fs.promises.writeFile(path.resolve(dd, `${page}.html`), html)
     )
 );
