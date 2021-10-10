@@ -2,6 +2,7 @@
   "name": "pre-style-bin",
   "private": true,
   "scripts": {
+    "pre-start": "",
     "start": "node index"
   },
   "author": {
@@ -11,6 +12,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "liquidjs": "^9.28.0"
+    "liquidjs": "^9.28.0",
+    "pre-style": "file:../../../"
   }
 }

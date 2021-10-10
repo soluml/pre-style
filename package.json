@@ -4,7 +4,7 @@
   "description": "",
   "main": "./dist/src/index.js",
   "bin": {
-    "prestyle": "./dist/bin/index.js"
+    "pre-style": "./dist/bin/index.js"
   },
   "files": [
     "README.md",
