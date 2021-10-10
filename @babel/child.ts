@@ -15,5 +15,5 @@ try {
     process.stdout.write(JSON.stringify(response));
   })(JSON.parse(process.env.cssblocks as string));
 } catch (e) {
-  process.stderr.write(`Pre-Style ran into an error:\r\n${e}`);
+  process.stderr.write(`pre-style ran into an error:\r\n${e}`);
 }
