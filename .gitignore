@@ -12,4 +12,6 @@ _prestyle.scss
 _prestyle.scss.classNames.js
 tmp
 dist
-docs
+docs/*
+docs/**/*
+!docs/.gitkeep
