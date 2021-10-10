@@ -1,0 +1,16 @@
+{
+  "name": "pre-style-bin",
+  "private": true,
+  "scripts": {
+    "start": "node index"
+  },
+  "author": {
+    "name": "Benjamin Solum",
+    "email": "benjamin@soluml.com",
+    "url": "http://soluml.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "liquidjs": "^9.28.0"
+  }
+}
