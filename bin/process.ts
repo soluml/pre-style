@@ -78,7 +78,7 @@ export default async function Process(
     )
   ).reduce(
     (acc: [Promise<void>[], string], {file, fileContents, changes}) => {
-      const fileDest = path.resolve(destination, path.basename(file));
+      const fileDest = path.resolve(destination, file);
       let newFileContents = fileContents;
 
       changes.forEach(({match, classNames, css}) => {
@@ -91,13 +91,15 @@ export default async function Process(
       });
 
       acc[0].push(
-        fs.promises.writeFile(fileDest, newFileContents).then(() => {
-          console.log(
-            `${chalk.green('File')} ${chalk.cyan(`${fileDest}`)} ${chalk.green(
-              'created.'
-            )}`
-          );
-        })
+        fs.promises.mkdir(path.dirname(fileDest), {recursive: true}).then(() =>
+          fs.promises.writeFile(fileDest, newFileContents).then(() => {
+            console.log(
+              `${chalk.green('File')} ${chalk.cyan(
+                `${fileDest}`
+              )} ${chalk.green('created.')}`
+            );
+          })
+        )
       );
 
       return acc;

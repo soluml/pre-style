@@ -9,14 +9,15 @@ const readFile = util.promisify(fs.readFile);
 
 describe('Bin Process', () => {
   const destination = PreStyle.cacheDirName('testfiles');
-  const sourceDirectories = ['test/bin/html/*'];
+  const sourceDir = 'test/bin/html';
+  const sourceDirectories = [`${sourceDir}/*`];
 
   it('Can process', async () => {
     await processFiles(config, destination, sourceDirectories);
 
     const files = await Promise.all([
-      readFile(`${destination}/test.html`),
-      readFile(`${destination}/test2.html`),
+      readFile(`${destination}/${sourceDir}/test.html`),
+      readFile(`${destination}/${sourceDir}/test2.html`),
       readFile(`${destination}/prestyle.css`),
     ]);
     const cssfile = csstree.parse(files.pop());
