@@ -2,7 +2,7 @@
   "name": "pre-style-bin",
   "private": true,
   "scripts": {
-    "pre-start": "",
+    "pre-start": "node ../../../dist/bin/index -d \"./tmp\" layouts/* pages/* partials/*",
     "start": "node index"
   },
   "author": {
@@ -12,7 +12,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "liquidjs": "^9.28.0",
-    "pre-style": "file:../../../"
+    "liquidjs": "^9.28.0"
   }
 }
