@@ -2,11 +2,16 @@
   "name": "pre-style-bin",
   "private": true,
   "config": {
-    "outputdir": "./tmp"
+    "outputdir": "./tmp",
+    "pages": [
+      "index",
+      "404"
+    ]
   },
   "scripts": {
     "prestart": "rimraf $npm_package_config_outputdir && node ../../../dist/bin/index -d \"$npm_package_config_outputdir\" layouts/* pages/* partials/*",
-    "start": "node index"
+    "start": "node index",
+    "poststart": ""
   },
   "author": {
     "name": "Benjamin Solum",
@@ -18,6 +23,7 @@
     "liquidjs": "^9.28.0"
   },
   "devDependencies": {
+    "copyfiles": "^2.4.1",
     "rimraf": "^3.0.2"
   }
 }
