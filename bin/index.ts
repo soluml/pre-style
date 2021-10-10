@@ -11,7 +11,7 @@ import processFiles from './process';
 const program = new Command();
 
 program
-  .version(require(path.resolve(process.cwd(), 'package.json')).version)
+  .version(require(path.resolve(__dirname, '../../package.json')).version)
   .option('-c, --config [file]', 'source config file')
   .option(
     '-d, --destination <dir>',
