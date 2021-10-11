@@ -10,9 +10,11 @@
     ]
   },
   "scripts": {
-    "prestart": "rimraf $npm_package_config_outputdir && node \"../../../dist/bin/index\" -d \"$npm_package_config_outputdir\" layouts/* pages/* partials/*",
-    "start": "node index",
-    "poststart": "copyfiles -u 1 \"./../../*\" \"$npm_package_config_docsdir/test\" && copyfiles -u 1 \"$npm_package_config_outputdir/prestyle.css\" \"$npm_package_config_docsdir\""
+    "prebuild": "rimraf $npm_package_config_outputdir && node \"../../../dist/bin/index\" -d \"$npm_package_config_outputdir\" layouts/* pages/* partials/*",
+    "build": "node index",
+    "postbuild": "copyfiles -u 1 \"./../../*\" \"$npm_package_config_docsdir/test\" && copyfiles -u 1 \"$npm_package_config_outputdir/prestyle.css\" \"$npm_package_config_docsdir\"",
+    "watcher": "node watcher",
+    "start": "browser-sync start --server \"$npm_package_config_docsdir\" --files \"$npm_package_config_docsdir/**/*\""
   },
   "author": {
     "name": "Benjamin Solum",
@@ -24,6 +26,8 @@
     "liquidjs": "^9.28.0"
   },
   "devDependencies": {
+    "browser-sync": "^2.27.5",
+    "chokidar": "^3.5.2",
     "copyfiles": "^2.4.1",
     "rimraf": "^3.0.2"
   }

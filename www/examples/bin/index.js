@@ -8,8 +8,8 @@ const engine = new Liquid({
   extname: '.liquid',
   globals: {title: 'LiquidJS Demo'},
   root: path.resolve(__dirname, outputdir),
-  layouts: './layouts',
-  partials: './partials',
+  layouts: path.resolve(__dirname, outputdir, 'layouts'),
+  partials: path.resolve(__dirname, outputdir, 'partials'),
 });
 
 pages.forEach((page) =>
