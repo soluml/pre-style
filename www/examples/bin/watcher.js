@@ -11,7 +11,7 @@ function debouncedBuild() {
   clearTimeout(timeout);
   timeout = setTimeout(() => {
     execSync('npm run build');
-    console.log('Updated!');
+    console.log(`Updated at ${Date.now()}!`);
   }, 10);
 }
 

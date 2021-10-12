@@ -1,22 +1,86 @@
-<header>
+<header class=prestyle`
+  $blur: 5px;
+
+  clip-path: polygon(-50% 0, 150% 0, 150% 100%, -50% 100%);
+  color: white;
+  font-size: clamp(1em, 4vw, 1.6em);
+  margin: 0 -1em;
+  padding: 1em 1em 2em;
+  position: relative;
+
+  &::before {
+    background: linear-gradient(180deg, rgba(darken(rgba(67,91,169), 30), .75) 25%, transparent 100%),
+
+                linear-gradient(-90deg, rgba(67,91,169,1) 0%, rgba(228,77,38,1) 50%, rgba(246,223,24,1) 100%);
+    content: '';
+    filter: blur($blur);
+    height: calc(100% + #{$blur*2});
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100vw + #{$blur*2});;
+    z-index: -1;
+  }
+`>
   <h1 class=prestyle`
     align-items: baseline;
-    display: inline-grid;
+    display: grid;
     font-family: 'Heebo', sans-serif;
-    font-size: clamp(1.6em, 10vw, 2.375em);
+    font-size: 1.25em;
     font-weight: 300;
     gap: 0.329em;
-    grid-template-columns: auto auto;
+    grid-template-columns: auto 1fr;
     letter-spacing: 0.025em;
     line-height: 1;
     margin: 0;
+    position: relative;
     white-space: nowrap;
+    width: 100%;
+
+    &::before {
+      background: rgba(white, .35);
+      bottom: -.75em;
+      content: '';
+      height: 1px;
+      left: 50%;
+      position: absolute;
+      transform: translateX(-50%);
+      width: 100vw;
+    }
   `>
     <img src="/logo.svg" alt="pre-style logo" class=prestyle`
       display: inline-block;
       height: 1em;
       width: 1em;
     ` />
-    <span>pre-style</span>
+    <span>
+      pre-style
+    </span>
   </h1>
+  <h2 class=prestyle`
+    font-size: 1.75em;
+    font-weight: 700;
+    margin: 1.25em 0 0.35em;
+    max-width: 12em;
+  `>
+    Your CSS;<br>"Just in Time"
+  </h2>
+  <p class=prestyle`
+    font-size: clamp(14px, 1em, 1.2rem);
+    margin-top: 0;
+    max-width: 25em;
+  `>
+    pre-style is the just in time css tool that adapts to how your choose to write CSS.
+  </p>
+  <a class=prestyle`
+    background: rgba(black, .7);
+    border-radius: 2em;
+    color: currentColor;
+    display: inline-block;
+    font-size: clamp(14px, 1em, 1.2rem);
+    padding: 1em 2em;
+  `>
+    Get Started 🠒
+  </a>
 </header>
