@@ -1,9 +1,12 @@
 const babel = require('@babel/core');
 
 const plugins = ['./dist/@babel'];
+const PreStyle = require('../../dist/src').default;
 
 describe('@Babel', () => {
-  it('Should process function strings with supplied namespace', () => {
+  it('Should process function strings with supplied namespace', async () => {
+    await PreStyle.clearCache();
+
     const bt = babel.transformSync(
       `
 import PreStyle, {Ignored} from 'pre-style';
@@ -18,7 +21,7 @@ const a = PreStyle\`font-size: 1em\`;
     const bt = babel.transformSync(
       `
 import SomethingCustom from 'pre-style';
-const a = SomethingCustom\`font-size: 1em;color: white;\`;
+const a = SomethingCustom\`color: white;font-size: 1em;\`;
 const b = SomethingCustom\`font-size: 1em;color: white;\`;
       `,
       {plugins: [plugins.concat({importAsCSS: true})]}
