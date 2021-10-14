@@ -1,4 +1,6 @@
+import css from 'pre-style';
 import logo from './logo.svg';
+import Test from './Test';
 import './App.css';
 
 function App() {
@@ -7,8 +9,17 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Edit{' '}
+          <code
+            className={css`
+              color: red;
+            `}
+          >
+            src/App.js
+          </code>{' '}
+          and save to reload.
         </p>
+        <Test />
         <a
           className="App-link"
           href="https://reactjs.org"
