@@ -26,7 +26,6 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
   let namespaces: string[];
   let blocks: NodePath<TaggedTemplateExpression>[];
   const t = babel.types;
-  const classNames = {};
 
   const cssFileDest = path.resolve(
     config.destination as string,
@@ -53,7 +52,6 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
               cssblocks: JSON.stringify(
                 blocks.map((np) => np.node.quasi.quasis[0].value.raw)
               ),
-              classNames: JSON.stringify(classNames),
               config: JSON.stringify(config),
             },
           },
@@ -68,8 +66,6 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
             blocks[i].replaceWith(
               t.StringLiteral(PreStyle.getClassString(cf.classNames))
             );
-
-            Object.assign(classNames, cf.classNames);
 
             return acc + cf.css;
           },
