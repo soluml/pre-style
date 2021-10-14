@@ -1,14 +1,10 @@
 import css from 'pre-style';
 
 export default function Test() {
-  return (
-    <div
-      className={css`
-        color: red;
-        font-weight: bold;
-      `}
-    >
-      This is a test!!
-    </div>
-  );
+  const Cmpt = css.div`
+    color: red;
+    font-weight: bold;
+  `;
+
+  return <Cmpt>This is a test!!</Cmpt>;
 }
