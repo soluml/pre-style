@@ -8,7 +8,7 @@ module.exports = override(
     path.resolve(DIST_PATH, '@babel'), // In a real project, the plugin path is just `pre-style/dist/@babel`
     {
       importAsCSS: true, // create-react-app supports importing CSS, so let's do that :)
-      styled: true, // Leverage "Styled Components", have pre-style generate them for you and pre fill their className's
+      styled: true, // Leverage "Styled Components", have pre-style generate them for you and pre fill their className's. Uses `React.createElement`.
       destination: './src', // imported files must come from the "src" directory, so let's drop our generated file there
     },
   ]),
