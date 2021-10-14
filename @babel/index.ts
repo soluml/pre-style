@@ -38,42 +38,44 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
       blocks = [];
     },
     post() {
-      if (!blocks.length) return;
+      let finalizedCss = '';
 
-      const data = spawnSync('node', [path.resolve(__dirname, 'child.js')], {
-        timeout: 60000,
-        // stdio: 'inherit', // <- For debugging ... will prevent stdout
-        cwd: process.cwd(),
-        env: {
-          ...process.env,
-          ...{
-            cssblocks: JSON.stringify(
-              blocks.map((np) => np.node.quasi.quasis[0].value.raw)
-            ),
-            classNames: JSON.stringify(classNames),
-            config: JSON.stringify(config),
+      if (blocks.length) {
+        const data = spawnSync('node', [path.resolve(__dirname, 'child.js')], {
+          timeout: 60000,
+          // stdio: 'inherit', // <- For debugging ... will prevent stdout
+          cwd: process.cwd(),
+          env: {
+            ...process.env,
+            ...{
+              cssblocks: JSON.stringify(
+                blocks.map((np) => np.node.quasi.quasis[0].value.raw)
+              ),
+              classNames: JSON.stringify(classNames),
+              config: JSON.stringify(config),
+            },
           },
-        },
-      });
+        });
 
-      const err = data.stderr?.toString();
+        const err = data.stderr?.toString();
 
-      if (err) throw new Error(err);
+        if (err) throw new Error(err);
 
-      const css = JSON.parse(data.stdout?.toString()).reduce(
-        (acc: string, cf: ClassifyResponse, i: number) => {
-          blocks[i].replaceWith(
-            t.StringLiteral(PreStyle.getClassString(cf.classNames))
-          );
+        const css = JSON.parse(data.stdout?.toString()).reduce(
+          (acc: string, cf: ClassifyResponse, i: number) => {
+            blocks[i].replaceWith(
+              t.StringLiteral(PreStyle.getClassString(cf.classNames))
+            );
 
-          Object.assign(classNames, cf.classNames);
+            Object.assign(classNames, cf.classNames);
 
-          return acc + cf.css;
-        },
-        ''
-      );
+            return acc + cf.css;
+          },
+          ''
+        );
 
-      const finalizedCss = Noramlize(ATP(css));
+        finalizedCss = Noramlize(ATP(css));
+      }
 
       fs.writeFileSync(cssFileDest, finalizedCss);
 
