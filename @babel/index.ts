@@ -24,9 +24,9 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
   /* eslint-enable no-param-reassign */
 
   let namespaces: string[];
-  let blocks: NodePath<TaggedTemplateExpression>[];
+  let blocks: [NodePath<TaggedTemplateExpression>, string | undefined][];
   const t = babel.types;
-
+  const jsxStyledPropName = t.identifier('p');
   const cssFileDest = path.resolve(
     config.destination as string,
     config.filename as string
@@ -50,7 +50,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
             ...process.env,
             ...{
               cssblocks: JSON.stringify(
-                blocks.map((np) => np.node.quasi.quasis[0].value.raw)
+                blocks.map(([np]) => np.node.quasi.quasis[0].value.raw)
               ),
               config: JSON.stringify(config),
             },
@@ -63,8 +63,41 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
 
         const css = JSON.parse(data.stdout?.toString()).reduce(
           (acc: string, cf: ClassifyResponse, i: number) => {
-            blocks[i].replaceWith(
-              t.StringLiteral(PreStyle.getClassString(cf.classNames))
+            const [nodepath, componentName] = blocks[i];
+            const classes = PreStyle.getClassString(cf.classNames);
+
+            nodepath.replaceWith(
+              componentName
+                ? t.arrowFunctionExpression(
+                    [jsxStyledPropName],
+                    t.jsxElement(
+                      t.jsxOpeningElement(
+                        t.jsxIdentifier(componentName),
+                        [
+                          t.jsxSpreadAttribute(jsxStyledPropName),
+                          t.jsxAttribute(
+                            t.jsxIdentifier('className'),
+                            t.jsxExpressionContainer(
+                              t.binaryExpression(
+                                '+',
+                                t.StringLiteral(`${classes} `),
+                                t.memberExpression(
+                                  jsxStyledPropName,
+                                  t.identifier('className')
+                                )
+                              )
+                            )
+                          ),
+                        ],
+                        true
+                      ),
+                      null,
+                      [],
+                      true
+                    ),
+                    false
+                  )
+                : t.StringLiteral(classes)
             );
 
             return acc + cf.css;
@@ -106,15 +139,28 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
           nodepath.remove();
         }
       },
-      TaggedTemplateExpression(nodepath: NodePath<TaggedTemplateExpression>) {
+      TaggedTemplateExpression: (
+        nodepath: NodePath<TaggedTemplateExpression>
+      ) => {
+        let componentName;
+
         if (
           // Namespaces are case insensitive
-          namespaces!.some(
-            (ns) =>
-              ns.toLowerCase() === (nodepath.node.tag as any).name.toLowerCase()
-          )
+          namespaces!.some((ns) => {
+            const nsl = ns.toLowerCase();
+            const tag = nodepath.node.tag as any;
+            let name = tag.name?.toLowerCase();
+
+            // If you use a TTE like this styled.div the above name will be undefined
+            if (!name) {
+              name = tag?.object?.name.toLowerCase();
+              componentName = config.styled && tag?.property?.name;
+            }
+
+            return nsl === name;
+          })
         ) {
-          blocks.push(nodepath);
+          blocks.push([nodepath, componentName || undefined]);
         }
       },
     },

@@ -62,4 +62,7 @@ declare interface BabelConfig extends Config, OutputConfig {
   // becomes
   // import 'prestyle.css';
   importAsCSS?: boolean;
+
+  // Have Babel change the TaggedTemplateExpression into a JSX component.
+  styled?: boolean;
 }

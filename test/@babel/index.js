@@ -49,4 +49,24 @@ const a = SomethingCustom\`color: blue\`;
 
     expect(code.trim()).toBe(bt.code.trim());
   });
+
+  it('Should handle styled namespace function strings', () => {
+    const bt = babel.transformSync(
+      `
+import SomethingCustom from 'pre-style';
+const a = SomethingCustom.div\`color: white;font-size: 1em;\`;
+      `,
+      {plugins: [plugins.concat({styled: true})]}
+    );
+
+    console.log(bt.code.trim());
+
+    expect(
+      bt.code
+        .trim()
+        .endsWith(
+          `const a = p => <div {...p} className={"A B " + p.className} />;`
+        )
+    ).toBe(true);
+  });
 });
