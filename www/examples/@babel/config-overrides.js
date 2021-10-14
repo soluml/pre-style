@@ -5,7 +5,7 @@ const DIST_PATH = path.resolve(__dirname, '../../../dist');
 
 module.exports = override(
   addBabelPlugins([
-    path.resolve(DIST_PATH, '@babel'), // In a real project, the plugin path is just `pre-style/@babel`
+    path.resolve(DIST_PATH, '@babel'), // In a real project, the plugin path is just `pre-style/dist/@babel`
     {importAsCSS: true},
   ]),
   // We need an alias to use the local `dist` as a node_module. In a real project, this line can be removed
