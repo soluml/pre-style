@@ -59,4 +59,13 @@ describe('Bin', () => {
     expect(stderr).toBe('');
     expect(stdout.includes('Error: ')).toBe(false);
   });
+
+  it('Can clear the cache!', async () => {
+    const result = cli(['--clear'], []);
+    const stdout = result.stdout.toString();
+    const stderr = result.stderr.toString();
+
+    expect(stderr).toBe('');
+    expect(stdout.includes('The pre-style cache has been cleared!')).toBe(true);
+  });
 });

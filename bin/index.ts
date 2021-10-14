@@ -6,6 +6,7 @@ import path from 'path';
 import {Command} from 'commander';
 import chalk from 'chalk';
 import type {BINConfig, Config} from 'global';
+import PreStyle from '../src';
 import processFiles from './process';
 
 const program = new Command();
@@ -17,35 +18,47 @@ program
     '-d, --destination <dir>',
     'directory to put files processed by PreStyle'
   )
+  .option('--clear', 'clears the ▚ pre-style cache')
   .parse(process.argv);
 
 try {
-  let {destination, ...options} = program.opts();
+  let {destination, clear, ...options} = program.opts();
   const config: BINConfig = {
     ...((options.config
       ? require(path.resolve(options.config))
       : {}) as Config),
   };
 
-  if (!destination) {
-    destination = config.destination;
-  }
-
-  if (!destination) {
-    throw new Error(
-      `You ${chalk.bold('MUST')} specify a destination with ${chalk.italic(
-        '-d'
-      )} or ${chalk.italic('--destination')}.`
+  if (clear) {
+    PreStyle.clearCache().then(
+      () => {
+        console.log(chalk.magenta(`The pre-style cache has been cleared!`));
+      },
+      (err) => {
+        throw new Error(err);
+      }
     );
+  } else {
+    if (!destination) {
+      destination = config.destination;
+    }
+
+    if (!destination) {
+      throw new Error(
+        `You ${chalk.bold('MUST')} specify a destination with ${chalk.italic(
+          '-d'
+        )} or ${chalk.italic('--destination')}.`
+      );
+    }
+
+    const sourceDirectories = [...new Set(program.args)];
+
+    if (!sourceDirectories.length) {
+      throw new Error(`No source files or folders were specified.`);
+    }
+
+    processFiles(config, destination, sourceDirectories);
   }
-
-  const sourceDirectories = [...new Set(program.args)];
-
-  if (!sourceDirectories.length) {
-    throw new Error(`No source files or folders were specified.`);
-  }
-
-  processFiles(config, destination, sourceDirectories);
 } catch (e) {
   console.log(chalk.underline.red('Error:'));
   console.log(e);
