@@ -6,10 +6,16 @@ declare type Adapter = (
 ) => Promise<string>;
 declare type AdapterOptions = {[x: string]: any};
 
+declare interface ClassifyResponse {
+  classNames: {[x: string]: string};
+  css: string;
+}
+
 declare type CacheMap = Map<string, [string, number]>;
 declare type CacheArray = [string, [string, number]];
 declare type CacheGetter = (block: string) => string | undefined;
 declare type CacheWriter = (block: string, classes: string) => void;
+declare type CacheGetKeyStringCollection = () => ClassifyResponse['classNames'];
 
 declare interface Config {
   // A function that processes the initial blob of CSS to be passed down into the normalizer
@@ -56,9 +62,4 @@ declare interface BabelConfig extends Config, OutputConfig {
   // becomes
   // import 'prestyle.css';
   importAsCSS?: boolean;
-}
-
-declare interface ClassifyResponse {
-  classNames: {[x: string]: string};
-  css: string;
 }

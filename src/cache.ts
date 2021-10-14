@@ -1,4 +1,11 @@
-import type {CacheGetter, CacheWriter, CacheArray, CacheMap} from 'global';
+import type {
+  CacheGetter,
+  CacheWriter,
+  CacheGetKeyStringCollection,
+  CacheArray,
+  CacheMap,
+  ClassifyResponse,
+} from 'global';
 import fs from 'fs';
 import ndjson from 'ndjson';
 
@@ -9,11 +16,13 @@ const cleanBlock = (str: string) => str.trim();
 export default function cache(
   filepath: string,
   cacheTime: number = THIRTY_DAYS,
-  timestamp: number
-): Promise<[CacheGetter, CacheWriter]> {
+  timestamp: number,
+  keyString?: string
+): Promise<[CacheGetter, CacheWriter, CacheGetKeyStringCollection]> {
   const stream = ndjson.stringify();
   const arr: CacheArray[] = [];
   let map: CacheMap;
+  const keyStringCollection: ClassifyResponse['classNames'] = {};
 
   stream.on('data', (line) => {
     fs.appendFile(filepath, line, {encoding}, (err) => {
@@ -22,6 +31,10 @@ export default function cache(
       }
     });
   });
+
+  function getKeyStringCollection(): ClassifyResponse['classNames'] {
+    return keyStringCollection;
+  }
 
   function getter(block: string): string | undefined {
     return map.get(cleanBlock(block))?.[0];
@@ -39,16 +52,25 @@ export default function cache(
   return new Promise((resolve) => {
     function done() {
       map = new Map(arr);
-      resolve([getter, writer]);
+
+      resolve([getter, writer, getKeyStringCollection]);
     }
 
     if (fs.existsSync(filepath)) {
       fs.createReadStream(filepath, encoding)
         .pipe(ndjson.parse())
-        .on(
-          'data',
-          (d: CacheArray) => d[1][1] > timestamp - cacheTime && arr.push(d)
-        )
+        .on('data', (d: CacheArray) => {
+          if (d[1][1] > timestamp - cacheTime) {
+            arr.push(d);
+
+            if (keyString) {
+              Object.assign(
+                keyStringCollection,
+                JSON.parse(d[1][0])[keyString]
+              );
+            }
+          }
+        })
         .on('end', done);
     } else {
       done();

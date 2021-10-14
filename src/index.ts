@@ -1,4 +1,10 @@
-import type {Config, CacheGetter, CacheWriter, ClassifyResponse} from 'global';
+import type {
+  Config,
+  CacheGetter,
+  CacheWriter,
+  CacheGetKeyStringCollection,
+  ClassifyResponse,
+} from 'global';
 import type {CssNode} from 'css-tree';
 import fs from 'fs';
 import findCacheDir from 'find-cache-dir';
@@ -24,9 +30,11 @@ class PreStyle {
 
   timestamp: number;
 
-  styleCache: Promise<[CacheGetter, CacheWriter]>;
+  styleCache: Promise<[CacheGetter, CacheWriter, CacheGetKeyStringCollection]>;
 
-  prependedFilesCache: Promise<[CacheGetter, CacheWriter]>;
+  prependedFilesCache: Promise<
+    [CacheGetter, CacheWriter, CacheGetKeyStringCollection]
+  >;
 
   sweatmap: any;
 
@@ -63,7 +71,8 @@ class PreStyle {
     this.styleCache = cache(
       PreStyle.cacheDirName(styleCacheFile),
       this.config.cache as number,
-      this.timestamp
+      this.timestamp,
+      'classNames'
     );
     this.prependedFilesCache = cache(
       PreStyle.cacheDirName(prependedFilesCacheFile),
@@ -89,7 +98,7 @@ class PreStyle {
         },
       });
     } else {
-      var [getter, writer] = await this.styleCache;
+      var [getter, writer, getKeyStringCollection] = await this.styleCache;
       const serializedClassifyResponse = getter(block);
       var classifyResponse = serializedClassifyResponse
         ? (JSON.parse(serializedClassifyResponse) as ClassifyResponse)
@@ -99,7 +108,7 @@ class PreStyle {
         cssSafe: true,
         existing_strings: {
           ...this.config.existingStrings,
-          ...classifyResponse?.classNames,
+          ...getKeyStringCollection(),
         },
       });
     }

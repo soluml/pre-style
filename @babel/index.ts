@@ -13,9 +13,11 @@ import Noramlize from '../src/normalize';
 const projectName = 'pre-style';
 
 export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
+  const cacheDirName = PreStyle.cacheDirName('');
+
   /* eslint-disable no-param-reassign */
   config = {
-    destination: PreStyle.cacheDirName(''),
+    destination: cacheDirName,
     ...defaultConfig,
     ...config,
   };
