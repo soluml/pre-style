@@ -49,7 +49,7 @@ export default function (t: any, styled: BabelConfig['styled']) {
     return t.arrowFunctionExpression(
       [t.identifier(PROP_NAME)],
       t.callExpression(callExpressionIdent, [
-        t.identifier(componentName),
+        t.StringLiteral(componentName),
         t.callExpression(
           t.memberExpression(t.identifier('Object'), t.identifier('assign')),
           [

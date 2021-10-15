@@ -82,7 +82,7 @@ const a = SomethingCustom.div\`color: white;font-size: 1em;\`;
 
       expect(
         bt.code.trim().endsWith(
-          `const a = p => ${fnn}(div, Object.assign({}, p, {
+          `const a = p => ${fnn}("div", Object.assign({}, p, {
   className: "A B " + p.className
 }));`
         )
