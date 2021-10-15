@@ -74,6 +74,7 @@ const a = SomethingCustom.div\`color: white;font-size: 1em;\`;
         `
   import SomethingCustom from 'pre-style';
   const a = SomethingCustom.div\`color: white;font-size: 1em;\`;
+  const b = SomethingCustom.Cmpt\`color: white;font-size: 1em;\`;
         `,
         {plugins: [plugins.concat({styled})]}
       );
@@ -83,6 +84,10 @@ const a = SomethingCustom.div\`color: white;font-size: 1em;\`;
       expect(
         bt.code.trim().endsWith(
           `const a = p => ${fnn}("div", Object.assign({}, p, {
+  className: "A B" + (p.className == undefined ? "" : " " + p.className)
+}));
+
+const b = p => ${fnn}(Cmpt, Object.assign({}, p, {
   className: "A B" + (p.className == undefined ? "" : " " + p.className)
 }));`
         )

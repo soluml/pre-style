@@ -46,10 +46,16 @@ export default function (t: any, styled: BabelConfig['styled']) {
         ? t.identifier(ident)
         : t.memberExpression(...ident!.map((id) => t.identifier(id)));
 
+    // If the component starts with a capital letter, assume it's a component, not an HTML tag
+    const componentType =
+      componentName.charAt(0) === componentName.charAt(0).toUpperCase()
+        ? t.identifier(componentName)
+        : t.StringLiteral(componentName);
+
     return t.arrowFunctionExpression(
       [t.identifier(PROP_NAME)],
       t.callExpression(callExpressionIdent, [
-        t.StringLiteral(componentName),
+        componentType,
         t.callExpression(
           t.memberExpression(t.identifier('Object'), t.identifier('assign')),
           [
