@@ -60,7 +60,7 @@ export default function (t: any, styled: BabelConfig['styled']) {
                 t.identifier('className'),
                 t.binaryExpression(
                   '+',
-                  t.StringLiteral(`${classes} `),
+                  t.StringLiteral(classes),
                   t.conditionalExpression(
                     t.binaryExpression(
                       '==',
@@ -71,9 +71,13 @@ export default function (t: any, styled: BabelConfig['styled']) {
                       t.identifier('undefined')
                     ),
                     t.StringLiteral(''),
-                    t.memberExpression(
-                      t.identifier(PROP_NAME),
-                      t.identifier('className')
+                    t.binaryExpression(
+                      '+',
+                      t.StringLiteral(' '),
+                      t.memberExpression(
+                        t.identifier(PROP_NAME),
+                        t.identifier('className')
+                      )
                     )
                   )
                 )
