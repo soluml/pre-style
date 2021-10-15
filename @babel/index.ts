@@ -9,6 +9,7 @@ import ATP from 'at-rule-packer';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
 import Noramlize from '../src/normalize';
+import styled from './styled';
 
 const projectName = 'pre-style';
 
@@ -26,7 +27,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
   let namespaces: string[];
   let blocks: [NodePath<TaggedTemplateExpression>, string | undefined][];
   const t = babel.types;
-  const jsxStyledPropName = t.identifier('p');
+  const styledFn = styled(t, config.styled);
   const cssFileDest = path.resolve(
     config.destination as string,
     config.filename as string
@@ -68,35 +69,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
 
             nodepath.replaceWith(
               componentName
-                ? t.arrowFunctionExpression(
-                    [jsxStyledPropName],
-                    t.jsxElement(
-                      t.jsxOpeningElement(
-                        t.jsxIdentifier(componentName),
-                        [
-                          t.jsxSpreadAttribute(jsxStyledPropName),
-                          t.jsxAttribute(
-                            t.jsxIdentifier('className'),
-                            t.jsxExpressionContainer(
-                              t.binaryExpression(
-                                '+',
-                                t.StringLiteral(`${classes} `),
-                                t.memberExpression(
-                                  jsxStyledPropName,
-                                  t.identifier('className')
-                                )
-                              )
-                            )
-                          ),
-                        ],
-                        true
-                      ),
-                      null,
-                      [],
-                      true
-                    ),
-                    false
-                  )
+                ? styledFn(componentName, classes)
                 : t.StringLiteral(classes)
             );
 

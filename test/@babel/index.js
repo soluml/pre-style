@@ -67,4 +67,26 @@ const a = SomethingCustom.div\`color: white;font-size: 1em;\`;
         )
     ).toBe(true);
   });
+
+  it('Should handle styled namespace function strings with a provided location object', () => {
+    ['h', ['createElement'], ['React', 'createElement']].forEach((styled) => {
+      const bt = babel.transformSync(
+        `
+  import SomethingCustom from 'pre-style';
+  const a = SomethingCustom.div\`color: white;font-size: 1em;\`;
+        `,
+        {plugins: [plugins.concat({styled})]}
+      );
+
+      const fnn = Array.isArray(styled) ? styled.join('.') : styled;
+
+      expect(
+        bt.code.trim().endsWith(
+          `const a = p => ${fnn}(div, Object.assign({}, p, {
+  className: "A B " + p.className
+}));`
+        )
+      ).toBe(true);
+    });
+  });
 });

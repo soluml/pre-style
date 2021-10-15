@@ -64,5 +64,8 @@ declare interface BabelConfig extends Config, OutputConfig {
   importAsCSS?: boolean;
 
   // Have Babel change the TaggedTemplateExpression into a JSX component.
-  styled?: boolean;
+  // boolean means output JSX
+  // string is a single identifier: `h`
+  // array of strings is a nested object: `React.createElement`
+  styled?: boolean | string | string[];
 }
