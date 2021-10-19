@@ -96,51 +96,55 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
       }
     },
     visitor: {
-      ImportDeclaration(nodepath: NodePath<ImportDeclaration>) {
-        const {value: moduleName} = nodepath.node.source;
+      Program(programPath: any) {
+        programPath.traverse({
+          ImportDeclaration(nodepath: NodePath<ImportDeclaration>) {
+            const {value: moduleName} = nodepath.node.source;
 
-        if (moduleName !== projectName) return;
+            if (moduleName !== projectName) return;
 
-        const localSpecifier = nodepath.node.specifiers.find(
-          (specifier) => !!specifier.local
-        );
+            const localSpecifier = nodepath.node.specifiers.find(
+              (specifier) => !!specifier.local
+            );
 
-        const newNameSpace = localSpecifier?.local.name;
+            const newNameSpace = localSpecifier?.local.name;
 
-        if (newNameSpace) namespaces!.push(newNameSpace);
+            if (newNameSpace) namespaces!.push(newNameSpace);
 
-        if (config.importAsCSS) {
-          const importNode = babel.template.statement
-            .ast`import "${cssFileDest}";`;
+            if (config.importAsCSS) {
+              const importNode = babel.template.statement
+                .ast`import "${cssFileDest}";`;
 
-          nodepath.replaceWith(importNode);
-        } else {
-          nodepath.remove();
-        }
-      },
-      TaggedTemplateExpression: (
-        nodepath: NodePath<TaggedTemplateExpression>
-      ) => {
-        let componentName;
-
-        if (
-          // Namespaces are case insensitive
-          namespaces!.some((ns) => {
-            const nsl = ns.toLowerCase();
-            const tag = nodepath.node.tag as any;
-            let name = tag.name?.toLowerCase();
-
-            // If you use a TTE like this styled.div the above name will be undefined
-            if (!name) {
-              name = tag?.object?.name.toLowerCase();
-              componentName = config.styled && tag?.property?.name;
+              nodepath.replaceWith(importNode);
+            } else {
+              nodepath.remove();
             }
+          },
+          TaggedTemplateExpression: (
+            nodepath: NodePath<TaggedTemplateExpression>
+          ) => {
+            let componentName;
 
-            return nsl === name;
-          })
-        ) {
-          blocks.push([nodepath, componentName || undefined]);
-        }
+            if (
+              // Namespaces are case insensitive
+              namespaces!.some((ns) => {
+                const nsl = ns.toLowerCase();
+                const tag = nodepath.node.tag as any;
+                let name = tag.name?.toLowerCase();
+
+                // If you use a TTE like this styled.div the above name will be undefined
+                if (!name) {
+                  name = tag?.object?.name.toLowerCase();
+                  componentName = config.styled && tag?.property?.name;
+                }
+
+                return nsl === name;
+              })
+            ) {
+              blocks.push([nodepath, componentName || undefined]);
+            }
+          },
+        });
       },
     },
   };
