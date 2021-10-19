@@ -26,6 +26,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
 
   let namespaces: string[];
   let blocks: [NodePath<TaggedTemplateExpression>, string | undefined][];
+  let lastWriteLength = 0;
   const t = babel.types;
   const styledFn = styled(t, config.styled);
   const cssFileDest = path.resolve(
@@ -41,6 +42,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
     },
     post() {
       let finalizedCss = '';
+      let finalizedCssLn = 0;
 
       if (blocks.length) {
         const data = spawnSync('node', [path.resolve(__dirname, 'child.js')], {
@@ -79,15 +81,19 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
         );
 
         finalizedCss = Noramlize(ATP(css));
+        finalizedCssLn = finalizedCss.length;
       }
 
-      fs.writeFileSync(cssFileDest, finalizedCss);
+      if (lastWriteLength !== finalizedCssLn) {
+        fs.writeFileSync(cssFileDest, finalizedCss);
+        lastWriteLength = finalizedCssLn;
 
-      console.log(
-        `${chalk.green('File')} ${chalk.cyan(cssFileDest)} ${chalk.green(
-          'created.'
-        )}`
-      );
+        console.log(
+          `${chalk.green('File')} ${chalk.cyan(cssFileDest)} ${chalk.green(
+            'created.'
+          )}`
+        );
+      }
     },
     visitor: {
       ImportDeclaration(nodepath: NodePath<ImportDeclaration>) {
