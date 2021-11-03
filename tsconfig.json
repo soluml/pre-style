@@ -18,5 +18,5 @@
     "declaration": true,
     "typeRoots": ["node_modules/@types"]
   },
-  "include": ["index.ts", "src", "bin", "@babel", "types"]
+  "include": ["index.ts", "src", "bin", "@babel", "postcss", "types"]
 }
