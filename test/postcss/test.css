@@ -1,9 +1,12 @@
-.title {
+.title #id,
+.test {
   color: blue;
   font-size: 1em;
 }
 
-.other {
-  color: #00f;
-  font-size: 2em;
+@media (min-width: 30em) {
+  .other {
+    color: #00f;
+    font-size: 2em;
+  }
 }
