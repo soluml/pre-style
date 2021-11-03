@@ -40,13 +40,18 @@ module.exports = (config: Config): postcssType.Plugin => {
       tempRoot.walkRules((nr) => {
         nr.replaceWith(
           postcss.rule({
-            selector: selectorParser.processSync(nr.selectors[0]),
+            selector: selectorParser.processSync(nr.selectors[0], {
+              lossless: false,
+            }),
             nodes: nr.nodes,
           })
         );
       });
 
-      console.log('ASDASD', tempRoot.toString());
+      console.log('ASDASD', {
+        before: cls,
+        temp: tempRoot.toString(),
+      });
 
       return cls;
     });
