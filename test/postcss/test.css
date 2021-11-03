@@ -4,6 +4,10 @@
   font-size: 1em;
 }
 
+.article {
+  color: #00f;
+}
+
 @media (min-width: 30em) {
   .other {
     color: #00f;

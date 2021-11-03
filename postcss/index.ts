@@ -1,6 +1,7 @@
 import type {Config} from 'global';
 import type * as postcssType from 'postcss';
 import postcss from 'postcss';
+import parser from 'postcss-selector-parser';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
 
@@ -9,6 +10,23 @@ module.exports = (config: Config): postcssType.Plugin => {
     ...defaultConfig,
     ...config,
   });
+  const placceholderSelectorLength = PS.placeholder.length + 1;
+
+  const selectorParser = parser((selectors) => {
+    selectors.walk((selector) => {
+      // Remove the Placeholder class and the succeeding child combinator
+      if (selector.sourceIndex < placceholderSelectorLength) {
+        selector.remove();
+      } else if (
+        selector.sourceIndex === placceholderSelectorLength + 1 &&
+        selector.type === 'class'
+      ) {
+        selector.replaceWith(parser.className({value: 'GET_NEW_ATOMIC_CLASS'}));
+      }
+    });
+
+    return selectors;
+  });
 
   async function doRule(rule: postcssType.Node) {
     if (rule.parent?.type !== 'root') return;
@@ -16,7 +34,24 @@ module.exports = (config: Config): postcssType.Plugin => {
     const css = rule.toString();
     const {classNames} = await PS.process(css);
 
-    console.log(rule.type, {css, classNames});
+    const updates = Object.keys(classNames).map((cls) => {
+      const tempRoot = postcss.parse(cls);
+
+      tempRoot.walkRules((nr) => {
+        nr.replaceWith(
+          postcss.rule({
+            selector: selectorParser.processSync(nr.selectors[0]),
+            nodes: nr.nodes,
+          })
+        );
+      });
+
+      console.log('ASDASD', tempRoot.toString());
+
+      return cls;
+    });
+
+    // console.log(rule.type, {css, classNames});
   }
 
   return {
