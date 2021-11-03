@@ -2,16 +2,20 @@ import type {Config} from 'global';
 import type * as postcssType from 'postcss';
 import postcss from 'postcss';
 import parser from 'postcss-selector-parser';
+import SweatMap from 'sweatmap';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
 
 module.exports = (config: Config): postcssType.Plugin => {
+  const atomicClasses = new SweatMap({
+    cssSafe: true,
+    existing_strings: {},
+  });
   const PS = new PreStyle({
     ...defaultConfig,
     ...config,
   });
   const placceholderSelectorLength = PS.placeholder.length + 1;
-
   const selectorParser = parser((selectors) => {
     selectors.walk((selector) => {
       // Remove the Placeholder class and the succeeding child combinator
@@ -21,7 +25,7 @@ module.exports = (config: Config): postcssType.Plugin => {
         selector.sourceIndex === placceholderSelectorLength + 1 &&
         selector.type === 'class'
       ) {
-        selector.replaceWith(parser.className({value: 'GET_NEW_ATOMIC_CLASS'}));
+        selector.replaceWith(parser.className({value: PS.placeholder}));
       }
     });
 
@@ -37,6 +41,7 @@ module.exports = (config: Config): postcssType.Plugin => {
     const updates = Object.keys(classNames).map((cls) => {
       const tempRoot = postcss.parse(cls);
 
+      // Update selector with Placeholder
       tempRoot.walkRules((nr) => {
         nr.replaceWith(
           postcss.rule({
@@ -48,15 +53,16 @@ module.exports = (config: Config): postcssType.Plugin => {
         );
       });
 
-      console.log('ASDASD', {
-        before: cls,
-        temp: tempRoot.toString(),
-      });
+      // Then swap placeholder with new
+      let atomicString = tempRoot.toString();
+      const atomicClass = atomicClasses.set(atomicString);
 
-      return cls;
+      atomicString = atomicString.replace(PS.placeholder, atomicClass);
+
+      return {rule: postcss.parse(atomicString), atomicClass};
     });
 
-    // console.log(rule.type, {css, classNames});
+    console.log(rule.type, {css, classNames, updates});
   }
 
   return {
