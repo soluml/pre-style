@@ -16,6 +16,7 @@ module.exports = (config: Config): postcssType.Plugin => {
     ...config,
   });
   const placceholderSelectorLength = PS.placeholder.length + 1;
+  let originalClass: string | undefined;
   const selectorParser = parser((selectors) => {
     selectors.walk((selector) => {
       // Remove the Placeholder class and the succeeding child combinator
@@ -25,11 +26,10 @@ module.exports = (config: Config): postcssType.Plugin => {
         selector.sourceIndex === placceholderSelectorLength + 1 &&
         selector.type === 'class'
       ) {
+        originalClass = selector.toString().slice(1);
         selector.replaceWith(parser.className({value: PS.placeholder}));
       }
     });
-
-    return selectors;
   });
 
   async function doRule(rule: postcssType.Node) {
@@ -40,14 +40,36 @@ module.exports = (config: Config): postcssType.Plugin => {
 
     const updates = Object.keys(classNames).map((cls) => {
       const tempRoot = postcss.parse(cls);
+      const tempObj: {[x: string]: string[]} = {};
 
       // Update selector with Placeholder
       tempRoot.walkRules((nr) => {
+        const selector = selectorParser.processSync(nr.selectors[0], {
+          lossless: false,
+        });
+        // const atomicClass = atomicClasses.set(
+        //   rule.type + selector + nr.nodes.toString()
+        // );
+
+        if (originalClass) {
+          if (!tempObj[originalClass]) {
+            tempObj[originalClass] = [];
+          }
+
+          //
+        }
+
+        console.log({
+          originalClass,
+          selector,
+          temp: nr.nodes.toString(),
+        });
+
+        originalClass = undefined;
+
         nr.replaceWith(
           postcss.rule({
-            selector: selectorParser.processSync(nr.selectors[0], {
-              lossless: false,
-            }),
+            selector,
             nodes: nr.nodes,
           })
         );
@@ -56,6 +78,8 @@ module.exports = (config: Config): postcssType.Plugin => {
       // Then swap placeholder with new
       let atomicString = tempRoot.toString();
       const atomicClass = atomicClasses.set(atomicString);
+
+      console.log('asts', atomicString);
 
       atomicString = atomicString.replace(PS.placeholder, atomicClass);
 
