@@ -17,7 +17,8 @@
     "test:src": "jest src",
     "test:bin": "jest bin",
     "test:@babel": "jest @babel --no-cache",
-    "test": "npm run test:src && npm run test:bin && npm run test:@babel",
+    "test:postcss": "jest postcss",
+    "test": "npm run test:src && npm run test:bin && npm run test:@babel && npm run test:postcss",
     "prestart": "npm run build",
     "start": "node dist/bin www/404.html -d docs"
   },
