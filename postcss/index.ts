@@ -13,9 +13,10 @@ module.exports = (config: Config): postcssType.Plugin => {
     ...config,
   });
 
-  const newRules = new Map<string, postcssType.Rule[]>();
+  const json: {[x: string]: Set<string>} = {};
 
   async function processRule(rule: postcssType.Rule) {
+    /* eslint-disable no-param-reassign */
     const topRule = (function getParent(r: postcssType.Rule): postcssType.Rule {
       if (r.parent?.type === 'root') {
         return r;
@@ -27,7 +28,6 @@ module.exports = (config: Config): postcssType.Plugin => {
     let jsonKey = '';
 
     // Set jsonKey and update selector
-    /* eslint-disable no-param-reassign */
     rule.selector = parser((selectors) => {
       selectors.walkClasses((selector) => {
         if (!selector.sourceIndex) {
@@ -39,19 +39,33 @@ module.exports = (config: Config): postcssType.Plugin => {
       });
     }).processSync(rule.selector);
     rule.selectors = [rule.selector];
-    /* eslint-enable no-param-reassign */
 
     // Get classNames
-    const {classNames} = await PS.process(topRule.toString());
+    const psProcessObj = await PS.process(topRule.toString());
+
+    // Add set (if needed)
+    if (!json[jsonKey]) {
+      json[jsonKey] = new Set();
+    }
+
+    // Update set
+    Object.values(psProcessObj.classNames).forEach((c) => json[jsonKey].add(c));
+
+    const newCss = psProcessObj.css.replaceAll(
+      ` .${replacedSelectorPlaceholder}`,
+      ''
+    );
+
+    // TODO: rule.replaceWith(postcss.parse(newCss));
 
     console.log({
-      // isSameAsTopRule,
-      // SOMETHING: rule.selector,
       jsonKey,
       topRuleCss: topRule.toString(),
-      classNames,
+      classNames: psProcessObj.classNames,
+      newCss,
     });
     console.log('====================');
+    /* eslint-enable no-param-reassign */
   }
 
   return {
@@ -100,7 +114,7 @@ module.exports = (config: Config): postcssType.Plugin => {
       // Calls once per file, since every file has single Root
 
       // console.log({css, result});
-      console.log('EXIT');
+      console.log('EXIT', {json});
     },
   };
 };
