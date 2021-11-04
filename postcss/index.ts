@@ -12,8 +12,8 @@ module.exports = (config: Config): postcssType.Plugin => {
     ...defaultConfig,
     ...config,
   });
-
   const json: {[x: string]: Set<string>} = {};
+  const updates: [postcssType.Rule, postcssType.Root][] = [];
 
   async function processRule(rule: postcssType.Rule) {
     /* eslint-disable no-param-reassign */
@@ -55,16 +55,9 @@ module.exports = (config: Config): postcssType.Plugin => {
       ` .${replacedSelectorPlaceholder}`,
       ''
     );
+    const newRules = postcss.parse(newCss);
 
-    // TODO: rule.replaceWith(postcss.parse(newCss));
-
-    console.log({
-      jsonKey,
-      topRuleCss: topRule.toString(),
-      classNames: psProcessObj.classNames,
-      newCss,
-    });
-    console.log('====================');
+    updates.push([rule, newRules]);
     /* eslint-enable no-param-reassign */
   }
 
@@ -72,6 +65,8 @@ module.exports = (config: Config): postcssType.Plugin => {
     postcssPlugin: 'pre-style',
 
     async AtRule(atrule) {
+      if ((atrule as any).PS_NO_PROCESS) return;
+
       // Break conjoined selectors within @at-rule
       if (atrule.nodes.length > 1) {
         atrule.nodes.forEach((rule) => {
@@ -89,6 +84,8 @@ module.exports = (config: Config): postcssType.Plugin => {
     },
 
     async Rule(rule) {
+      if ((rule as any).PS_NO_PROCESS) return;
+
       // Break conjoined selectors
       if (rule.selectors.length > 1) {
         rule.selectors.forEach((sel) => {
@@ -112,8 +109,12 @@ module.exports = (config: Config): postcssType.Plugin => {
 
     async OnceExit(css, {result}) {
       // Calls once per file, since every file has single Root
+      // console.log(css, result);
 
-      // console.log({css, result});
+      updates.forEach(([oldRule, newRootRule]) => {
+        oldRule.replaceWith(newRootRule);
+      });
+
       console.log('EXIT', {json});
     },
   };
