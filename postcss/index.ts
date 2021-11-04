@@ -57,7 +57,7 @@ module.exports = (config: Config): postcssType.Plugin => {
     );
     const newRules = postcss.parse(newCss);
 
-    updates.push([rule, newRules]);
+    updates.push([topRule, newRules]);
     /* eslint-enable no-param-reassign */
   }
 
