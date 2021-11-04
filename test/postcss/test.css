@@ -9,6 +9,7 @@
 }
 
 @media (min-width: 30em) {
+  .other,
   .other .other2 {
     color: #00f;
     font-size: 2em;

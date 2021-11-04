@@ -2,97 +2,92 @@ import type {Config} from 'global';
 import type * as postcssType from 'postcss';
 import postcss from 'postcss';
 import parser from 'postcss-selector-parser';
-import SweatMap from 'sweatmap';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
 
+const replacedSelectorPlaceholder = '▚';
+
 module.exports = (config: Config): postcssType.Plugin => {
-  const atomicClasses = new SweatMap({
-    cssSafe: true,
-    existing_strings: {},
-  });
   const PS = new PreStyle({
     ...defaultConfig,
     ...config,
   });
-  const placceholderSelectorLength = PS.placeholder.length + 1;
-  let originalClass: string | undefined;
-  const selectorParser = parser((selectors) => {
-    selectors.walk((selector) => {
-      // Remove the Placeholder class and the succeeding child combinator
-      if (selector.sourceIndex < placceholderSelectorLength) {
-        selector.remove();
-      } else if (
-        selector.sourceIndex === placceholderSelectorLength + 1 &&
-        selector.type === 'class'
-      ) {
-        originalClass = selector.toString().slice(1);
-        selector.replaceWith(parser.className({value: PS.placeholder}));
+
+  async function processRule(rule: postcssType.Rule) {
+    const topRule = (function getParent(r: postcssType.Rule): postcssType.Rule {
+      if (r.parent?.type === 'root') {
+        return r;
       }
-    });
-  });
+      return getParent(r.parent as postcssType.Rule);
+    })(rule);
+    // const isSameAsTopRule = rule.toString() === topRule.toString();
+    let jsonKey = '';
 
-  async function doRule(rule: postcssType.Node) {
-    if (rule.parent?.type !== 'root') return;
-
-    const css = rule.toString();
-    const {classNames} = await PS.process(css);
-
-    const updates = Object.keys(classNames).map((cls) => {
-      const tempRoot = postcss.parse(cls);
-      const tempObj: {[x: string]: string[]} = {};
-
-      // Update selector with Placeholder
-      tempRoot.walkRules((nr) => {
-        const selector = selectorParser.processSync(nr.selectors[0], {
-          lossless: false,
-        });
-        // const atomicClass = atomicClasses.set(
-        //   rule.type + selector + nr.nodes.toString()
-        // );
-
-        if (originalClass) {
-          if (!tempObj[originalClass]) {
-            tempObj[originalClass] = [];
-          }
-
-          //
+    // Set jsonKey and update selector
+    /* eslint-disable no-param-reassign */
+    rule.selector = parser((selectors) => {
+      selectors.walkClasses((selector) => {
+        if (!selector.sourceIndex) {
+          jsonKey = selector.value;
+          selector.replaceWith(
+            parser.className({value: replacedSelectorPlaceholder})
+          );
         }
-
-        console.log({
-          originalClass,
-          selector,
-          temp: nr.nodes.toString(),
-        });
-
-        originalClass = undefined;
-
-        nr.replaceWith(
-          postcss.rule({
-            selector,
-            nodes: nr.nodes,
-          })
-        );
       });
+    }).processSync(rule.selector);
+    rule.selectors = [rule.selector];
+    /* eslint-enable no-param-reassign */
 
-      // Then swap placeholder with new
-      let atomicString = tempRoot.toString();
-      const atomicClass = atomicClasses.set(atomicString);
+    // Get classNames
+    // let classNames = {};
 
-      console.log('asts', atomicString);
+    // for (let i = 0, ln = rule.nodes.length; i < ln; i++) {
+    //   const property = rule.nodes[i].toString();
+    //   const block = processedSelector
+    //     ? `${processedSelector}{${property}}`.trim()
+    //     : property;
+    //   const psobj = await PS.process(block);
 
-      atomicString = atomicString.replace(PS.placeholder, atomicClass);
+    //   classNames = {
+    //     ...classNames,
+    //     ...psobj.classNames,
+    //   };
+    // }
 
-      return {rule: postcss.parse(atomicString), atomicClass};
+    console.log({
+      // isSameAsTopRule,
+      jsonKey,
+      topRuleCss: topRule.toString(),
+      // classNames,
     });
-
-    console.log(rule.type, {css, classNames, updates});
+    console.log('====================');
   }
 
   return {
     postcssPlugin: 'pre-style',
-    AtRule: doRule,
-    Rule: doRule,
+
+    async Rule(rule) {
+      // Break conjoined selectors
+      if (rule.selectors.length > 1) {
+        rule.selectors.forEach((sel) => {
+          const clone = rule.clone();
+
+          clone.selector = sel;
+          clone.selectors = [clone.selector];
+
+          rule.before(clone);
+        });
+
+        rule.remove();
+        return;
+      }
+
+      // Only handle rules that start with a class
+      if (!rule.selector.startsWith('.')) return;
+
+      await processRule.call(this, rule);
+    },
+
     async OnceExit(css, {result}) {
       // Calls once per file, since every file has single Root
 
