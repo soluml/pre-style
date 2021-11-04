@@ -13,6 +13,8 @@ module.exports = (config: Config): postcssType.Plugin => {
     ...config,
   });
 
+  const newRules = new Map<string, postcssType.Rule[]>();
+
   async function processRule(rule: postcssType.Rule) {
     const topRule = (function getParent(r: postcssType.Rule): postcssType.Rule {
       if (r.parent?.type === 'root') {
@@ -20,6 +22,7 @@ module.exports = (config: Config): postcssType.Plugin => {
       }
       return getParent(r.parent as postcssType.Rule);
     })(rule);
+
     // const isSameAsTopRule = rule.toString() === topRule.toString();
     let jsonKey = '';
 
@@ -39,32 +42,37 @@ module.exports = (config: Config): postcssType.Plugin => {
     /* eslint-enable no-param-reassign */
 
     // Get classNames
-    // let classNames = {};
-
-    // for (let i = 0, ln = rule.nodes.length; i < ln; i++) {
-    //   const property = rule.nodes[i].toString();
-    //   const block = processedSelector
-    //     ? `${processedSelector}{${property}}`.trim()
-    //     : property;
-    //   const psobj = await PS.process(block);
-
-    //   classNames = {
-    //     ...classNames,
-    //     ...psobj.classNames,
-    //   };
-    // }
+    const {classNames} = await PS.process(topRule.toString());
 
     console.log({
       // isSameAsTopRule,
+      // SOMETHING: rule.selector,
       jsonKey,
       topRuleCss: topRule.toString(),
-      // classNames,
+      classNames,
     });
     console.log('====================');
   }
 
   return {
     postcssPlugin: 'pre-style',
+
+    async AtRule(atrule) {
+      // Break conjoined selectors within @at-rule
+      if (atrule.nodes.length > 1) {
+        atrule.nodes.forEach((rule) => {
+          const clone = atrule.clone();
+          const ruleClone = rule.clone();
+
+          clone.nodes = [];
+
+          atrule.before(clone);
+          clone.append(ruleClone);
+        });
+
+        atrule.remove();
+      }
+    },
 
     async Rule(rule) {
       // Break conjoined selectors
