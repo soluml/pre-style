@@ -122,7 +122,7 @@ class PreStyle {
 
       classifyResponse = this.classify(atomizedAst);
 
-      writer?.(block, JSON.stringify(classifyResponse));
+      writer(block, JSON.stringify(classifyResponse));
     }
 
     return classifyResponse;

@@ -46,6 +46,9 @@ export default function cache(
     const line: CacheArray = [wsb, wsv];
 
     map.set(wsb, wsv);
+    if (keyString) {
+      Object.assign(keyStringCollection, JSON.parse(wsv[0])[keyString]);
+    }
     stream.write(line);
   }
 
