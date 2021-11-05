@@ -10,6 +10,7 @@ npm-debug.log*
 node_modules
 _prestyle.scss
 _prestyle.scss.classNames.js
+test/postcss/test.css.json
 tmp
 dist
 docs/*

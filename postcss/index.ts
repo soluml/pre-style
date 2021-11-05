@@ -4,10 +4,18 @@ import postcss from 'postcss';
 import parser from 'postcss-selector-parser';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
+import Normalize from '../src/normalize';
+import saveJSON from './saveJSON';
 
 const replacedSelectorPlaceholder = '▚';
 
-module.exports = (config: Config): postcssType.Plugin => {
+interface PostcssModules {
+  getJSON: typeof saveJSON;
+}
+
+module.exports = (
+  config = {} as Config & PostcssModules
+): postcssType.Plugin => {
   const PS = new PreStyle({
     ...defaultConfig,
     ...config,
@@ -107,15 +115,28 @@ module.exports = (config: Config): postcssType.Plugin => {
       await processRule.call(this, rule);
     },
 
-    async OnceExit(css, {result}) {
-      // Calls once per file, since every file has single Root
-      // console.log(css, result);
+    async OnceExit(root, {result}) {
+      const getJSON = config.getJSON || saveJSON;
 
+      // Perform Updates
       updates.forEach(([oldRule, newRootRule]) => {
         oldRule.replaceWith(newRootRule);
       });
 
-      console.log('EXIT', {json});
+      // Re-normalize to eliminate extra rules
+      const newRoot = postcss.parse(Normalize(root.toString()));
+      const newJson = Object.entries(json).reduce(
+        (acc, [key, acs]) => ({
+          ...acc,
+          [key]: Array.from(acs).join(' '),
+        }),
+        {}
+      );
+
+      // `root.replaceWith(newRoot)` didn't seem to work here, so just swap out for the new nodes
+      root.nodes = newRoot.nodes; // eslint-disable-line no-param-reassign
+
+      await getJSON(root.source!.input.file as string, newJson, result.opts.to);
     },
   };
 };
