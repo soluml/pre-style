@@ -36,6 +36,12 @@ module.exports = (
     let jsonKey = '';
 
     // Set jsonKey and update selector
+    if (~rule.selector.indexOf(replacedSelectorPlaceholder)) {
+      throw new Error(
+        `The placeholder (${replacedSelectorPlaceholder}) was used in a css selector. Please replace all instances of this selector with another value!`
+      );
+    }
+
     rule.selector = parser((selectors) => {
       selectors.walkClasses((selector) => {
         if (!selector.sourceIndex) {
