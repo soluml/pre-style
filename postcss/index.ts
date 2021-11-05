@@ -131,7 +131,7 @@ module.exports = (
 
       // Re-normalize to eliminate extra rules
       const newRoot = postcss.parse(Normalize(root.toString()));
-      const newJson = Object.entries(json).reduce(
+      const exportTokens = Object.entries(json).reduce(
         (acc, [key, acs]) => ({
           ...acc,
           [key]: Array.from(acs).join(' '),
@@ -142,7 +142,23 @@ module.exports = (
       // `root.replaceWith(newRoot)` didn't seem to work here, so just swap out for the new nodes
       root.nodes = newRoot.nodes; // eslint-disable-line no-param-reassign
 
-      await getJSON(root.source!.input.file as string, newJson, result.opts.to);
+      result.messages.push({
+        type: 'export',
+        plugin: 'postcss-modules',
+        exportTokens,
+      });
+
+      result.messages.push({
+        type: 'export',
+        plugin: 'pre-style',
+        exportTokens,
+      });
+
+      await getJSON(
+        root.source!.input.file as string,
+        exportTokens,
+        result.opts.to
+      );
     },
   };
 };
