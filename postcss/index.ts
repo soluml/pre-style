@@ -9,13 +9,21 @@ import saveJSON from './saveJSON';
 
 const replacedSelectorPlaceholder = '▚';
 
+// This plugin can assume the identity of `postcss-modules` to better integrate into existing workflows
+enum Identity {
+  PS = 'pre-style',
+  PM = 'postcss-modules',
+}
+
 interface PostcssModules {
-  getJSON: typeof saveJSON;
+  getJSON?: typeof saveJSON;
+  identity?: Identity.PM | Identity.PS;
 }
 
 module.exports = (
   config = {} as Config & PostcssModules
 ): postcssType.Plugin => {
+  const postcssPlugin = config.identity || Identity.PS;
   const PS = new PreStyle({
     ...defaultConfig,
     ...config,
@@ -76,7 +84,7 @@ module.exports = (
   }
 
   return {
-    postcssPlugin: 'pre-style',
+    postcssPlugin,
 
     async AtRule(atrule) {
       if ((atrule as any).PS_NO_PROCESS) return;
@@ -144,13 +152,7 @@ module.exports = (
 
       result.messages.push({
         type: 'export',
-        plugin: 'postcss-modules',
-        exportTokens,
-      });
-
-      result.messages.push({
-        type: 'export',
-        plugin: 'pre-style',
+        plugin: postcssPlugin,
         exportTokens,
       });
 
