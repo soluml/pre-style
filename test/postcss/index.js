@@ -15,5 +15,14 @@ describe('postcss', () => {
     expect(result.css.trim()).toBe(
       '.B #id,.D{font-size:1em}.A,.C #id{color:#00f}@media (min-width:30em){.E,.G .other2{font-size:2em}.F,.H .other2{color:#00f}}#stuff .asd{color:green}'
     );
+
+    expect(require('./test.css.json')).toEqual(
+      expect.objectContaining({
+        article: 'A',
+        title: 'B C',
+        test: 'D A',
+        other: 'E F G H',
+      })
+    );
   });
 });
