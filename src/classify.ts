@@ -1,7 +1,7 @@
 import type {ClassifyResponse} from 'global';
 import type {CssNode} from 'css-tree';
 import csstree from 'css-tree';
-import ATP from 'at-rule-packer';
+import ATP from 'at-rule-packer/dist/tool';
 import type PreStyle from '.';
 import type {AST} from './atomize';
 
@@ -27,7 +27,7 @@ export default function Classify(
     }
   );
 
-  res.css = ATP(res.css);
+  res.css = ATP(res.css) as string;
 
   return res;
 }

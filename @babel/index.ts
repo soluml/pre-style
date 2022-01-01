@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import {spawnSync} from 'child_process';
 import chalk from 'chalk';
-import ATP from 'at-rule-packer';
+import ATP from 'at-rule-packer/dist/tool';
 import defaultConfig from '../bin/utils/defaultConfig';
 import PreStyle from '../src';
 import Noramlize from '../src/normalize';
@@ -80,7 +80,7 @@ export default function BabelPluginPreStyle(babel: any, config: BabelConfig) {
           ''
         );
 
-        finalizedCss = Noramlize(ATP(css));
+        finalizedCss = Noramlize(ATP(css) as string);
         finalizedCssLn = finalizedCss.length;
       }
 

@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import chalk from 'chalk';
 import glob from 'fast-glob';
-import ATP from 'at-rule-packer';
+import ATP from 'at-rule-packer/dist/tool';
 import type Quotes from './utils/quotes';
 import PreStyle from '../src';
 import Noramlize from '../src/normalize';
@@ -108,7 +108,7 @@ export default async function Process(
   );
 
   const cssFileDest = path.resolve(destination, config.filename as string);
-  const finalizedCss = Noramlize(ATP(fullcss));
+  const finalizedCss = Noramlize(ATP(fullcss) as string);
 
   await Promise.all(
     writes.concat([
