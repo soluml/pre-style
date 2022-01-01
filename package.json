@@ -1,6 +1,6 @@
 {
   "name": "pre-style",
-  "version": "2.0.1-alpha",
+  "version": "2.0.2-alpha",
   "description": "",
   "main": "./dist/index.js",
   "bin": {
@@ -11,13 +11,13 @@
     "dist/**/*"
   ],
   "exports": {
-    "babel": {
+    "./babel": {
       "default": "./dist/@babel/index.js"
     },
-    "@babel": {
+    "./@babel": {
       "default": "./dist/@babel/index.js"
     },
-    "postcss": {
+    "./postcss": {
       "default": "./dist/postcss/index.js"
     }
   },
