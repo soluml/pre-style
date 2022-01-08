@@ -146,4 +146,16 @@ describe('Atomizer', () => {
       `@media (max-width:600px){.${placeholder}{aspect-ratio:1}}@media (max-width:600px){.${placeholder}{color:white}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){.${placeholder}{font-weight:normal}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){.${placeholder}{background-color:yellow}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){.${placeholder}:active{color:green}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){.${placeholder}:link{color:green}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){.${placeholder}:hover{color:green}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){@container (min-width: 650px){.${placeholder}{grid-template-columns:2fr 1fr}}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){@container (min-width: 650px){.${placeholder}{display:grid}}}}}@media (max-width:600px){@media (max-width:600px),(min-width:200px){@supports not ((text-align-last:justify) or (-moz-text-align-last:justify)){@container (min-width: 650px){.${placeholder}{container-type:inline-size}}}}}`
     );
   });
+
+  it('Should handle strings within CSS', () => {
+    const css = `
+      .${placeholder}::before {
+        content: '\\2713';
+      }
+    `;
+
+    expect(csstree.generate(Atomize(css))).toBe(
+      `.${placeholder}::before{content:'\\2713'}`
+    );
+  });
 });
