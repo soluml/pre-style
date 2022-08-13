@@ -19,6 +19,9 @@
     },
     "./postcss": {
       "default": "./dist/postcss/index.js"
+    },
+    "./postcss/getJSON": {
+      "default": "./dist/postcss/saveJSONToPreStyleCache.js"
     }
   },
   "scripts": {
