@@ -26,7 +26,7 @@ export default async function saveJSONToPreStyleCache(
   await promises.mkdir(path.dirname(final), {recursive: true});
 
   // Write the file
-  await promises.writeFile(`${cssFile}.json`, JSON.stringify(json));
+  await promises.writeFile(`${final}.json`, JSON.stringify(json));
 
   return json;
 }
