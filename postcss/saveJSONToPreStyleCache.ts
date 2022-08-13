@@ -1,4 +1,4 @@
-import {writeFile, promises} from 'fs';
+import {promises} from 'fs';
 import path from 'path';
 import findCacheDir from 'find-cache-dir';
 
@@ -14,23 +14,19 @@ export function getPathToJSONFileInCache(cssFile: string) {
   return cacheDirName!(path.join('modules', re));
 }
 
-export default function saveJSONToPreStyleCache(
+export default async function saveJSONToPreStyleCache(
   cssFile: string,
   json: {[x: string]: string},
   // To was added as postcss-modules allows three args into getJSON
   to?: any //eslint-disable-line
 ) {
-  return new Promise((resolve, reject) => {
-    const final = getPathToJSONFileInCache(cssFile);
+  const final = getPathToJSONFileInCache(cssFile);
 
-    promises
-      .mkdir(path.dirname(final), {recursive: true})
-      .then(() => {
-        writeFile(`${cssFile}.json`, JSON.stringify(json), (e) =>
-          e ? reject(e) : resolve(json)
-        );
-      })
-      .then(resolve)
-      .catch((e) => reject(e));
-  });
+  // Create Directories
+  await promises.mkdir(path.dirname(final), {recursive: true});
+
+  // Write the file
+  await promises.writeFile(`${cssFile}.json`, JSON.stringify(json));
+
+  return json;
 }
