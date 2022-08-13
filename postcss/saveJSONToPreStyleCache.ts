@@ -7,7 +7,7 @@ const cacheDirName = findCacheDir({
   thunk: true,
 });
 
-function getFinal(cssFile: string) {
+export function getPathToJSONFileInCache(cssFile: string) {
   const {dir, base} = path.parse(cssFile);
   const re = path.resolve(dir, base.split('?')[0]);
 
@@ -21,7 +21,7 @@ export default function saveJSONToPreStyleCache(
   to?: any //eslint-disable-line
 ) {
   return new Promise((resolve, reject) => {
-    const final = getFinal(cssFile);
+    const final = getPathToJSONFileInCache(cssFile);
 
     promises
       .mkdir(path.dirname(final), {recursive: true})
