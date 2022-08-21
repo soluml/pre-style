@@ -18,18 +18,21 @@ enum Identity {
 interface PostcssModules {
   getJSON?: typeof saveJSON;
   identity?: Identity.PM | Identity.PS;
+  onlyTheseFiles?: RegExp;
 }
 
 module.exports = (
   config = {} as Config & PostcssModules
 ): postcssType.Plugin => {
   const postcssPlugin = config.identity || Identity.PS;
+  const {onlyTheseFiles} = config;
   const PS = new PreStyle({
     ...defaultConfig,
     ...config,
   });
   const json: {[x: string]: Set<string>} = {};
   const updates: [postcssType.Rule, postcssType.Root][] = [];
+  let skipFile = false;
 
   async function processRule(rule: postcssType.Rule) {
     /* eslint-disable no-param-reassign */
@@ -86,7 +89,19 @@ module.exports = (
   return {
     postcssPlugin,
 
+    async Once(root) {
+      const filename = (root.source!.input.file as string).trim();
+
+      if (!onlyTheseFiles || onlyTheseFiles.test(filename)) {
+        skipFile = false;
+      } else {
+        skipFile = true;
+      }
+    },
+
     async AtRule(atrule) {
+      if (skipFile) return;
+
       if ((atrule as any).PS_NO_PROCESS) return;
 
       // Break conjoined selectors within @at-rule
@@ -106,6 +121,8 @@ module.exports = (
     },
 
     async Rule(rule) {
+      if (skipFile) return;
+
       if ((rule as any).PS_NO_PROCESS) return;
 
       // Break conjoined selectors
@@ -130,6 +147,8 @@ module.exports = (
     },
 
     async OnceExit(root, {result}) {
+      if (skipFile) return;
+
       const getJSON = config.getJSON || saveJSON;
 
       // Perform Updates
