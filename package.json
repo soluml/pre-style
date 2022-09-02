@@ -1,6 +1,6 @@
 {
   "name": "pre-style",
-  "version": "2.1.0-alpha",
+  "version": "2.1.1-alpha",
   "description": "",
   "main": "./dist/index.js",
   "bin": {
@@ -24,7 +24,7 @@
       "default": "./dist/astro/index.js"
     },
     "./astro/postcss": {
-      "default": "./dist/astro/index.js"
+      "default": "./dist/astro/postcss.js"
     }
   },
   "scripts": {
