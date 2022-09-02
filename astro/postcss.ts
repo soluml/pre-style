@@ -4,8 +4,10 @@ export const DEFAULT_MATCHER = '.prestyle.(c|le|sa|sc)ss';
 
 export const getRegex = (matcher: string) => new RegExp(`${matcher}?$`);
 
+/* eslint-disable no-useless-escape */
 export const getRegexWithOptionalQueryString = (matcher: string) =>
-  new RegExp(`${matcher}(?.*)?$`);
+  new RegExp(`${matcher}(\?.*)?$`);
+/* eslint-enable */
 
 export default function PreStyleAstroPostCSSConfig(
   preStyleFileMatcher = DEFAULT_MATCHER
