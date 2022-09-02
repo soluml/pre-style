@@ -8,14 +8,31 @@ import {promisify} from 'util';
 import glob from 'glob';
 /* eslint-enable */
 import {getPathToJSONFileInCache} from '../postcss/saveJSONToPreStyleCache';
+import {
+  DEFAULT_MATCHER,
+  getRegexWithOptionalQueryString,
+  getRegex,
+} from './postcss';
 
 type Command = 'build' | 'dev';
 
+interface Options {
+  preStyleFileMatcher: string;
+}
+
 const promglob = promisify(glob);
 
-function preStyleModules(command: Command, emit): Plugin {
+function preStyleModules(
+  command: Command,
+  emit: (str: string) => void,
+  options?: Options
+): Plugin {
+  const matcher = options?.preStyleFileMatcher ?? DEFAULT_MATCHER;
+
   const fileRegex =
-    command === 'build' ? /(\.prestyle.s?css)(\?.*)?$/ : /(\.prestyle.s?css)$/;
+    command === 'build'
+      ? getRegexWithOptionalQueryString(matcher)
+      : getRegex(matcher);
 
   return {
     name: 'pre-style-modules',
@@ -37,7 +54,7 @@ function preStyleModules(command: Command, emit): Plugin {
   };
 }
 
-export default function preStyleIntegration() {
+export default function preStyleIntegration(options?: Options) {
   const emitter = new EventEmitter();
   const evt = 'prestyle-css';
   const emit = emitter.emit.bind(emitter, evt);
@@ -59,14 +76,14 @@ export default function preStyleIntegration() {
       }) => {
         updateConfig({
           vite: {
-            plugins: [preStyleModules(command, emit)],
+            plugins: [preStyleModules(command, emit, options)],
             build: {
               cssCodeSplit: false,
             },
           },
         });
       },
-      'astro:build:done': async (opts) => {
+      'astro:build:done': async (opts: {dir: URL}) => {
         const {base} = path.parse(opts.dir.pathname);
         const [cssFilePath] = await promglob(`${base}/assets/*.css`);
 
