@@ -26,6 +26,7 @@ Sets the character encoding of the stylesheet. It is hoisted first (hoist order 
 
 ##### Description
 
+- Type - statement
 - Hoist - 0
 - Atomic - false
 
@@ -39,6 +40,7 @@ Imports rules from another stylesheet. It is hoisted third (hoist order 2): it c
 
 ##### Description
 
+- Type - statement
 - Hoist - 2
 - Atomic - false
 
@@ -55,6 +57,7 @@ Declares an XML namespace for the stylesheet. Used mainly with SVG/MathML or XHT
 
 ##### Description
 
+- Type - statement
 - Hoist - 3
 - Atomic - false
 
@@ -76,6 +79,7 @@ Applies the styles inside it only when the media query matches (viewport size, m
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - true
 
@@ -94,6 +98,7 @@ Applies styles only when the browser supports the given CSS feature, selector, o
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - true
 
@@ -111,6 +116,7 @@ Applies styles based on the size, style, or scroll state of an ancestor containe
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - true
 
@@ -132,6 +138,7 @@ Defines a named alias for a media query that you can reuse.
 
 ##### Description
 
+- Type - statement
 - Hoist - false
 - Atomic - false
 
@@ -151,6 +158,7 @@ A general conditional rule that combines media and supports queries and allows e
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - true
 
@@ -170,18 +178,33 @@ A general conditional rule that combines media and supports queries and allows e
 
 ## Cascade & Scoping
 
-### `@layer`
+### `@layer` (statement)
 
-Declares a cascade layer. Layers let you control precedence between groups of rules no matter how specific their selectors are. It can be written as a statement (to set layer order) or as a block. The statement form is hoisted second (hoist order 1): it comes after `@charset` and before `@import`, `@namespace`, and every other rule. The block form can appear anywhere and does not need to be hoisted.
+Declares the names and order of cascade layers without adding any styles to them. It is hoisted second (hoist order 1): it comes after `@charset` and before `@import`, `@namespace`, and every other rule. Matched by `@layer` followed by one or more comma-separated layer names and a semicolon, with no braces.
+
+Hoisting can change layer order. Layers are ordered by where each name first appears, so if a `@layer base { … }` block comes before `@layer reset, base;` in the source, hoisting the statement moves `reset` ahead of `base`.
 
 ##### Description
 
+- Type - statement
 - Hoist - 1
-- Atomic - true
+- Atomic - false
 
 ```css
 @layer reset, base, components, utilities;
+```
 
+### `@layer` (block)
+
+Adds styles to a named or anonymous cascade layer. Layers let you control precedence between groups of rules no matter how specific their selectors are. It stays where it was written and is not hoisted; its position only sets the layer's order when no earlier `@layer` statement has already declared that layer. Matched by `@layer` followed by an optional layer name and a `{ … }` block.
+
+##### Description
+
+- Type - block
+- Hoist - false
+- Atomic - true
+
+```css
 @layer components {
   .button {
     padding: 0.5em 1em;
@@ -195,6 +218,7 @@ Limits styles to a DOM subtree, with an optional lower boundary ("donut scope").
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - true
 
@@ -216,6 +240,7 @@ Defines a custom font, its source files, and descriptors such as weight, style, 
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -234,6 +259,7 @@ Gives readable names to OpenType feature indices for a font family, so `font-var
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -255,6 +281,7 @@ Customizes the color palette of a color font (COLRv0/v1). You apply it with `fon
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -283,6 +310,7 @@ Defines the intermediate steps of a CSS animation.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -307,6 +335,7 @@ Sets the starting values for a transition on an element's first style update, fo
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - true
 
@@ -331,6 +360,7 @@ Opts the document into cross-document (multi-page) view transitions.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -350,6 +380,7 @@ Registers a custom property with a type (syntax), inheritance behavior, and init
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -372,6 +403,7 @@ Defines a custom CSS function that takes arguments and returns a value.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -385,12 +417,13 @@ Defines a custom CSS function that takes arguments and returns a value.
 }
 ```
 
-### `@mixin` / `@apply` _(draft, not implemented)_
+### `@mixin` _(draft, not implemented)_
 
-Defines a reusable block of declarations (`@mixin`) and inserts it elsewhere (`@apply`).
+Defines a named, reusable block of declarations. You insert it elsewhere with `@apply`.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -399,7 +432,19 @@ Defines a reusable block of declarations (`@mixin`) and inserts it elsewhere (`@
   display: grid;
   place-items: center;
 }
+```
 
+### `@apply` _(draft, not implemented)_
+
+Inserts the declarations of a mixin defined with `@mixin` into the current style rule.
+
+##### Description
+
+- Type - statement
+- Hoist - false
+- Atomic - false
+
+```css
 .hero {
   @apply --center;
 }
@@ -411,6 +456,7 @@ Defines a named alias for a selector list.
 
 ##### Description
 
+- Type - statement
 - Hoist - false
 - Atomic - false
 
@@ -432,6 +478,7 @@ Changes page properties (size, margins, orientation) when printing or using page
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -452,6 +499,7 @@ Nested inside `@page`, these style the 16 page-margin boxes (headers, footers, c
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -473,6 +521,7 @@ Defines a named fallback position for an anchor-positioned element. You referenc
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -499,6 +548,7 @@ Defines a custom counter style for list markers and `counter()` output.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -524,6 +574,7 @@ Defines and names an ICC color profile so the `color()` function can use it.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -547,6 +598,7 @@ Applied styles based on the document's URL. It has been removed from standards, 
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - true
 
@@ -565,6 +617,7 @@ Controlled viewport settings from CSS. Use `<meta name="viewport">` instead.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
@@ -580,6 +633,7 @@ Proposed syntax for CSS nesting. Native nesting shipped without it.
 
 ##### Description
 
+- Type - block
 - Hoist - false
 - Atomic - false
 
