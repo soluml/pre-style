@@ -29,6 +29,7 @@ Sets the character encoding of the stylesheet. It is hoisted first (hoist order 
 - Type - statement
 - Hoist - 0
 - Atomic - false
+- Overridable - false
 
 ```css
 @charset "UTF-8";
@@ -43,6 +44,7 @@ Imports rules from another stylesheet. It is hoisted third (hoist order 2): it c
 - Type - statement
 - Hoist - 2
 - Atomic - false
+- Overridable - false
 
 ```css
 @import url("theme.css");
@@ -60,6 +62,7 @@ Declares an XML namespace for the stylesheet. Used mainly with SVG/MathML or XHT
 - Type - statement
 - Hoist - 3
 - Atomic - false
+- Overridable - true
 
 ```css
 @namespace svg url("http://www.w3.org/2000/svg");
@@ -82,6 +85,7 @@ Applies the styles inside it only when the media query matches (viewport size, m
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 @media (min-width: 768px) and (prefers-color-scheme: dark) {
@@ -101,6 +105,7 @@ Applies styles only when the browser supports the given CSS feature, selector, o
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 @supports (display: grid) and selector(:has(a)) {
@@ -119,6 +124,7 @@ Applies styles based on the size, style, or scroll state of an ancestor containe
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 .card-wrapper {
@@ -141,6 +147,7 @@ Defines a named alias for a media query that you can reuse.
 - Type - statement
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @custom-media --narrow-window (max-width: 30em);
@@ -161,6 +168,7 @@ A general conditional rule that combines media and supports queries and allows e
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 @when media(width >= 400px) and supports(display: flex) {
@@ -189,6 +197,7 @@ Hoisting can change layer order. Layers are ordered by where each name first app
 - Type - statement
 - Hoist - 1
 - Atomic - false
+- Overridable - false
 
 ```css
 @layer reset, base, components, utilities;
@@ -203,6 +212,7 @@ Adds styles to a named or anonymous cascade layer. Layers let you control preced
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 @layer components {
@@ -221,6 +231,7 @@ Limits styles to a DOM subtree, with an optional lower boundary ("donut scope").
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 @scope (.card) to (.card-content) {
@@ -243,6 +254,7 @@ Defines a custom font, its source files, and descriptors such as weight, style, 
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @font-face {
@@ -262,6 +274,7 @@ Gives readable names to OpenType feature indices for a font family, so `font-var
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - false
 
 ```css
 @font-feature-values "Font One" {
@@ -284,6 +297,7 @@ Customizes the color palette of a color font (COLRv0/v1). You apply it with `fon
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @font-palette-values --brand {
@@ -313,6 +327,7 @@ Defines the intermediate steps of a CSS animation.
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @keyframes fade-in {
@@ -338,6 +353,7 @@ Sets the starting values for a transition on an element's first style update, fo
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 .popover {
@@ -363,6 +379,7 @@ Opts the document into cross-document (multi-page) view transitions.
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @view-transition {
@@ -383,6 +400,7 @@ Registers a custom property with a type (syntax), inheritance behavior, and init
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @property --angle {
@@ -406,6 +424,7 @@ Defines a custom CSS function that takes arguments and returns a value.
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @function --negate(--value) {
@@ -426,6 +445,7 @@ Defines a named, reusable block of declarations. You insert it elsewhere with `@
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @mixin --center {
@@ -443,6 +463,7 @@ Inserts the declarations of a mixin defined with `@mixin` into the current style
 - Type - statement
 - Hoist - false
 - Atomic - false
+- Overridable - false
 
 ```css
 .hero {
@@ -459,6 +480,7 @@ Defines a named alias for a selector list.
 - Type - statement
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @custom-selector :--heading h1, h2, h3;
@@ -481,6 +503,7 @@ Changes page properties (size, margins, orientation) when printing or using page
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - false
 
 ```css
 @page {
@@ -502,6 +525,7 @@ Nested inside `@page`, these style the 16 page-margin boxes (headers, footers, c
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - false
 
 ```css
 @page {
@@ -524,6 +548,7 @@ Defines a named fallback position for an anchor-positioned element. You referenc
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @position-try --below {
@@ -551,6 +576,7 @@ Defines a custom counter style for list markers and `counter()` output.
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @counter-style thumbs {
@@ -577,6 +603,7 @@ Defines and names an ICC color profile so the `color()` function can use it.
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - true
 
 ```css
 @color-profile --swop5c {
@@ -601,6 +628,7 @@ Applied styles based on the document's URL. It has been removed from standards, 
 - Type - block
 - Hoist - false
 - Atomic - true
+- Overridable - false
 
 ```css
 @document url("https://example.com/")
@@ -620,6 +648,7 @@ Controlled viewport settings from CSS. Use `<meta name="viewport">` instead.
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - false
 
 ```css
 @viewport {
@@ -636,6 +665,7 @@ Proposed syntax for CSS nesting. Native nesting shipped without it.
 - Type - block
 - Hoist - false
 - Atomic - false
+- Overridable - false
 
 ```css
 /* No longer valid — use native nesting instead: */
