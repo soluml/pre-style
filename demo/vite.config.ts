@@ -11,7 +11,7 @@ const SOURCE = 'pre-style-source';
 const plugin = 'vite-plugin-pre-style';
 const { default: preStyle }: typeof import('vite-plugin-pre-style') = await import(plugin);
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     preStyle({
       include: ['app/**/*.{ts,tsx}'],
@@ -20,7 +20,8 @@ export default defineConfig({
         scss: ['app/styles/_tokens.scss'],
       },
       lightningcss: { minify: true },
-      sourceMap: true,
+      // Source maps in dev only.
+      sourceMap: command === 'serve',
     }),
     reactRouter(),
   ],
@@ -28,4 +29,4 @@ export default defineConfig({
   ssr: {
     resolve: { conditions: [SOURCE, ...defaultServerConditions], externalConditions: [SOURCE] },
   },
-});
+}));
