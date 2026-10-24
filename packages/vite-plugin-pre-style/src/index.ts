@@ -91,6 +91,12 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   let server: ViteDevServer | undefined;
   let compiler: Compiler;
   let table: { revision: number; table: MergeTable } | undefined;
+  // In dev, the client and SSR environments share one compiler, so the
+  // server renders the same class strings the browser hydrates.
+  let devCompiler: Promise<Compiler> | undefined;
+  // Whether the client build imported the CSS module, in which case Vite
+  // bundles the CSS and the plugin doesn't write `output.file`.
+  let cssImported = false;
 
   const mergeTable = () => {
     if (table === undefined || table.revision !== compiler.revision)
@@ -105,10 +111,11 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       for (const id of [RESOLVED_CSS_ID, RESOLVED_MERGE_ID]) {
         const module = environment.moduleGraph.getModuleById(id);
         if (module === undefined) continue;
-        // Invalidated now, so the next request regenerates it, then updated
-        // in the browser through HMR.
+        // Invalidated now, so the next request regenerates it. Only the
+        // browser gets an HMR update: reloading on the server restarts its
+        // whole module runner.
         environment.moduleGraph.invalidateModule(module);
-        void environment.reloadModule(module);
+        if (environment.config.consumer === 'client') void environment.reloadModule(module);
       }
     }
   };
@@ -135,16 +142,24 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
     },
 
     async buildStart() {
-      compiler = await createCompiler({
-        prependFiles: options.prependFiles,
-        lightningcss: options.lightningcss,
-        sourceMap: options.sourceMap,
-        root: config.root,
-        warn: (message) => config.logger.warn(`[pre-style] ${message}`),
-      });
-      table = undefined;
+      const create = () =>
+        createCompiler({
+          prependFiles: options.prependFiles,
+          lightningcss: options.lightningcss,
+          sourceMap: options.sourceMap,
+          root: config.root,
+          warn: (message) => config.logger.warn(`[pre-style] ${message}`),
+        });
       // Dev names blocks on demand, as they're served.
-      if (config.command !== 'build') return;
+      if (config.command !== 'build') {
+        compiler = await (devCompiler ??= create());
+        return;
+      }
+      // Each build environment scans the same files, so they assign the
+      // same names.
+      compiler = await create();
+      table = undefined;
+      cssImported = false;
 
       const exclude = [
         ...toArray(options.exclude),
@@ -183,7 +198,11 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       if (id === RESOLVED_MERGE_ID) {
         return `import { createMerge } from 'pre-style';\nexport const merge = /* @__PURE__ */ createMerge(${JSON.stringify(mergeTable())});\n`;
       }
-      if (id === RESOLVED_CSS_ID) return outputCss().code;
+      if (id === RESOLVED_CSS_ID) {
+        if (config.command === 'build' && this.environment.config.consumer === 'client')
+          cssImported = true;
+        return outputCss().code;
+      }
     },
 
     transform(code, id) {
@@ -265,7 +284,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
     },
 
     generateBundle() {
-      if (this.environment.config.consumer !== 'client') return;
+      if (this.environment.config.consumer !== 'client' || cssImported) return;
       const { code, map, bannerLines } = outputCss();
       if (map === null) {
         this.emitFile({ type: 'asset', fileName: outputFile, source: code });

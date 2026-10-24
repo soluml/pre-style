@@ -88,6 +88,16 @@ export function Card({ children }) {
 
 In a build, the plugin writes `prestyle.css` to your output directory and links it from `index.html`. In dev, the CSS is served by Vite and updates as you edit.
 
+### Frameworks without `index.html`
+
+Frameworks that render on the server, such as React Router's framework mode, don't use `index.html`. Import Pre-Style's CSS in your root module instead:
+
+```ts
+import 'virtual:pre-style.css';
+```
+
+Vite then bundles the CSS with your app's other CSS, and the framework links it when rendering on the server, both in builds and in dev. The plugin doesn't write `output.file` when the CSS is imported this way.
+
 ## Writing blocks
 
 A block styles one element. Each block is treated as its own small stylesheet, where declarations at the top level apply to the element.
@@ -315,6 +325,14 @@ npm run typecheck
 npm run lint       # Oxlint
 npm run format     # Oxfmt
 npm run build
+```
+
+`demo/` is a React Router app in framework mode, for trying Pre-Style on the client and server. It uses the packages' TypeScript source, so changes to them show up without a build.
+
+```sh
+npm run demo         # dev server
+npm run demo:build   # production build
+npm run demo:start   # serve the production build
 ```
 
 ## License

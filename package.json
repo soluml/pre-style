@@ -3,16 +3,20 @@
   "private": true,
   "workspaces": [
     "packages/pre-style",
-    "packages/vite-plugin-pre-style"
+    "packages/vite-plugin-pre-style",
+    "demo"
   ],
   "type": "module",
   "scripts": {
-    "build": "npm run build --workspaces",
-    "typecheck": "npm run typecheck --workspaces",
-    "test": "npm test --workspaces",
+    "build": "npm run build -w packages/pre-style -w packages/vite-plugin-pre-style",
+    "typecheck": "npm run typecheck -w packages/pre-style -w packages/vite-plugin-pre-style",
+    "test": "npm test -w packages/pre-style -w packages/vite-plugin-pre-style",
     "lint": "oxlint",
     "format": "oxfmt",
-    "format:check": "oxfmt --check"
+    "format:check": "oxfmt --check",
+    "demo": "npm run dev -w demo",
+    "demo:build": "npm run build -w demo",
+    "demo:start": "npm run start -w demo"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

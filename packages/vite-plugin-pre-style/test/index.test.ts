@@ -127,6 +127,16 @@ describe('build', () => {
   });
 });
 
+describe('importing virtual:pre-style.css', () => {
+  test('Vite bundles the CSS, and the plugin does not write output.file', async () => {
+    const files = await buildFixture('imported', { lightningcss: { minify: true } });
+    assert.equal(files.get('prestyle.css'), undefined);
+    const css = [...files].find(([name]) => name.endsWith('.css'));
+    assert.match(css![0], /^assets\/index-.+\.css$/);
+    assert.match(css![1], /\.A\{color:red\}/);
+  });
+});
+
 describe('errors', () => {
   const main = `${fixture('errors')}/src/main.ts`;
   after(() => writeFileSync(main, 'export const ok = true;\n'));
@@ -171,9 +181,17 @@ describe('dev', () => {
       // Dev names blocks in the order they're served.
       assert.match(main!.code, /const base = "A A-B";/);
 
-      await server.transformRequest('/src/button.ts');
+      const button = await server.transformRequest('/src/button.ts');
       const css = await server.transformRequest('/__pre-style.css');
       assert.match(css!.code, /padding-top:8px/);
+
+      // The SSR environment shares the compiler, so it renders the same
+      // class strings the browser hydrates. `button.ts`'s names depend on
+      // the blocks named before it, so a separate compiler would differ.
+      const ssrButton = await server.environments.ssr.transformRequest('/src/button.ts');
+      const classString = (code: string) => /button = "([^"]+)"/.exec(code)![1];
+      assert.equal(classString(ssrButton!.code), classString(button!.code));
+      assert.notEqual(classString(button!.code).split(' ')[0], 'A');
     } finally {
       await server.close();
     }
