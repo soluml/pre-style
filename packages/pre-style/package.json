@@ -23,10 +23,12 @@
   "type": "module",
   "exports": {
     ".": {
+      "pre-style-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./compiler": {
+      "pre-style-source": "./src/compiler/index.ts",
       "types": "./dist/compiler/index.d.ts",
       "default": "./dist/compiler/index.js"
     }

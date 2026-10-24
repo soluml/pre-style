@@ -26,9 +26,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc",
-    "test": "node --test \"test/**/*.test.ts\""
+    "test": "node --conditions=pre-style-source --test \"test/**/*.test.ts\""
   },
   "dependencies": {
+    "magic-string": "^1.4.3",
+    "oxc-parser": "^0.155.0",
     "pre-style": "3.0.0-alpha.0"
   },
   "devDependencies": {

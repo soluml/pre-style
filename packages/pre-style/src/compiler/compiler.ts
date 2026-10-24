@@ -127,6 +127,12 @@ export class Compiler {
     };
   }
 
+  // Increases whenever a class or global rule is added, so callers can tell
+  // when the output CSS has changed.
+  get revision(): number {
+    return this.#order;
+  }
+
   // Pass 1 of naming: parses a block and counts what it uses. Call for every
   // block before `assignNames`.
   scan(block: Block): void {
