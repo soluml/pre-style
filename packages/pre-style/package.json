@@ -1,0 +1,57 @@
+{
+  "name": "pre-style",
+  "version": "3.0.0-alpha.0",
+  "description": "Zero-runtime CSS-in-JS that compiles css and scss blocks into atomic CSS classes.",
+  "homepage": "http://pre.style",
+  "bugs": {
+    "url": "https://github.com/soluml/pre-style/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Benjamin Solum",
+    "email": "benjamin@soluml.com",
+    "url": "http://soluml.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soluml/pre-style/",
+    "directory": "packages/pre-style"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "test": "node --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "sweatmap": "^0.4.1"
+  },
+  "devDependencies": {
+    "lightningcss": "^1.33.0",
+    "sass": "^1.106.1"
+  },
+  "peerDependencies": {
+    "lightningcss": "^1.33.0",
+    "sass": "^1.106.1"
+  },
+  "peerDependenciesMeta": {
+    "lightningcss": {
+      "optional": true
+    },
+    "sass": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

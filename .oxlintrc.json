@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "node"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {},
+  "env": {
+    "builtin": true,
+    "node": true
+  },
+  "ignorePatterns": ["docs/", "src/www/", "**/dist/"]
+}
