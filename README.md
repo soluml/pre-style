@@ -275,7 +275,7 @@ preStyle({
 | `exclude`      |                                             | Globs removed from `include`. |
 | `prependFiles` |                                             | Files added to the start of blocks. See [Sharing values with prepended files](#sharing-values-with-prepended-files). |
 | `lightningcss` |                                             | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before Pre-Style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
-| `sourceMap`    | `false`                                     | Write a source map next to the CSS file, mapping each class to the first block it appears in. |
+| `sourceMap`    | `false`                                     | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre-style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
 | `quotes`       | `'double-quote'`                            | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`. |
 | `output.file`  | `'prestyle.css'`                            | Path and name of the CSS file, relative to Vite's `build.outDir`. |
 | `output.banner`|                                             | Text added to the start of the CSS file. |

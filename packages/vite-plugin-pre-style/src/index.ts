@@ -120,18 +120,33 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
     }
   };
 
+  // The output CSS with the banner and footer, and its source map (when
+  // `sourceMap` is on) as a parsed object.
   const outputCss = () => {
     const { code, map } = compiler.css();
+    let json: { mappings: string; sources: string[] } | null = null;
+    if (map !== null) {
+      json = JSON.parse(map);
+      // Lines added by the banner shift the mappings down.
+      const bannerLines = banner ? banner.split('\n').length - (banner.endsWith('\n') ? 1 : 0) : 0;
+      json!.mappings = ';'.repeat(bannerLines) + json!.mappings;
+    }
     return {
       code: `${banner}${banner && !banner.endsWith('\n') ? '\n' : ''}${code}${footer}`,
-      map,
-      bannerLines: banner ? banner.split('\n').length - (banner.endsWith('\n') ? 1 : 0) : 0,
+      map: json,
     };
   };
 
   return {
     name: 'pre-style',
     enforce: 'pre',
+
+    // Vite only passes CSS source maps to the browser in dev with
+    // `css.devSourcemap`, so `sourceMap` turns it on unless it's set.
+    config(userConfig) {
+      if (options.sourceMap && userConfig.css?.devSourcemap === undefined)
+        return { css: { devSourcemap: true } };
+    },
 
     configResolved(resolved) {
       config = resolved;
@@ -201,7 +216,10 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       if (id === RESOLVED_CSS_ID) {
         if (config.command === 'build' && this.environment.config.consumer === 'client')
           cssImported = true;
-        return outputCss().code;
+        // Vite combines this map with its own, for the browser in dev and for
+        // the bundled CSS in builds (with `build.sourcemap`).
+        const { code, map } = outputCss();
+        return { code, map };
       }
     },
 
@@ -285,7 +303,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
 
     generateBundle() {
       if (this.environment.config.consumer !== 'client' || cssImported) return;
-      const { code, map, bannerLines } = outputCss();
+      const { code, map } = outputCss();
       if (map === null) {
         this.emitFile({ type: 'asset', fileName: outputFile, source: code });
         return;
@@ -297,13 +315,10 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
         fileName: outputFile,
         source: `${code}\n/*# sourceMappingURL=${name} */\n`,
       });
-      const json = JSON.parse(map);
-      // Lines added by the banner shift the mappings down.
-      json.mappings = ';'.repeat(bannerLines) + json.mappings;
-      json.sources = json.sources.map((source: string) =>
+      map.sources = map.sources.map((source) =>
         relative(resolve(config.root, config.build.outDir, outputFile, '..'), source),
       );
-      this.emitFile({ type: 'asset', fileName: mapFile, source: JSON.stringify(json) });
+      this.emitFile({ type: 'asset', fileName: mapFile, source: JSON.stringify(map) });
     },
   };
 }

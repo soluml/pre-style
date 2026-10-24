@@ -19,13 +19,25 @@ const config = (name: string, options: PreStyleOptions): InlineConfig => ({
 });
 
 // Builds a fixture without writing it, and returns its output files.
-async function buildFixture(name: string, options: PreStyleOptions = {}) {
-  const result = (await build(config(name, options))) as Rollup.RollupOutput;
+async function buildFixture(
+  name: string,
+  options: PreStyleOptions = {},
+  overrides: InlineConfig = {},
+) {
+  const base = config(name, options);
+  const result = (await build({
+    ...base,
+    ...overrides,
+    build: { ...base.build, ...overrides.build },
+  })) as Rollup.RollupOutput;
   const files = new Map<string, string>();
   for (const item of result.output)
     files.set(item.fileName, item.type === 'chunk' ? item.code : String(item.source));
   return files;
 }
+
+// The class string assigned to `button` in transformed code.
+const classString = (code: string) => /button = "([^"]+)"/.exec(code)![1];
 
 const chunk = (files: Map<string, string>) => [...files].find(([name]) => name.endsWith('.js'))![1];
 
@@ -135,6 +147,17 @@ describe('importing virtual:pre-style.css', () => {
     assert.match(css![0], /^assets\/index-.+\.css$/);
     assert.match(css![1], /\.A\{color:red\}/);
   });
+
+  // Vite doesn't write source maps for bundled CSS, even with
+  // `build.sourcemap`, so imported CSS only has a map in dev.
+  test('the bundled CSS has no source map', async () => {
+    const files = await buildFixture(
+      'imported',
+      { sourceMap: true },
+      { build: { sourcemap: true } },
+    );
+    assert.ok(![...files.keys()].some((name) => name.endsWith('.css.map')));
+  });
 });
 
 describe('errors', () => {
@@ -189,9 +212,28 @@ describe('dev', () => {
       // class strings the browser hydrates. `button.ts`'s names depend on
       // the blocks named before it, so a separate compiler would differ.
       const ssrButton = await server.environments.ssr.transformRequest('/src/button.ts');
-      const classString = (code: string) => /button = "([^"]+)"/.exec(code)![1];
       assert.equal(classString(ssrButton!.code), classString(button!.code));
       assert.notEqual(classString(button!.code).split(' ')[0], 'A');
+    } finally {
+      await server.close();
+    }
+  });
+
+  test('with sourceMap, the CSS module maps to the blocks', async () => {
+    const server = await createServer({
+      ...config('basic', { sourceMap: true }),
+      server: { middlewareMode: true, ws: false },
+    });
+    try {
+      await server.transformRequest('/src/main.ts');
+      const css = await server.transformRequest('/__pre-style.css');
+      const encoded =
+        /sourceMappingURL=data:application\/json;(?:charset=utf-8;)?base64,([A-Za-z0-9+/=]+)/.exec(
+          css!.code,
+        )![1];
+      const map = JSON.parse(Buffer.from(encoded, 'base64').toString());
+      assert.deepEqual(map.sources, [`${fixture('basic')}/src/main.ts`]);
+      assert.match(map.sourcesContent[0], /const base = css`/);
     } finally {
       await server.close();
     }
