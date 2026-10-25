@@ -1,0 +1,43 @@
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import viteReact from '@vitejs/plugin-react';
+import {
+  defineConfig,
+  defaultClientConditions,
+  defaultExternalConditions,
+  defaultServerConditions,
+} from 'vite';
+
+// `pre-style-source` resolves Pre-Style's packages to their TypeScript
+// source, so changes to them show up here without a build. Setting
+// conditions replaces Vite's defaults, so they're added to them.
+const SOURCE = 'pre-style-source';
+
+// Vite bundles this config, including linked workspace packages, without
+// that condition. Importing the plugin through a variable leaves it to Node,
+// which the npm scripts run with `--conditions=pre-style-source`.
+const plugin = 'vite-plugin-pre-style';
+const { default: preStyle }: typeof import('vite-plugin-pre-style') = await import(plugin);
+
+export default defineConfig(({ command }) => ({
+  plugins: [
+    preStyle({
+      include: ['src/**/*.{ts,tsx}'],
+      prependFiles: {
+        css: ['src/styles/tokens.css'],
+        scss: ['src/styles/_tokens.scss'],
+      },
+      lightningcss: { minify: true },
+      // Source maps in dev only.
+      sourceMap: command === 'serve',
+    }),
+    tanstackStart(),
+    viteReact(),
+  ],
+  resolve: { conditions: [SOURCE, ...defaultClientConditions] },
+  ssr: {
+    resolve: {
+      conditions: [SOURCE, ...defaultServerConditions],
+      externalConditions: [SOURCE, ...defaultExternalConditions],
+    },
+  },
+}));

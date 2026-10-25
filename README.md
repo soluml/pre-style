@@ -327,12 +327,16 @@ npm run format     # Oxfmt
 npm run build
 ```
 
-`demo/` is a React Router app in framework mode, for trying Pre-Style on the client and server. It uses the packages' TypeScript source, so changes to them show up without a build.
+`demo/` has two apps for trying Pre-Style on the client and server: a React Router app in framework mode (`demo/react-router`) and a TanStack Start app (`demo/tanstack-start`). They have the same pages, and use the packages' TypeScript source, so changes to them show up without a build.
 
 ```sh
-npm run demo         # dev server
-npm run demo:build   # production build
-npm run demo:start   # serve the production build
+npm run demo:react-router          # dev server
+npm run demo:react-router:build    # production build
+npm run demo:react-router:start    # serve the production build
+
+npm run demo:tanstack-start        # likewise for TanStack Start
+npm run demo:tanstack-start:build
+npm run demo:tanstack-start:start
 ```
 
 ## License

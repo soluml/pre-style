@@ -1,7 +1,7 @@
 {
-  "name": "pre-style-demo",
+  "name": "pre-style-demo-react-router",
   "private": true,
-  "description": "A React Router app for dogfooding Pre-Style on the client and server.",
+  "description": "A React Router app (framework mode) for dogfooding Pre-Style on the client and server.",
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS=--conditions=pre-style-source react-router dev",

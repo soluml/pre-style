@@ -1,8 +1,14 @@
 import { reactRouter } from '@react-router/dev/vite';
-import { defineConfig, defaultClientConditions, defaultServerConditions } from 'vite';
+import {
+  defineConfig,
+  defaultClientConditions,
+  defaultExternalConditions,
+  defaultServerConditions,
+} from 'vite';
 
 // `pre-style-source` resolves Pre-Style's packages to their TypeScript
-// source, so changes to them show up here without a build.
+// source, so changes to them show up here without a build. Setting
+// conditions replaces Vite's defaults, so they're added to them.
 const SOURCE = 'pre-style-source';
 
 // Vite bundles this config, including linked workspace packages, without
@@ -27,6 +33,9 @@ export default defineConfig(({ command }) => ({
   ],
   resolve: { conditions: [SOURCE, ...defaultClientConditions] },
   ssr: {
-    resolve: { conditions: [SOURCE, ...defaultServerConditions], externalConditions: [SOURCE] },
+    resolve: {
+      conditions: [SOURCE, ...defaultServerConditions],
+      externalConditions: [SOURCE, ...defaultExternalConditions],
+    },
   },
 }));
