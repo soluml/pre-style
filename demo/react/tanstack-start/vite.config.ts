@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import viteReact from '@vitejs/plugin-react';
 import {
@@ -25,10 +26,12 @@ export default defineConfig(({ command }) => ({
       // through the `pre-style` field in its package.json, and compiled with
       // its own tokens.
       include: ['src/**/*.{ts,tsx}'],
-      // The app's own blocks use the component library's design tokens too.
-      prependFiles: {
-        css: ['../ui/src/styles/tokens.css'],
-        scss: ['../ui/src/styles/_tokens.scss'],
+      // The app's own blocks use the component library's Sass mixins too.
+      prependFiles: { scss: ['../ui/src/styles/_tokens.scss'] },
+      // The component library's design tokens, written once at the start of
+      // the CSS file.
+      output: {
+        banner: readFileSync(new URL('../ui/src/styles/tokens.css', import.meta.url), 'utf8'),
       },
       lightningcss: { minify: true },
       // Source maps in dev only.

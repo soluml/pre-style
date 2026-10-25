@@ -1,5 +1,6 @@
-/* The library's design tokens. Apps prepend this file to every css block,
-   and the rule is written to the CSS file once. */
+/* The library's design tokens. The library prepends this file to every css
+   block, and the rule is written to the CSS file once. Apps add it to the
+   start of the CSS file with `output.banner`. */
 :root {
   --space: 0.25rem;
   --radius: 0.75rem;
