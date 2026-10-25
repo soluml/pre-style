@@ -1,6 +1,6 @@
 import { Form, useNavigation } from 'react-router';
 import { scss } from 'pre-style';
-import { Button } from '../components/Button';
+import { Button } from 'pre-style-demo-react-ui';
 import type { Route } from './+types/server';
 
 export const meta: Route.MetaFunction = () => [{ title: 'Server · Pre-Style demo' }];

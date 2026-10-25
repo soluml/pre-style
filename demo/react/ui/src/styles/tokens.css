@@ -1,4 +1,5 @@
-/* Prepended to every css block. The rule is written to the CSS file once. */
+/* The library's design tokens. Apps prepend this file to every css block,
+   and the rule is written to the CSS file once. */
 :root {
   --space: 0.25rem;
   --radius: 0.75rem;

@@ -327,7 +327,7 @@ npm run format     # Oxfmt
 npm run build
 ```
 
-`demo/` has two apps for trying Pre-Style on the client and server: a React Router app in framework mode (`demo/react-router`) and a TanStack Start app (`demo/tanstack-start`). They have the same pages, and use the packages' TypeScript source, so changes to them show up without a build.
+`demo/react/` has two apps for trying Pre-Style on the client and server: a React Router app in framework mode (`react-router`) and a TanStack Start app (`tanstack-start`). They have the same pages, and share a small component library (`ui`), which ships its source with the blocks still in it and its design tokens, for each app's Pre-Style plugin to compile. The demos use the packages' TypeScript source, so changes to them show up without a build.
 
 ```sh
 npm run demo:react-router          # dev server

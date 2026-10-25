@@ -1,12 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { css, merge } from 'pre-style';
-import { Button, buttonClass, type ButtonVariant } from '../components/Button';
+import { Button, buttonClass, type ButtonVariant } from 'pre-style-demo-react-ui';
+import type { Route } from './+types/merge';
 
-export const Route = createFileRoute('/merge')({
-  head: () => ({ meta: [{ title: 'Merge · Pre-Style demo' }] }),
-  component: MergeRoute,
-});
+export const meta: Route.MetaFunction = () => [{ title: 'Merge · Pre-Style demo' }];
 
 const controls = css`
   display: flex;
@@ -38,7 +35,7 @@ const staticMerge = merge(
   `,
 );
 
-function MergeRoute() {
+export default function MergeRoute() {
   const [variant, setVariant] = useState<ButtonVariant>('primary');
   const [large, setLarge] = useState(false);
   const size = large ? 'large' : 'normal';

@@ -1,8 +1,11 @@
+import { createFileRoute } from '@tanstack/react-router';
 import { css } from 'pre-style';
-import { Button } from '../components/Button';
-import type { Route } from './+types/home';
+import { Button } from 'pre-style-demo-react-ui';
 
-export const meta: Route.MetaFunction = () => [{ title: 'Basics · Pre-Style demo' }];
+export const Route = createFileRoute('/')({
+  head: () => ({ meta: [{ title: 'Basics · Pre-Style demo' }] }),
+  component: Home,
+});
 
 const title = css`
   font-size: 2rem;
@@ -82,7 +85,7 @@ const FEATURES = [
   ['Server rendered', 'The same class strings render on the server and hydrate in the browser.'],
 ];
 
-export default function Home() {
+function Home() {
   return (
     <>
       <h1 className={title}>Pre-Style, dogfooded</h1>

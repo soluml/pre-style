@@ -2,7 +2,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
 import { scss } from 'pre-style';
 import { useState } from 'react';
-import { Button } from '../components/Button';
+import { Button } from 'pre-style-demo-react-ui';
 
 const savedNotes: string[] = ['Rendered on the server first.'];
 

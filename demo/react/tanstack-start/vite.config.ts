@@ -1,4 +1,5 @@
-import { reactRouter } from '@react-router/dev/vite';
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import viteReact from '@vitejs/plugin-react';
 import {
   defineConfig,
   defaultClientConditions,
@@ -20,16 +21,20 @@ const { default: preStyle }: typeof import('vite-plugin-pre-style') = await impo
 export default defineConfig(({ command }) => ({
   plugins: [
     preStyle({
-      include: ['app/**/*.{ts,tsx}'],
+      // The shared component library's source is scanned with the app's, so
+      // its blocks are named with everything else.
+      include: ['src/**/*.{ts,tsx}', '../ui/src/**/*.{ts,tsx}'],
+      // Design tokens come from the component library.
       prependFiles: {
-        css: ['app/styles/tokens.css'],
-        scss: ['app/styles/_tokens.scss'],
+        css: ['../ui/src/styles/tokens.css'],
+        scss: ['../ui/src/styles/_tokens.scss'],
       },
       lightningcss: { minify: true },
       // Source maps in dev only.
       sourceMap: command === 'serve',
     }),
-    reactRouter(),
+    tanstackStart(),
+    viteReact(),
   ],
   resolve: { conditions: [SOURCE, ...defaultClientConditions] },
   ssr: {

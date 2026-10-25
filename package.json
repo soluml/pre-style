@@ -4,7 +4,7 @@
   "workspaces": [
     "packages/pre-style",
     "packages/vite-plugin-pre-style",
-    "demo/*"
+    "demo/react/*"
   ],
   "type": "module",
   "scripts": {
@@ -14,12 +14,12 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "demo:react-router": "npm run dev -w demo/react-router",
-    "demo:react-router:build": "npm run build -w demo/react-router",
-    "demo:react-router:start": "npm run start -w demo/react-router",
-    "demo:tanstack-start": "npm run dev -w demo/tanstack-start",
-    "demo:tanstack-start:build": "npm run build -w demo/tanstack-start",
-    "demo:tanstack-start:start": "npm run start -w demo/tanstack-start"
+    "demo:react-router": "npm run dev -w demo/react/react-router",
+    "demo:react-router:build": "npm run build -w demo/react/react-router",
+    "demo:react-router:start": "npm run start -w demo/react/react-router",
+    "demo:tanstack-start": "npm run dev -w demo/react/tanstack-start",
+    "demo:tanstack-start:build": "npm run build -w demo/react/tanstack-start",
+    "demo:tanstack-start:start": "npm run start -w demo/react/tanstack-start"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

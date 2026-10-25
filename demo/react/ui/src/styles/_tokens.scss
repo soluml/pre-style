@@ -1,4 +1,5 @@
-// Prepended to every scss block. Outputs no CSS of its own.
+// The library's Sass tokens and mixins. Apps prepend this file to every scss
+// block. Outputs no CSS of its own.
 $breakpoint-md: 768px;
 
 @mixin md {
