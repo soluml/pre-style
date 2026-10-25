@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Compiler, createCompiler, PreStyleError } from '../../src/compiler/index.ts';
@@ -407,6 +407,48 @@ describe('prependFiles', () => {
         .B{color:red}
         .A-A:hover{color:#00f}
       `,
+    );
+  });
+});
+
+describe('libraries', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'pre-style-'));
+  mkdirSync(join(dir, 'lib'));
+  writeFileSync(join(dir, 'app.scss'), '$space: 1rem;');
+  writeFileSync(join(dir, 'lib', 'tokens.scss'), '$space: 4px;');
+  const options = {
+    root: dir,
+    prependFiles: { scss: ['app.scss'] },
+    libraries: [{ dir: 'lib', prependFiles: { scss: ['tokens.scss'] } }],
+  };
+
+  test("a library's blocks get only its prepended files", async () => {
+    const { classes, css: output } = await compile(
+      [
+        { code: 'margin-top: $space;', lang: 'scss', file: join(dir, 'src', 'App.tsx') },
+        { code: 'margin-top: $space;', lang: 'scss', file: join(dir, 'lib', 'Button.js') },
+      ],
+      options,
+    );
+    // The same block compiles differently in the app and the library.
+    assert.deepEqual(classes, ['B', 'A']);
+    assert.equal(
+      output,
+      css`
+        .B{margin-top:1rem}
+        .A{margin-top:4px}
+      `,
+    );
+  });
+
+  test("the app's prepended files don't apply to a library's blocks", async () => {
+    writeFileSync(join(dir, 'app.scss'), '$space: 1rem; $only-app: red;');
+    await assert.rejects(
+      compile(
+        [{ code: 'color: $only-app;', lang: 'scss', file: join(dir, 'lib', 'Button.js') }],
+        options,
+      ),
+      /Undefined variable/,
     );
   });
 });

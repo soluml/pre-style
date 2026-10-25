@@ -20,10 +20,11 @@ const { default: preStyle }: typeof import('vite-plugin-pre-style') = await impo
 export default defineConfig(({ command }) => ({
   plugins: [
     preStyle({
-      // The shared component library's source is scanned with the app's, so
-      // its blocks are named with everything else.
-      include: ['app/**/*.{ts,tsx}', '../ui/src/**/*.{ts,tsx}'],
-      // Design tokens come from the component library.
+      // The shared component library (pre-style-demo-react-ui) is found
+      // through the `pre-style` field in its package.json, and compiled with
+      // its own tokens.
+      include: ['app/**/*.{ts,tsx}'],
+      // The app's own blocks use the component library's design tokens too.
       prependFiles: {
         css: ['../ui/src/styles/tokens.css'],
         scss: ['../ui/src/styles/_tokens.scss'],

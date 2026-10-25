@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolve as resolvePath } from 'node:path';
+import { resolve as resolvePath, sep } from 'node:path';
 import type { Rule, SelectorList } from 'lightningcss';
 import SweatMap from 'sweatmap';
 import { parseBlock, PreStyleError, valueOf } from './block.ts';
@@ -19,10 +19,23 @@ import type { Printed } from './print.ts';
 import { lvhfaRank, withClass } from './selectors.ts';
 import type { MergeTable } from '../merge.ts';
 
+// Files prepended to blocks: an array for every block, or separate arrays
+// for `css` and `scss` blocks.
+export type PrependFiles = string[] | { css?: string[]; scss?: string[] };
+
+export interface Library {
+  // The library's directory. Blocks in files under it belong to the library.
+  dir: string;
+  // Prepended to the library's blocks only, instead of the app's
+  // `prependFiles`. Relative to `dir`.
+  prependFiles?: PrependFiles;
+}
+
 export interface CompilerOptions {
-  // Files prepended to blocks: an array for every block, or separate arrays
-  // for `css` and `scss` blocks.
-  prependFiles?: string[] | { css?: string[]; scss?: string[] };
+  // Prepended to the app's blocks.
+  prependFiles?: PrependFiles;
+  // Component libraries, whose blocks get their own prepended files.
+  libraries?: Library[];
   lightningcss?: LightningOptions;
   // Generate a source map for the output CSS.
   sourceMap?: boolean;
@@ -87,8 +100,12 @@ export async function createCompiler(options: CompilerOptions = {}): Promise<Com
 }
 
 export class Compiler {
-  readonly #parseOptions: ParseOptions;
+  readonly #parseOptions: Omit<ParseOptions, 'prepend'>;
   readonly #options: CompilerOptions;
+  // Prepended code for the app's blocks, and for each library's, with the
+  // most deeply nested library first.
+  readonly #prepend: Record<Lang, string>;
+  readonly #libraries: { dir: string; prepend: Record<Lang, string> }[];
   readonly #blocks = new Map<string, ParsedBlock>();
 
   // Separate name lists for at-rules, selector variants, and declarations.
@@ -113,15 +130,15 @@ export class Compiler {
   constructor(options: CompilerOptions, sass: SassCompiler | null) {
     this.#options = options;
     const root = options.root ?? process.cwd();
-    const read = (files: string[] = []) =>
-      files.map((file) => readFileSync(resolvePath(root, file), 'utf8')).join('\n');
-    const { prependFiles } = options;
-    const prepend = Array.isArray(prependFiles)
-      ? { css: read(prependFiles), scss: read(prependFiles) }
-      : { css: read(prependFiles?.css), scss: read(prependFiles?.scss) };
+    this.#prepend = readPrepend(root, options.prependFiles);
+    this.#libraries = (options.libraries ?? [])
+      .map((library) => {
+        const dir = resolvePath(root, library.dir);
+        return { dir: dir + sep, prepend: readPrepend(dir, library.prependFiles) };
+      })
+      .toSorted((a, b) => b.dir.length - a.dir.length);
     this.#parseOptions = {
       lightningcss: options.lightningcss ?? {},
-      prepend,
       sass,
       warn: options.warn ?? ((message) => console.warn(message)),
     };
@@ -199,11 +216,17 @@ export class Compiler {
   }
 
   #parse(block: Block): ParsedBlock {
-    const cacheKey = `${block.lang}\n${block.code}`;
+    // A library's blocks get its prepended files instead of the app's.
+    const library =
+      block.file === undefined
+        ? -1
+        : this.#libraries.findIndex(({ dir }) => block.file!.startsWith(dir));
+    const prepend = library === -1 ? this.#prepend : this.#libraries[library].prepend;
+    const cacheKey = `${library}\n${block.lang}\n${block.code}`;
     let parsed = this.#blocks.get(cacheKey);
     if (parsed === undefined) {
       try {
-        parsed = parseBlock(block.code, block.lang, this.#parseOptions);
+        parsed = parseBlock(block.code, block.lang, { ...this.#parseOptions, prepend });
       } catch (error) {
         throw error instanceof PreStyleError ? locate(error, block) : error;
       }
@@ -301,6 +324,15 @@ interface Group {
   order: number;
   atoms: AtomRecord[];
   children: Map<string, Group>;
+}
+
+// Reads prepended files, relative to `dir`, once.
+function readPrepend(dir: string, files: PrependFiles | undefined): Record<Lang, string> {
+  const read = (list: string[] = []) =>
+    list.map((file) => readFileSync(resolvePath(dir, file), 'utf8')).join('\n');
+  return Array.isArray(files)
+    ? { css: read(files), scss: read(files) }
+    : { css: read(files?.css), scss: read(files?.scss) };
 }
 
 const count = (map: Map<string, number>, key: string) => map.set(key, (map.get(key) ?? 0) + 1);

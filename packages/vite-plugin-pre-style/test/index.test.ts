@@ -1,6 +1,6 @@
-import { after, describe, test } from 'node:test';
+import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
+import { cpSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { build, createServer, defaultClientConditions } from 'vite';
 import type { InlineConfig, Rollup } from 'vite';
@@ -157,6 +157,57 @@ describe('importing virtual:pre-style.css', () => {
       { build: { sourcemap: true } },
     );
     assert.ok(![...files.keys()].some((name) => name.endsWith('.css.map')));
+  });
+});
+
+describe('component libraries', () => {
+  // The libraries are installed into a real node_modules for these tests.
+  const modules = `${fixture('library')}/node_modules`;
+  before(() => cpSync(fixture('library-packages'), modules, { recursive: true }));
+  after(() => rmSync(modules, { recursive: true, force: true }));
+
+  test('dependencies with a pre-style field are compiled, with their own prepended files', async () => {
+    const files = await buildFixture('library', { lightningcss: { minify: true } });
+    // acme-ui and acme-icons (a dependency of acme-ui) each prepend their own
+    // tokens. The app's `color: red` and acme-ui's share a class.
+    assert.equal(files.get('prestyle.css'), '.C{width:16px}.B{padding-top:4px}.A{color:red}');
+    const js = chunk(files);
+    assert.match(js, /var app = "A";/);
+    assert.match(js, /document\.body\.dataset\.button = "B A";/);
+    assert.match(js, /document\.body\.dataset\.icon = "C";/);
+    // plain-ui has no pre-style field, so it isn't compiled.
+    assert.match(js, /var plain = css`margin-top: 0;`;/);
+  });
+
+  test('the libraries option adds packages and leaves them out', async () => {
+    const files = await buildFixture('library', {
+      lightningcss: { minify: true },
+      libraries: { 'plain-ui': true, 'acme-icons': false },
+    });
+    assert.equal(files.get('prestyle.css'), '.C{padding-top:4px}.A{color:red}.B{margin-top:0}');
+    const js = chunk(files);
+    assert.match(js, /document\.body\.dataset\.plain = "B";/);
+    assert.match(js, /var icon = scss`width: \$icon-size;`;/);
+  });
+
+  test("in dev, libraries aren't pre-bundled or externalized, and render the same on the server", async () => {
+    const server = await createServer({
+      ...config('library', {}),
+      server: { middlewareMode: true, ws: false },
+    });
+    try {
+      assert.deepEqual(server.config.optimizeDeps.exclude, ['acme-ui', 'acme-icons']);
+      assert.deepEqual(server.environments.ssr.config.resolve.noExternal, [
+        'acme-ui',
+        'acme-icons',
+      ]);
+      const id = `${modules}/acme-ui/index.js`;
+      const client = await server.environments.client.transformRequest(id);
+      const ssr = await server.environments.ssr.transformRequest(id);
+      assert.equal(classString(client!.code), classString(ssr!.code));
+    } finally {
+      await server.close();
+    }
   });
 });
 

@@ -1,13 +1,17 @@
 import { readFile, glob } from 'node:fs/promises';
-import { matchesGlob, relative, resolve } from 'node:path';
+import { matchesGlob, relative, resolve, sep } from 'node:path';
 import { MagicString } from 'magic-string';
 import { createMerge } from 'pre-style';
 import type { MergeTable } from 'pre-style';
 import { createCompiler, PreStyleError } from 'pre-style/compiler';
-import type { Block, Compiler, LightningOptions } from 'pre-style/compiler';
+import type { Block, Compiler, LightningOptions, PrependFiles } from 'pre-style/compiler';
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
 import { FindError, findInHtml, findInScript } from './find.ts';
 import type { FoundBlock, FoundImport, ScriptAnalysis } from './find.ts';
+import { findLibraries } from './libraries.ts';
+import type { LibraryConfig, ResolvedLibrary } from './libraries.ts';
+
+export type { LibraryConfig };
 
 export interface PreStyleOptions {
   // Globs of every source file that contains blocks, relative to Vite's
@@ -15,9 +19,13 @@ export interface PreStyleOptions {
   include?: string | string[];
   // Globs removed from `include`.
   exclude?: string | string[];
-  // Files prepended to blocks: an array for every block, or separate arrays
-  // for `css` and `scss` blocks. Relative to Vite's root.
-  prependFiles?: string[] | { css?: string[]; scss?: string[] };
+  // Files prepended to the app's blocks: an array for every block, or
+  // separate arrays for `css` and `scss` blocks. Relative to Vite's root.
+  prependFiles?: PrependFiles;
+  // Component libraries to compile, by package name, in addition to the
+  // dependencies with a `pre-style` field in their package.json. A config
+  // replaces the package's field, and `false` leaves the package out.
+  libraries?: Record<string, LibraryConfig | boolean>;
   // Options passed through to Lightning CSS.
   lightningcss?: LightningOptions;
   // Generate a source map for the output CSS.
@@ -37,6 +45,7 @@ export interface PreStyleOptions {
 const SCRIPT = /\.(?:[cm]?[jt]sx?)$/;
 const HTML = /\.html$/;
 const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html}'];
+const NODE_MODULES = '**/node_modules/**';
 const QUOTES = { 'single-quote': "'", 'double-quote': '"', backtick: '`' };
 
 const MERGE_ID = 'virtual:pre-style/merge';
@@ -88,6 +97,8 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   const footer = options.output?.footer ?? '';
 
   let config: ResolvedConfig;
+  let libraries: ResolvedLibrary[] = [];
+  const inLibrary = (file: string) => libraries.some(({ dir }) => file.startsWith(dir + sep));
   let server: ViteDevServer | undefined;
   let compiler: Compiler;
   let table: { revision: number; table: MergeTable } | undefined;
@@ -141,11 +152,20 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
     name: 'pre-style',
     enforce: 'pre',
 
-    // Vite only passes CSS source maps to the browser in dev with
-    // `css.devSourcemap`, so `sourceMap` turns it on unless it's set.
     config(userConfig) {
-      if (options.sourceMap && userConfig.css?.devSourcemap === undefined)
-        return { css: { devSourcemap: true } };
+      libraries = findLibraries(resolve(userConfig.root ?? process.cwd()), options.libraries);
+      const names = libraries.map(({ name }) => name);
+      return {
+        // Vite only passes CSS source maps to the browser in dev with
+        // `css.devSourcemap`, so `sourceMap` turns it on unless it's set.
+        ...(options.sourceMap &&
+          userConfig.css?.devSourcemap === undefined && { css: { devSourcemap: true } }),
+        // Libraries are compiled from their source: not pre-bundled in dev,
+        // and not left for Node to load on the server, so their blocks reach
+        // this plugin.
+        optimizeDeps: { exclude: names },
+        ssr: { noExternal: names },
+      };
     },
 
     configResolved(resolved) {
@@ -160,6 +180,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       const create = () =>
         createCompiler({
           prependFiles: options.prependFiles,
+          libraries: libraries.map(({ dir, prependFiles }) => ({ dir, prependFiles })),
           lightningcss: options.lightningcss,
           sourceMap: options.sourceMap,
           root: config.root,
@@ -176,26 +197,30 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       table = undefined;
       cssImported = false;
 
-      const exclude = [
+      // The app's files, then each library's, as absolute paths.
+      const files = new Set<string>();
+      const add = async (cwd: string, include: string[], exclude: string[]) => {
+        for await (const file of glob(include, {
+          cwd,
+          exclude: (path) => exclude.some((pattern) => matchesGlob(path, pattern)),
+        })) {
+          files.add(resolve(cwd, file));
+        }
+      };
+      const outDir = `${relative(config.root, resolve(config.root, config.build.outDir))}/**`;
+      await add(config.root, options.include ? toArray(options.include) : DEFAULT_INCLUDE, [
         ...toArray(options.exclude),
-        '**/node_modules/**',
-        `${relative(config.root, resolve(config.root, config.build.outDir))}/**`,
-      ];
-      const include = options.include ? toArray(options.include) : DEFAULT_INCLUDE;
-      const files: string[] = [];
-      for await (const file of glob(include, {
-        cwd: config.root,
-        exclude: (path) => exclude.some((pattern) => matchesGlob(path, pattern)),
-      })) {
-        files.push(file);
-      }
+        NODE_MODULES,
+        outDir,
+      ]);
+      for (const library of libraries) await add(library.dir, library.include, [NODE_MODULES]);
+
       // Sorted, so names don't depend on the order the file system lists files.
-      for (const file of files.toSorted()) {
-        const id = resolve(config.root, file);
+      for (const id of [...files].toSorted()) {
         const code = await readFile(id, 'utf8');
         if (!code.includes('css`')) continue;
         try {
-          const found = HTML.test(file) ? findInHtml(code) : (findInScript(id, code)?.blocks ?? []);
+          const found = HTML.test(id) ? findInHtml(code) : (findInScript(id, code)?.blocks ?? []);
           for (const b of found) compiler.scan(block(b, id));
         } catch (error) {
           fail(this, error, id);
@@ -225,7 +250,12 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
 
     transform(code, id) {
       const file = cleanId(id);
-      if (!SCRIPT.test(file) || file.includes('/node_modules/') || !code.includes('pre-style'))
+      // Files in node_modules are only compiled when they're in a library.
+      if (
+        !SCRIPT.test(file) ||
+        (file.includes('/node_modules/') && !inLibrary(file)) ||
+        !code.includes('pre-style')
+      )
         return;
       const revision = compiler.revision;
 

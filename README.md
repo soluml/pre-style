@@ -201,6 +201,60 @@ An array applies the files to every block. An object applies `css` files only to
 
 Rules the files output, such as `:root { --space: 4px }`, appear in the CSS file once. Keep prepended files to things that don't output CSS, or output it once (variables, mixins, custom properties). Large libraries slow the build down.
 
+## Component libraries
+
+A component library styled with Pre-Style ships its blocks uncompiled, and each app's Pre-Style plugin compiles them along with the app's own. The library's classes share names and the CSS file with the app's, so a `color: red` in the library and one in the app are the same class, and `merge` resolves conflicts between them.
+
+### Using a library
+
+Install it. The plugin finds dependencies with a `pre-style` field in their `package.json` (and the libraries those depend on) and compiles them. There's nothing to configure.
+
+To compile a package that doesn't have the field, or to change how one is compiled, use the `libraries` option. `false` leaves a package out.
+
+```ts
+preStyle({
+  libraries: {
+    'legacy-ui': { include: 'dist/**/*.js' },
+    'some-ui': false,
+  },
+});
+```
+
+A library's class names depend on the whole app, so they differ between apps. Don't depend on them.
+
+### Writing a library
+
+- Ship ESM JavaScript (or TypeScript) with the blocks left as they are. Don't run Pre-Style on the library itself.
+- List `pre-style` as a peer dependency, so the library and the app share one copy.
+- Add a `pre-style` field to `package.json`:
+
+```json
+{
+  "name": "@acme/ui",
+  "peerDependencies": {
+    "pre-style": "^3.0.0"
+  },
+  "pre-style": {
+    "include": "dist/**/*.js",
+    "prependFiles": {
+      "css": ["dist/styles/tokens.css"],
+      "scss": ["dist/styles/_tokens.scss"]
+    }
+  }
+}
+```
+
+| Field          | Default             | Description |
+| -------------- | ------------------- | ----------- |
+| `include`      | Every JS and TS file | Globs of the files with blocks, relative to the package. |
+| `prependFiles` |                     | Files added to the start of the library's blocks, relative to the package. They apply only to the library's blocks, not the app's, so the library's tokens and mixins are always available to it and never leak into the app. |
+
+`"pre-style": true` uses the defaults.
+
+To let apps use the library's tokens in their own blocks, export the token files, and apps can add them to their own `prependFiles`.
+
+The plugin excludes libraries from Vite's dependency pre-bundling and from SSR externalization, so their blocks reach it in dev and on the server.
+
 ## How the CSS is written
 
 ### Class names
@@ -273,7 +327,8 @@ preStyle({
 | -------------- | ------------------------------------------- | ----------- |
 | `include`      | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html}` | Globs of the files with blocks, relative to Vite's root. Scanned before a build to assign names. `node_modules` and the output directory are always skipped. |
 | `exclude`      |                                             | Globs removed from `include`. |
-| `prependFiles` |                                             | Files added to the start of blocks. See [Sharing values with prepended files](#sharing-values-with-prepended-files). |
+| `prependFiles` |                                             | Files added to the start of the app's blocks. See [Sharing values with prepended files](#sharing-values-with-prepended-files). |
+| `libraries`    |                                             | Component libraries to compile, by package name, in addition to dependencies with a `pre-style` field. A config replaces the package's field, and `false` leaves the package out. See [Component libraries](#component-libraries). |
 | `lightningcss` |                                             | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before Pre-Style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
 | `sourceMap`    | `false`                                     | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre-style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
 | `quotes`       | `'double-quote'`                            | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`. |
@@ -305,6 +360,7 @@ The build fails, with the file, line, and column, when:
 - At-rules Lightning CSS doesn't parse, such as `@when`, `@function`, and `@custom-selector`, are copied to the output as they are.
 - Nested pseudo-elements, such as `::before::marker`, aren't supported yet.
 - Blocks in PHP and other templates aren't supported, because Vite doesn't output them.
+- Component libraries are found among the app's dependencies and the dependencies of other libraries. A library used only through a package that isn't one (a wrapper without a `pre-style` field) isn't found automatically; add it with the `libraries` option.
 - Positions in `scss` blocks point to the start of the block, since Sass's output doesn't match the original lines.
 
 ## Packages

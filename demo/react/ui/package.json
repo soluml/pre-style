@@ -20,5 +20,16 @@
   "peerDependencies": {
     "pre-style": "3.0.0-alpha.0",
     "react": "^19.3.1"
+  },
+  "pre-style": {
+    "include": "src/**/*.{ts,tsx}",
+    "prependFiles": {
+      "css": [
+        "src/styles/tokens.css"
+      ],
+      "scss": [
+        "src/styles/_tokens.scss"
+      ]
+    }
   }
 }
