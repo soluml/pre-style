@@ -305,6 +305,16 @@ Within one block, a later declaration overrides an earlier one, as in plain CSS.
 3. Selector variants, with pseudo-classes in LVHFA order (`:link`, `:visited`, `:hover`, `:focus`, `:active`).
 4. At-rule groups. `@media` queries with only a `min-width` come last, smallest first (mobile-first).
 
+## Compared to utility-first frameworks
+
+Utility-first frameworks such as [Tailwind CSS](https://tailwindcss.com/) also produce atomic CSS, so the same styles cost about the same in either. The differences are elsewhere:
+
+- **CSS file.** Each declaration is written once in both, so the classes themselves come to about the same size. Pre-Style adds no reset or base styles, and no supporting rules beyond what your blocks contain. A framework's reset can be larger than all of a small app's classes.
+- **Markup.** Pre-Style's class names are generated and one to three characters long, so class strings are much shorter than utility names like `px-5 py-4 rounded-xl`. Class strings end up in your JS and in every server-rendered page, so this saving grows with your markup. Some shorthands do produce many classes (see [Shorthands](#shorthands)).
+- **Combining classes.** `merge` is resolved during the build when its arguments are known, and otherwise uses a small table generated for your project. Utility frameworks need a separate library that knows every utility to do the same.
+- **In the browser.** No difference. Both are static CSS with single-class selectors and nothing running at runtime, so apart from download size the browser does the same work.
+- **Build speed.** A utility framework only scans your files for class names. Pre-Style parses every block with Lightning CSS, and runs Sass for `scss` blocks. That takes more time during the build, but your users never see it.
+
 ## Configuration
 
 All options are optional.
