@@ -271,6 +271,21 @@ describe('declarations in a block', () => {
     assert.equal(output, '.A{color:red!important}');
   });
 
+  test('border stays one class', async () => {
+    // Written before longhands, so `border-top-color` still wins.
+    const { classes, css: output } = await compile([
+      `border: 1px solid red; border-top-color: blue`,
+    ]);
+    assert.deepEqual(classes, ['A B']);
+    assert.equal(
+      output,
+      css`
+        .A{border:1px solid red}
+        .B{border-top-color:#00f}
+      `,
+    );
+  });
+
   test('shorthands with CSS-wide keywords stay one class', async () => {
     // Written before longhands, so `font-weight: 600` still wins.
     const { classes, css: output } = await compile([`font: inherit; font-weight: 600`]);

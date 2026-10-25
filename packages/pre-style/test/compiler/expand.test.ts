@@ -23,7 +23,6 @@ const SHORTHANDS = [
   'scroll-padding: 1px 2px',
   'scroll-padding-block: 1px 2px',
   'scroll-padding-inline: 1px 2px',
-  'border: 1px solid red',
   'border-top: 1px solid red',
   'border-right: 2px dashed blue',
   'border-bottom: thin dotted green',
@@ -107,6 +106,12 @@ for (const source of SHORTHANDS) {
     assert.equal(minify(print([rule(parsed)], [], {}, false).code), minify(`.a{${source}}`));
   });
 }
+
+test('keeps border as it is', () => {
+  // It would expand to 12 longhands.
+  const declaration = declarationOf('border: 1px solid red');
+  assert.deepEqual(expand(declaration), [declaration]);
+});
 
 test('keeps shorthands with var() as they are', () => {
   const declaration = declarationOf('margin: var(--m)');

@@ -75,7 +75,9 @@ const EXPANDERS: Record<string, Expander> = {
   'scroll-padding-block': blockKeys('scroll-padding'),
   'scroll-padding-inline': inlineKeys('scroll-padding'),
 
-  border: borderSides(...SIDES),
+  // `border` isn't expanded: it sets 12 longhands (width, style, and color
+  // for each side), too many classes for one declaration. `merge` still
+  // knows which longhands it covers.
   'border-top': borderSide('top'),
   'border-right': borderSide('right'),
   'border-bottom': borderSide('bottom'),
@@ -203,9 +205,9 @@ function expandValue(property: string, value: Value): Longhands {
 }
 
 // Expands a declaration into longhand declarations. Declarations that aren't
-// shorthands, or that can't be expanded (values with `var()`, `env()`, or
-// `attr()`, CSS-wide keywords such as `inherit`, and `all`), are returned as
-// they are. Longhands a shorthand sets
+// shorthands, shorthands that aren't expanded (`border`), and ones that can't
+// be (values with `var()`, `env()`, or `attr()`, CSS-wide keywords such as
+// `inherit`, and `all`) are returned as they are. Longhands a shorthand sets
 // that Lightning CSS keeps no value for (such as the `font-variant-*`
 // properties `font` resets) are set to `initial`.
 export function expand(declaration: Declaration): Declaration[] {
