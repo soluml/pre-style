@@ -78,8 +78,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <NavLink to="/" end className={link}>
               Basics
             </NavLink>
-            <NavLink to="/merge" className={link}>
-              Merge
+            <NavLink to="/cn" className={link}>
+              cn
             </NavLink>
             <NavLink to="/server" className={link}>
               Server

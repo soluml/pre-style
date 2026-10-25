@@ -1,6 +1,6 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createMerge, merge } from '../src/index.ts';
+import { createCn, cn } from '../src/index.ts';
 import { createCompiler } from '../src/compiler/index.ts';
 
 const table = {
@@ -13,8 +13,8 @@ const table = {
   G: ['', 'background-color'],
 } as const;
 
-describe('merge', () => {
-  const m = createMerge(table);
+describe('cn', () => {
+  const m = createCn(table);
 
   test('a later class wins when both set the same property', () => {
     assert.equal(m('A', 'B'), 'B');
@@ -42,11 +42,11 @@ describe('merge', () => {
   });
 
   test('without a table, only combines classes', () => {
-    assert.equal(merge('A', 'B', { C: true }, 'A'), 'B C A');
+    assert.equal(cn('A', 'B', { C: true }, 'A'), 'B C A');
   });
 });
 
-describe('merge with a compiled table', () => {
+describe('cn with a compiled table', () => {
   test('the spec example', async () => {
     const compiler = await createCompiler();
     const blocks = [
@@ -58,21 +58,21 @@ describe('merge with a compiled table', () => {
     const [first, second] = blocks.map((block) => compiler.classString(block));
     assert.equal(first, 'D A_A');
     assert.equal(second, 'C A_B');
-    assert.equal(createMerge(compiler.mergeTable())(first, second), 'C A_B');
+    assert.equal(createCn(compiler.cnTable())(first, second), 'C A_B');
   });
 
   test('a later class removes an !important one', async () => {
     const compiler = await createCompiler();
     const important = compiler.classString({ code: 'color: red !important', lang: 'css' });
     const normal = compiler.classString({ code: 'color: blue', lang: 'css' });
-    assert.equal(createMerge(compiler.mergeTable())(important, normal), normal);
+    assert.equal(createCn(compiler.cnTable())(important, normal), normal);
   });
 
   test('a later shorthand with a CSS-wide keyword removes earlier longhands', async () => {
     const compiler = await createCompiler();
     const weight = compiler.classString({ code: 'font-weight: 600', lang: 'css' });
     const inherit = compiler.classString({ code: 'font: inherit', lang: 'css' });
-    const m = createMerge(compiler.mergeTable());
+    const m = createCn(compiler.cnTable());
     assert.equal(m(weight, inherit), inherit);
     assert.equal(m(inherit, weight), `${inherit} ${weight}`);
   });
@@ -84,7 +84,7 @@ describe('merge with a compiled table', () => {
       lang: 'css',
     });
     const shorthand = compiler.classString({ code: 'padding: var(--p)', lang: 'css' });
-    const m = createMerge(compiler.mergeTable());
+    const m = createCn(compiler.cnTable());
     assert.equal(m(longhands, shorthand), `${longhands.split(' ')[2]} ${shorthand}`);
     assert.equal(m(shorthand, longhands), `${shorthand} ${longhands}`);
   });

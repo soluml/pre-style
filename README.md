@@ -158,12 +158,12 @@ HTML can't import anything, so blocks in HTML files that Vite processes, such as
 <main class="css`padding: 1rem; max-width: 60rem;`">…</main>
 ```
 
-## Combining class strings with `merge`
+## Combining class strings with `cn`
 
-Atomic classes all have the same specificity, so when two classes on one element set the same property, the order of the CSS file decides which wins, not the order in your `class` attribute. Use `merge` to combine class strings: when two classes conflict, it keeps the later one.
+Atomic classes all have the same specificity, so when two classes on one element set the same property, the order of the CSS file decides which wins, not the order in your `class` attribute. Use `cn` to combine class strings: when two classes conflict, it keeps the later one.
 
 ```js
-import { css, merge } from 'pre-style';
+import { css, cn } from 'pre-style';
 
 const button = css`
   background-color: #0071ba;
@@ -173,16 +173,16 @@ const danger = css`
   background-color: #c62828;
 `;
 
-const className = merge(button, isDanger && danger);
+const className = cn(button, isDanger && danger);
 ```
 
-`merge` takes the same arguments as [clsx](https://github.com/lukeed/clsx): strings, arrays, objects whose keys are included when their value is truthy, and falsy values, which are ignored.
+`cn` takes the same arguments as [clsx](https://github.com/lukeed/clsx): strings, arrays, objects whose keys are included when their value is truthy, and falsy values, which are ignored.
 
 Two classes conflict when they set the same property under the same at-rules and selector. A later shorthand also removes earlier longhands it covers.
 
 When every argument is a block or a string literal, the plugin resolves the call during the build, so it costs nothing at runtime. Other calls use a small lookup table the plugin generates for your project.
 
-> **Note:** `merge` removes `!important` declarations too. A later class that sets the same property wins, even when the earlier one is `!important`.
+> **Note:** `cn` removes `!important` declarations too. A later class that sets the same property wins, even when the earlier one is `!important`.
 
 ## Sharing values with prepended files
 
@@ -203,7 +203,7 @@ Rules the files output, such as `:root { --space: 4px }`, appear in the CSS file
 
 ## Component libraries
 
-A component library styled with Pre-Style ships its blocks uncompiled, and each app's Pre-Style plugin compiles them along with the app's own. The library's classes share names and the CSS file with the app's, so a `color: red` in the library and one in the app are the same class, and `merge` resolves conflicts between them.
+A component library styled with Pre-Style ships its blocks uncompiled, and each app's Pre-Style plugin compiles them along with the app's own. The library's classes share names and the CSS file with the app's, so a `color: red` in the library and one in the app are the same class, and `cn` resolves conflicts between them.
 
 ### Using a library
 
@@ -275,7 +275,7 @@ Production builds scan your files first, so names are stable between builds. In 
 
 ### Shorthands
 
-Shorthand properties are expanded into their longhands, so `merge` can resolve conflicts between them:
+Shorthand properties are expanded into their longhands, so `cn` can resolve conflicts between them:
 
 ```js
 css`margin: auto;`;
@@ -311,7 +311,7 @@ Utility-first frameworks such as [Tailwind CSS](https://tailwindcss.com/) also p
 
 - **CSS file.** Each declaration is written once in both, so the classes themselves come to about the same size. Pre-Style adds no reset or base styles, and no supporting rules beyond what your blocks contain. A framework's reset can be larger than all of a small app's classes.
 - **Markup.** Pre-Style's class names are generated and one to three characters long, so class strings are much shorter than utility names like `px-5 py-4 rounded-xl`. Class strings end up in your JS and in every server-rendered page, so this saving grows with your markup. Some shorthands do produce many classes (see [Shorthands](#shorthands)).
-- **Combining classes.** `merge` is resolved during the build when its arguments are known, and otherwise uses a small table generated for your project. Utility frameworks need a separate library that knows every utility to do the same.
+- **Combining classes.** `cn` is resolved during the build when its arguments are known, and otherwise uses a small table generated for your project. Utility frameworks need a separate library that knows every utility to do the same.
 - **In the browser.** No difference. Both are static CSS with single-class selectors and nothing running at runtime, so apart from download size the browser does the same work.
 - **Build speed.** A utility framework only scans your files for class names. Pre-Style parses every block with Lightning CSS, and runs Sass for `scss` blocks. That takes more time during the build, but your users never see it.
 
@@ -350,7 +350,7 @@ The CSS isn't minified unless you set `lightningcss: { minify: true }`.
 
 ## TypeScript
 
-`css`, `scss`, and `merge` are typed. `css` and `scss` return `string`.
+`css`, `scss`, and `cn` are typed. `css` and `scss` return `string`.
 
 `css` and `scss` must be used as tagged templates (`` css`…` ``), and every block must be compiled by the plugin. If code that uses them runs without the plugin, for example in tests run directly in Node, they throw an error saying the transform wasn't applied, instead of silently rendering unstyled.
 
@@ -377,7 +377,7 @@ The build fails, with the file, line, and column, when:
 
 | Package                 | Description                                            |
 | ----------------------- | ------------------------------------------------------ |
-| `pre-style`             | `css`, `scss`, and `merge`, plus the compiler at `pre-style/compiler` for bundler plugins. |
+| `pre-style`             | `css`, `scss`, and `cn`, plus the compiler at `pre-style/compiler` for bundler plugins. |
 | `vite-plugin-pre-style` | The Vite plugin.                                       |
 
 ## Development

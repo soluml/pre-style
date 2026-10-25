@@ -1,4 +1,4 @@
-import { css, merge } from 'pre-style';
+import { css, cn } from 'pre-style';
 
 const base = css`
   appearance: none;
@@ -61,7 +61,7 @@ export function buttonClass(
 ) {
   // Resolved at runtime with the project's lookup table, since the
   // arguments depend on props.
-  return merge(base, variants[variant], size === 'large' && large);
+  return cn(base, variants[variant], size === 'large' && large);
 }
 
 export function Button({
@@ -73,5 +73,5 @@ export function Button({
   variant?: ButtonVariant;
   size?: 'normal' | 'large';
 }) {
-  return <button className={merge(buttonClass(variant, size), className)} {...props} />;
+  return <button className={cn(buttonClass(variant, size), className)} {...props} />;
 }

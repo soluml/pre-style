@@ -1,12 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { css, merge } from 'pre-style';
+import { css, cn } from 'pre-style';
 import { Button, buttonClass, type ButtonVariant } from 'pre-style-demo-react-ui';
+import type { Route } from './+types/cn';
 
-export const Route = createFileRoute('/merge')({
-  head: () => ({ meta: [{ title: 'Merge · Pre-Style demo' }] }),
-  component: MergeRoute,
-});
+export const meta: Route.MetaFunction = () => [{ title: 'cn · Pre-Style demo' }];
 
 const controls = css`
   display: flex;
@@ -27,7 +24,7 @@ const output = css`
 `;
 
 // Resolved at build time: every argument is a block.
-const staticMerge = merge(
+const staticCn = cn(
   css`
     color: red;
     padding: 1rem;
@@ -38,17 +35,17 @@ const staticMerge = merge(
   `,
 );
 
-function MergeRoute() {
+export default function CnRoute() {
   const [variant, setVariant] = useState<ButtonVariant>('primary');
   const [large, setLarge] = useState(false);
   const size = large ? 'large' : 'normal';
 
   return (
     <>
-      <h1>merge</h1>
+      <h1>cn</h1>
       <p>
-        Pick a variant. The button's classes are combined with <code>merge</code> in the browser,
-        using the project's lookup table.
+        Pick a variant. The button's classes are combined with <code>cn</code> in the browser, using
+        the project's lookup table.
       </p>
       <div className={controls}>
         {(['primary', 'danger', 'ghost'] as const).map((v) => (
@@ -73,9 +70,9 @@ function MergeRoute() {
       <pre className={output}>{buttonClass(variant, size)}</pre>
       <h2>Resolved at build time</h2>
       <p>
-        <span className={staticMerge}>This text is green, with 2rem of left padding.</span>
+        <span className={staticCn}>This text is green, with 2rem of left padding.</span>
       </p>
-      <pre className={output}>{staticMerge}</pre>
+      <pre className={output}>{staticCn}</pre>
     </>
   );
 }

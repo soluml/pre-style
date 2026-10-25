@@ -17,7 +17,7 @@ import type {
 import { print } from './print.ts';
 import type { Printed } from './print.ts';
 import { lvhfaRank, withClass } from './selectors.ts';
-import type { MergeTable } from '../merge.ts';
+import type { CnTable } from '../cn.ts';
 
 // Files prepended to blocks: an array for every block, or separate arrays
 // for `css` and `scss` blocks.
@@ -202,14 +202,13 @@ export class Compiler {
     return print(rules, sources, this.#parseOptions.lightningcss, this.#options.sourceMap ?? false);
   }
 
-  mergeTable(): MergeTable {
-    const table: MergeTable = {};
-    for (const record of this.#atoms.values())
-      table[this.#nameOf(record)] = this.#mergeEntry(record);
+  cnTable(): CnTable {
+    const table: CnTable = {};
+    for (const record of this.#atoms.values()) table[this.#nameOf(record)] = this.#cnEntry(record);
     return table;
   }
 
-  #mergeEntry(record: AtomRecord): [prefix: string, property: string] {
+  #cnEntry(record: AtomRecord): [prefix: string, property: string] {
     const className = this.#nameOf(record);
     const declaration = this.#names.declarations.get(record.atom.declaration.key)!;
     return [className.slice(0, className.length - declaration.length), record.atom.property];

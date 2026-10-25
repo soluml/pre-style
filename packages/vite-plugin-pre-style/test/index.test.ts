@@ -63,20 +63,17 @@ describe('build', () => {
     assert.match(html, /<link rel="stylesheet" href="\/prestyle.css">/);
   });
 
-  test('resolves merge calls with static arguments at build time', async () => {
+  test('resolves cn calls with static arguments at build time', async () => {
     const js = chunk(await buildFixture('basic'));
     // `color: red` is overridden by `color: green`.
     assert.match(js, /document\.body\.className = "I H F G C";/);
   });
 
-  test('other merge calls use the project lookup table', async () => {
+  test('other cn calls use the project lookup table', async () => {
     const js = chunk(await buildFixture('basic'));
-    assert.match(js, /var merge = \/\* @__PURE__ \*\/ createMerge\(\{/);
+    assert.match(js, /var cn = \/\* @__PURE__ \*\/ createCn\(\{/);
     assert.match(js, /"A_E": \["A_", "font-size"\]/);
-    assert.match(
-      js,
-      /document\.body\.dataset\.dynamic = merge\(base, big, window\.location\.hash\);/,
-    );
+    assert.match(js, /document\.body\.dataset\.dynamic = cn\(base, big, window\.location\.hash\);/);
   });
 
   test('the quotes option sets the quote character', async () => {

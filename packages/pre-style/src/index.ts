@@ -15,11 +15,11 @@ export function scss(_strings: TemplateStringsArray): string {
   return notTransformed();
 }
 
-import { createMerge } from './merge.ts';
+import { createCn } from './cn.ts';
 
-// Without a project's lookup table, `merge` only combines classes and drops
-// duplicates. The bundler plugin rewrites `merge` imports to a version bound
+// Without a project's lookup table, `cn` only combines classes and drops
+// duplicates. The bundler plugin rewrites `cn` imports to a version bound
 // to the project's table.
-export const merge = createMerge({});
-export { createMerge };
-export type { ClassDictionary, ClassValue, MergeTable } from './merge.ts';
+export const cn = createCn({});
+export { createCn };
+export type { ClassDictionary, ClassValue, CnTable } from './cn.ts';

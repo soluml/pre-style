@@ -2,7 +2,7 @@ import { SHORTHANDS } from './shorthands.ts';
 
 // Each class's prefix (its at-rule and selector variant segments) and the
 // property it sets.
-export type MergeTable = Record<string, readonly [prefix: string, property: string]>;
+export type CnTable = Record<string, readonly [prefix: string, property: string]>;
 
 export type ClassValue =
   | string
@@ -31,7 +31,7 @@ function collect(value: ClassValue, classes: string[]) {
 // when they have the same prefix and set the same property. A later
 // shorthand also removes earlier longhands it covers. Classes not in the
 // table are kept.
-export function resolve(classes: string[], table: MergeTable): string[] {
+export function resolve(classes: string[], table: CnTable): string[] {
   const seen = new Set<string>();
   const kept: string[] = [];
   for (let i = classes.length - 1; i >= 0; i--) {
@@ -52,7 +52,7 @@ export function resolve(classes: string[], table: MergeTable): string[] {
   return kept.toReversed();
 }
 
-export function createMerge(table: MergeTable): (...inputs: ClassValue[]) => string {
+export function createCn(table: CnTable): (...inputs: ClassValue[]) => string {
   return (...inputs) => {
     const classes: string[] = [];
     collect(inputs, classes);

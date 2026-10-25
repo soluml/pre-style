@@ -76,7 +76,7 @@ const EXPANDERS: Record<string, Expander> = {
   'scroll-padding-inline': inlineKeys('scroll-padding'),
 
   // `border` isn't expanded: it sets 12 longhands (width, style, and color
-  // for each side), too many classes for one declaration. `merge` still
+  // for each side), too many classes for one declaration. `cn` still
   // knows which longhands it covers.
   'border-top': borderSide('top'),
   'border-right': borderSide('right'),

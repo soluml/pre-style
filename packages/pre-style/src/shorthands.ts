@@ -1,5 +1,5 @@
 // Each CSS shorthand and the most specific longhands it sets. The compiler
-// uses it to set longhands a shorthand resets to `initial`, and `merge` uses
+// uses it to set longhands a shorthand resets to `initial`, and `cn` uses
 // it for shorthands that weren't expanded (`margin: var(--m)`,
 // `font: inherit`).
 

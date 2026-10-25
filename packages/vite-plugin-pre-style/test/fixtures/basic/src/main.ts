@@ -1,4 +1,4 @@
-import { css, merge } from 'pre-style';
+import { css, cn } from 'pre-style';
 import { button } from './button.ts';
 
 const base = css`
@@ -17,7 +17,7 @@ const big = css`
   }
 `;
 
-document.body.className = merge(css`color: red; margin: 0;`, css`color: green;`);
-document.body.dataset.dynamic = merge(base, big, window.location.hash);
+document.body.className = cn(css`color: red; margin: 0;`, css`color: green;`);
+document.body.dataset.dynamic = cn(base, big, window.location.hash);
 
 export { base, big, button };

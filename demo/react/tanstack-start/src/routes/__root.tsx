@@ -77,8 +77,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <Link to="/" className={link} activeOptions={{ exact: true }}>
               Basics
             </Link>
-            <Link to="/merge" className={link}>
-              Merge
+            <Link to="/cn" className={link}>
+              cn
             </Link>
             <Link to="/server" className={link}>
               Server

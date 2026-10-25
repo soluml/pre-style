@@ -1,8 +1,8 @@
 import { readFile, glob } from 'node:fs/promises';
 import { matchesGlob, relative, resolve, sep } from 'node:path';
 import { MagicString } from 'magic-string';
-import { createMerge } from 'pre-style';
-import type { MergeTable } from 'pre-style';
+import { createCn } from 'pre-style';
+import type { CnTable } from 'pre-style';
 import { createCompiler, PreStyleError } from 'pre-style/compiler';
 import type { Block, Compiler, LightningOptions, PrependFiles } from 'pre-style/compiler';
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
@@ -48,8 +48,8 @@ const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html}'];
 const NODE_MODULES = '**/node_modules/**';
 const QUOTES = { 'single-quote': "'", 'double-quote': '"', backtick: '`' };
 
-const MERGE_ID = 'virtual:pre-style/merge';
-const RESOLVED_MERGE_ID = '\0virtual:pre-style/merge';
+const CN_ID = 'virtual:pre-style/cn';
+const RESOLVED_CN_ID = '\0virtual:pre-style/cn';
 // The dev CSS module. Its resolved ID has no `\0`, so Vite's CSS plugin
 // handles it (including HMR).
 const CSS_ID = 'virtual:pre-style.css';
@@ -101,7 +101,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   const inLibrary = (file: string) => libraries.some(({ dir }) => file.startsWith(dir + sep));
   let server: ViteDevServer | undefined;
   let compiler: Compiler;
-  let table: { revision: number; table: MergeTable } | undefined;
+  let table: { revision: number; table: CnTable } | undefined;
   // In dev, the client and SSR environments share one compiler, so the
   // server renders the same class strings the browser hydrates.
   let devCompiler: Promise<Compiler> | undefined;
@@ -109,17 +109,17 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   // bundles the CSS and the plugin doesn't write `output.file`.
   let cssImported = false;
 
-  const mergeTable = () => {
+  const cnTable = () => {
     if (table === undefined || table.revision !== compiler.revision)
-      table = { revision: compiler.revision, table: compiler.mergeTable() };
+      table = { revision: compiler.revision, table: compiler.cnTable() };
     return table.table;
   };
 
-  // Reloads the dev CSS and merge modules after new classes are added.
+  // Reloads the dev CSS and `cn` modules after new classes are added.
   const update = (revision: number) => {
     if (server === undefined || compiler.revision === revision) return;
     for (const environment of Object.values(server.environments)) {
-      for (const id of [RESOLVED_CSS_ID, RESOLVED_MERGE_ID]) {
+      for (const id of [RESOLVED_CSS_ID, RESOLVED_CN_ID]) {
         const module = environment.moduleGraph.getModuleById(id);
         if (module === undefined) continue;
         // Invalidated now, so the next request regenerates it. Only the
@@ -230,13 +230,13 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
     },
 
     resolveId(id) {
-      if (id === MERGE_ID) return RESOLVED_MERGE_ID;
+      if (id === CN_ID) return RESOLVED_CN_ID;
       if (id === CSS_ID) return RESOLVED_CSS_ID;
     },
 
     load(id) {
-      if (id === RESOLVED_MERGE_ID) {
-        return `import { createMerge } from 'pre-style';\nexport const merge = /* @__PURE__ */ createMerge(${JSON.stringify(mergeTable())});\n`;
+      if (id === RESOLVED_CN_ID) {
+        return `import { createCn } from 'pre-style';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(cnTable())});\n`;
       }
       if (id === RESOLVED_CSS_ID) {
         if (config.command === 'build' && this.environment.config.consumer === 'client')
@@ -268,13 +268,13 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
         for (const found of analysis.blocks)
           classes.set(found, compiler.classString(block(found, file)));
 
-        // Merge calls with static arguments are resolved now. Blocks inside
+        // `cn` calls with static arguments are resolved now. Blocks inside
         // them are replaced along with the call.
         const resolved = new Set<FoundBlock>();
-        for (const call of analysis.mergeCalls) {
+        for (const call of analysis.cnCalls) {
           if (call.args === null) continue;
-          const merge = createMerge(mergeTable());
-          const value = merge(
+          const cn = createCn(cnTable());
+          const value = cn(
             ...call.args.map((arg) => (typeof arg === 'string' ? arg : classes.get(arg)!)),
           );
           for (const arg of call.args) if (typeof arg !== 'string') resolved.add(arg);
@@ -358,20 +358,19 @@ function quoted(value: string, quote: string): string {
 }
 
 // Removes `css` and `scss` from `pre-style` imports (the blocks are gone),
-// and imports `merge` from the virtual module bound to the project's table.
+// and imports `cn` from the virtual module bound to the project's table.
 function rewriteImport(statement: FoundImport): string {
   const named: string[] = [];
-  const merge: string[] = [];
+  const cn: string[] = [];
   const others: string[] = [];
   for (const specifier of statement.specifiers) {
     if (specifier.kind !== 'named') others.push(`import ${specifier.text} from 'pre-style';`);
-    else if (specifier.imported === 'merge') merge.push(specifier.text);
+    else if (specifier.imported === 'cn') cn.push(specifier.text);
     else if (specifier.imported !== 'css' && specifier.imported !== 'scss')
       named.push(specifier.text);
   }
   const statements = [...others];
   if (named.length > 0) statements.push(`import { ${named.join(', ')} } from 'pre-style';`);
-  if (merge.length > 0)
-    statements.push(`import { ${merge.join(', ')} } from ${JSON.stringify(MERGE_ID)};`);
+  if (cn.length > 0) statements.push(`import { ${cn.join(', ')} } from ${JSON.stringify(CN_ID)};`);
   return statements.join(' ');
 }

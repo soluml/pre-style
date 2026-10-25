@@ -39,7 +39,7 @@ describe('spec examples', () => {
     );
   });
 
-  test('blocks merged with merge share the at-rule name', async () => {
+  test('blocks combined with cn share the at-rule name', async () => {
     const { classes, css: output } = await compile([
       `color: yellow; @media (min-width: 768px) { background-color: green; }`,
       `color: orange; @media (min-width: 768px) { background-color: purple; }`,

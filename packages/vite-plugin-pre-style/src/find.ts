@@ -25,7 +25,7 @@ export interface FoundImport {
   }[];
 }
 
-export interface MergeCall {
+export interface CnCall {
   start: number;
   end: number;
   // Static arguments: string literals and blocks. Null when any argument
@@ -36,7 +36,7 @@ export interface MergeCall {
 export interface ScriptAnalysis {
   blocks: FoundBlock[];
   imports: FoundImport[];
-  mergeCalls: MergeCall[];
+  cnCalls: CnCall[];
 }
 
 export class FindError extends Error {
@@ -49,7 +49,7 @@ export class FindError extends Error {
   }
 }
 
-const IMPORTS = new Set(['css', 'scss', 'merge']);
+const IMPORTS = new Set(['css', 'scss', 'cn']);
 
 // Converts offsets to lines and columns, from 1.
 function locator(code: string) {
@@ -148,13 +148,13 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
 
   const blocks: FoundBlock[] = [];
   const blockAt = new Map<Node, FoundBlock>();
-  const mergeNodes: Node[] = [];
+  const cnNodes: Node[] = [];
 
   walk(program, null, (node, parent) => {
     if (node.type !== 'Identifier' || !locals.has(node.name) || !isReference(node, parent)) return;
     const imported = locals.get(node.name)!;
-    if (imported === 'merge') {
-      if (parent?.type === 'CallExpression' && parent.callee === node) mergeNodes.push(parent);
+    if (imported === 'cn') {
+      if (parent?.type === 'CallExpression' && parent.callee === node) cnNodes.push(parent);
       return;
     }
     if (parent?.type !== 'TaggedTemplateExpression' || parent.tag !== node) {
@@ -188,9 +188,9 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
     blockAt.set(parent, block);
   });
 
-  // Merge calls with only string literals and blocks can be resolved at
+  // `cn` calls with only string literals and blocks can be resolved at
   // build time.
-  const mergeCalls = mergeNodes.map((node): MergeCall => {
+  const cnCalls = cnNodes.map((node): CnCall => {
     const args: (string | FoundBlock)[] = [];
     for (const arg of node.arguments as Node[]) {
       if (arg.type === 'Literal' && typeof arg.value === 'string') args.push(arg.value);
@@ -202,7 +202,7 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
     return { start: node.start, end: node.end, args };
   });
 
-  return { blocks, imports, mergeCalls };
+  return { blocks, imports, cnCalls };
 }
 
 const HTML_BLOCK = /\b(s?css)`([^`]*)`/g;
