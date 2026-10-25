@@ -234,7 +234,7 @@ css`margin: auto;`;
 .B{margin-left:auto}
 ```
 
-Shorthands whose values aren't known until runtime (values with `var()`, `env()`, or `attr()`) are kept as they are. They're written before longhands, so a longhand still wins:
+Shorthands whose values aren't known until runtime (values with `var()`, `env()`, or `attr()`), and shorthands set to a CSS-wide keyword (`font: inherit`, `margin: initial`), are kept as one class. They're written before longhands, so a longhand still wins:
 
 ```js
 css`padding: var(--space); padding-top: 0;`;

@@ -1,6 +1,7 @@
 // Each CSS shorthand and the most specific longhands it sets. The compiler
-// uses it to expand CSS-wide keywords (`margin: inherit`), and `merge` uses
-// it for shorthands that couldn't be expanded (`margin: var(--m)`).
+// uses it to set longhands a shorthand resets to `initial`, and `merge` uses
+// it for shorthands that weren't expanded (`margin: var(--m)`,
+// `font: inherit`).
 
 const sides = (prefix: string, suffix = '') =>
   ['top', 'right', 'bottom', 'left'].map((side) => `${prefix}${side}${suffix}`);

@@ -190,8 +190,6 @@ const BACKGROUND_POSITION: Expander = (v: Value[]) => [
   ['background-position-y', v.map((layer) => layer.position.y)],
 ];
 
-const CSS_WIDE_KEYWORDS = new Set(['inherit', 'initial', 'unset', 'revert', 'revert-layer']);
-
 const custom = (name: string, keyword: string): Declaration =>
   ({
     property: 'custom',
@@ -206,22 +204,17 @@ function expandValue(property: string, value: Value): Longhands {
 
 // Expands a declaration into longhand declarations. Declarations that aren't
 // shorthands, or that can't be expanded (values with `var()`, `env()`, or
-// `attr()`, and `all`), are returned as they are. Longhands a shorthand sets
+// `attr()`, CSS-wide keywords such as `inherit`, and `all`), are returned as
+// they are. Longhands a shorthand sets
 // that Lightning CSS keeps no value for (such as the `font-variant-*`
 // properties `font` resets) are set to `initial`.
 export function expand(declaration: Declaration): Declaration[] {
   const { property } = declaration;
 
-  if (property === 'unparsed') {
-    // A CSS-wide keyword (`margin: inherit`) applies to every longhand.
-    const { propertyId, value } = declaration.value;
-    const token = value.length === 1 && value[0].type === 'token' ? value[0].value : null;
-    if (token?.type !== 'ident' || !CSS_WIDE_KEYWORDS.has(token.value)) return [declaration];
-    if (!Object.hasOwn(SHORTHANDS, propertyId.property)) return [declaration];
-    return SHORTHANDS[propertyId.property].map((name) => custom(name, token.value));
-  }
-
-  if (!Object.hasOwn(EXPANDERS, property)) return [declaration];
+  // Unparsed values (with `var()`, or a CSS-wide keyword such as
+  // `font: inherit`) are kept as they are. A keyword applies to every
+  // longhand equally, so splitting it would only add classes.
+  if (property === 'unparsed' || !Object.hasOwn(EXPANDERS, property)) return [declaration];
 
   const vendorPrefix = 'vendorPrefix' in declaration ? declaration.vendorPrefix : undefined;
   const longhands = expandValue(property, declaration.value).map(

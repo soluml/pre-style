@@ -271,17 +271,23 @@ describe('declarations in a block', () => {
     assert.equal(output, '.A{color:red!important}');
   });
 
-  test('CSS-wide keywords set every longhand', async () => {
-    const { css: output } = await compile([`margin: inherit`]);
+  test('shorthands with CSS-wide keywords stay one class', async () => {
+    // Written before longhands, so `font-weight: 600` still wins.
+    const { classes, css: output } = await compile([`font: inherit; font-weight: 600`]);
+    assert.deepEqual(classes, ['B A']);
     assert.equal(
       output,
       css`
-        .D{margin-top:inherit}
-        .C{margin-right:inherit}
-        .A{margin-bottom:inherit}
-        .B{margin-left:inherit}
+        .B{font:inherit}
+        .A{font-weight:600}
       `,
     );
+  });
+
+  test('a later shorthand with a CSS-wide keyword overrides earlier longhands', async () => {
+    const { classes, css: output } = await compile([`font-weight: 600; font: inherit`]);
+    assert.deepEqual(classes, ['A']);
+    assert.equal(output, '.A{font:inherit}');
   });
 });
 

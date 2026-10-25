@@ -68,6 +68,15 @@ describe('merge with a compiled table', () => {
     assert.equal(createMerge(compiler.mergeTable())(important, normal), normal);
   });
 
+  test('a later shorthand with a CSS-wide keyword removes earlier longhands', async () => {
+    const compiler = await createCompiler();
+    const weight = compiler.classString({ code: 'font-weight: 600', lang: 'css' });
+    const inherit = compiler.classString({ code: 'font: inherit', lang: 'css' });
+    const m = createMerge(compiler.mergeTable());
+    assert.equal(m(weight, inherit), inherit);
+    assert.equal(m(inherit, weight), `${inherit} ${weight}`);
+  });
+
   test('a later unexpanded shorthand removes earlier longhands', async () => {
     const compiler = await createCompiler();
     const longhands = compiler.classString({

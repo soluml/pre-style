@@ -113,10 +113,11 @@ test('keeps shorthands with var() as they are', () => {
   assert.deepEqual(expand(declaration), [declaration]);
 });
 
-test('expands CSS-wide keywords to every longhand', () => {
-  const longhands = expand(declarationOf('margin: inherit'));
-  assert.equal(
-    print([rule(longhands)], [], { minify: true }, false).code,
-    '.a{margin-top:inherit;margin-right:inherit;margin-bottom:inherit;margin-left:inherit}',
-  );
+test('keeps shorthands with CSS-wide keywords as they are', () => {
+  // A keyword applies to every longhand equally, so splitting it would only
+  // add classes.
+  for (const source of ['font: inherit', 'margin: initial', 'border: unset']) {
+    const declaration = declarationOf(source);
+    assert.deepEqual(expand(declaration), [declaration]);
+  }
 });
