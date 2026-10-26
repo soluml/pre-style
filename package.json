@@ -23,7 +23,9 @@
     "demo:tanstack-start:start": "npm run start -w demo/react/tanstack-start",
     "demo:astro": "npm run dev -w demo/astro",
     "demo:astro:build": "npm run build -w demo/astro",
-    "demo:astro:start": "npm run start -w demo/astro"
+    "demo:astro:start": "npm run start -w demo/astro",
+    "www": "npm run dev --prefix src/www",
+    "www:build": "npm run build --prefix src/www"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

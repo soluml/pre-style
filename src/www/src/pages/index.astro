@@ -1,0 +1,95 @@
+---
+import { css } from '@pre.style/core';
+import Layout from '../layouts/Layout.astro';
+
+const hero = css`
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  background-color: #da5b06;
+  background-image: linear-gradient(165deg, #ffe62c, #da5b06);
+  text-align: center;
+`;
+
+const content = css`
+  max-width: 40rem;
+`;
+
+const logo = css`
+  display: block;
+  width: min(100%, 28rem);
+  height: auto;
+  margin: 0 auto 1.5rem;
+`;
+
+const tagline = css`
+  font-size: 1.25rem;
+  line-height: 1.4;
+  margin: 0 0 2rem;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+
+  @media (min-width: 768px) {
+    font-size: 1.5rem;
+  }
+`;
+
+const badge = css`
+  display: inline-block;
+  margin: 0 0 2rem;
+  padding: 0.375rem 1rem;
+  border-radius: 999px;
+  background-color: rgb(0 0 0 / 0.75);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+`;
+
+const code = css`
+  display: block;
+  margin: 0 0 2rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: rgb(0 0 0 / 0.75);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9375rem;
+  overflow-x: auto;
+  white-space: nowrap;
+`;
+
+const link = css`
+  color: #fff;
+  font-weight: 600;
+  text-underline-offset: 0.2em;
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+`;
+---
+
+<Layout
+  title="pre.style: zero-runtime CSS-in-JS"
+  description="Write plain CSS or SCSS next to your markup, and pre.style compiles it at build time into atomic CSS classes. Docs coming soon."
+>
+  <main class={hero}>
+    <div class={content}>
+      <h1 class={css`margin: 0;`}>
+        <img class={logo} src="/logo.svg" alt="pre.style" width="1121" height="267" />
+      </h1>
+      <p class={tagline}>
+        Zero-runtime CSS-in-JS. Write plain CSS or SCSS next to your markup, and pre.style compiles
+        it at build time into atomic CSS classes.
+      </p>
+      <p class={badge}>Docs coming soon</p>
+      <code class={code}>npm install --save-dev @pre.style/vite lightningcss</code>
+      <p>
+        <a class={link} href="https://github.com/soluml/pre.style">GitHub</a>
+        ·
+        <a class={link} href="https://www.npmjs.com/package/@pre.style/core">npm</a>
+      </p>
+    </div>
+  </main>
+</Layout>

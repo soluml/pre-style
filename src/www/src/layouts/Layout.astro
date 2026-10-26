@@ -1,0 +1,36 @@
+---
+import { css } from '@pre.style/core';
+// pre.style's CSS. Astro bundles it in builds, and links it on every page
+// that uses this layout.
+import 'virtual:pre.style.css';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+
+const body = css`
+  background-color: #1a1a1a;
+  color: #fff;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  margin: 0;
+`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+  </head>
+  <body class={body}>
+    <slot />
+  </body>
+</html>

@@ -1,30 +1,25 @@
 {
-  "name": "Pre-Style-Site",
+  "name": "pre.style-www",
   "private": true,
-  "version": "0.0.0",
+  "description": "The pre.style website, built with Astro and the published pre.style packages.",
+  "type": "module",
   "scripts": {
-    "style": "'../../bin/prestyle' html -d '../../tmp' -o '../src/www/css/_prestyle.scss' -p 'css/_vars.scss' -q 'double'",
-    "sass": "node-sass css --output '../../docs' --output-style compressed",
-    "autoprefixer": "postcss -o '../../docs/s.css' '../../docs/s.css' -u autoprefixer",
-    "html": "html-minifier --input-dir '../../tmp/html' --output-dir '../../docs' --collapse-boolean-attributes --collapse-whitespace",
-    "clean": "rimraf ../../tmp",
-    "build": "npm run style && npm run sass && npm run autoprefixer && npm run html && npm run clean",
-    "server": "browser-sync start --config 'bs-config.js'",
-    "prestart": "npm run build",
-    "start": "npm run server"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro sync && tsc"
   },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 10",
-    "ie 11"
-  ],
+  "dependencies": {
+    "@pre.style/core": "3.0.0-alpha.0",
+    "astro": "^7.4.2"
+  },
   "devDependencies": {
-    "autoprefixer": "9.6.1",
-    "browser-sync": "^2.26.7",
-    "html-minifier": "4.0.0",
-    "node-sass": "4.12.0",
-    "postcss-cli": "6.1.3",
-    "rimraf": "2.6.3"
+    "@pre.style/vite": "3.0.0-alpha.0",
+    "lightningcss": "^1.33.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
