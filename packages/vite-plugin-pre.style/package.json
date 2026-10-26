@@ -2,11 +2,23 @@
   "name": "vite-plugin-pre.style",
   "version": "3.0.0-alpha.0",
   "description": "Vite plugin for pre.style.",
+  "keywords": [
+    "atomic-css",
+    "css-in-js",
+    "pre.style",
+    "vite",
+    "vite-plugin",
+    "zero-runtime"
+  ],
+  "homepage": "https://pre.style",
+  "bugs": {
+    "url": "https://github.com/soluml/pre.style/issues"
+  },
   "license": "MIT",
   "author": {
     "name": "Benjamin Solum",
     "email": "benjamin@soluml.com",
-    "url": "http://soluml.com"
+    "url": "https://soluml.com"
   },
   "repository": {
     "type": "git",
@@ -24,7 +36,12 @@
       "default": "./dist/index.js"
     }
   },
+  "publishConfig": {
+    "tag": "next"
+  },
   "scripts": {
+    "prepack": "npm run build -w pre.style -w vite-plugin-pre.style && cp ../../README.md ../../LICENSE .",
+    "postpack": "rm README.md LICENSE",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc",
     "test": "node --conditions=pre.style-source --test \"test/**/*.test.ts\""

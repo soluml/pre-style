@@ -8,3 +8,7 @@ node_modules
 
 # Build output
 dist
+
+# Copied into each package by prepack, removed by postpack
+packages/*/README.md
+packages/*/LICENSE

@@ -2,7 +2,16 @@
   "name": "pre.style",
   "version": "3.0.0-alpha.0",
   "description": "Zero-runtime CSS-in-JS that compiles css and scss blocks into atomic CSS classes.",
-  "homepage": "http://pre.style",
+  "keywords": [
+    "atomic-css",
+    "css",
+    "css-in-js",
+    "lightningcss",
+    "sass",
+    "scss",
+    "zero-runtime"
+  ],
+  "homepage": "https://pre.style",
   "bugs": {
     "url": "https://github.com/soluml/pre.style/issues"
   },
@@ -10,7 +19,7 @@
   "author": {
     "name": "Benjamin Solum",
     "email": "benjamin@soluml.com",
-    "url": "http://soluml.com"
+    "url": "https://soluml.com"
   },
   "repository": {
     "type": "git",
@@ -33,7 +42,12 @@
       "default": "./dist/compiler/index.js"
     }
   },
+  "publishConfig": {
+    "tag": "next"
+  },
   "scripts": {
+    "prepack": "npm run build && cp ../../README.md ../../LICENSE .",
+    "postpack": "rm README.md LICENSE",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc",
     "test": "node --test \"test/**/*.test.ts\""
