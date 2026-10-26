@@ -30,6 +30,10 @@ export interface PreStyleOptions {
   lightningcss?: LightningOptions;
   // Generate a source map for the output CSS.
   sourceMap?: boolean;
+  // Lowercase class names only, for pages in quirks mode (no doctype), where
+  // class selectors ignore case. Names get longer, so only use it for pages
+  // you can't add a doctype to.
+  quirksMode?: boolean;
   // Quote character around the class string that replaces each block.
   quotes?: 'single-quote' | 'double-quote' | 'backtick';
   output?: {
@@ -46,6 +50,9 @@ const SCRIPT = /\.(?:[cm]?[jt]sx?)$/;
 const HTML = /\.html$/;
 const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html}'];
 const NODE_MODULES = '**/node_modules/**';
+// A doctype at the start of an HTML file, after any whitespace and comments.
+// Legacy doctypes that still trigger quirks mode aren't detected.
+const DOCTYPE = /^\uFEFF?(?:\s|<!--[\s\S]*?-->)*<!doctype\s/i;
 const QUOTES = { 'single-quote': "'", 'double-quote': '"', backtick: '`' };
 
 const CN_ID = 'virtual:pre-style/cn';
@@ -108,6 +115,8 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   // Whether the client build imported the CSS module, in which case Vite
   // bundles the CSS and the plugin doesn't write `output.file`.
   let cssImported = false;
+  // HTML files already warned about a missing doctype.
+  const warnedDoctype = new Set<string>();
 
   // The project's table, and a `cn` bound to it for build-time calls.
   const current = () => {
@@ -188,6 +197,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
           sourceMap: options.sourceMap,
           root: config.root,
           warn: (message) => config.logger.warn(`[pre-style] ${message}`),
+          quirksMode: options.quirksMode,
         });
       // Dev names blocks on demand, as they're served.
       if (config.command !== 'build') {
@@ -307,6 +317,12 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       order: 'pre',
       handler(html, context) {
         const id = context.filename;
+        if (!options.quirksMode && !DOCTYPE.test(html) && !warnedDoctype.has(id)) {
+          warnedDoctype.add(id);
+          config.logger.warn(
+            `[pre-style] ${relative(config.root, id)} has no doctype, so browsers render it in quirks mode, where class selectors ignore case and Pre-Style's classes collide. Add <!doctype html>, or set quirksMode: true if you can't.`,
+          );
+        }
         const revision = compiler.revision;
         const s = new MagicString(html);
         try {

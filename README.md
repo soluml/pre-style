@@ -333,12 +333,22 @@ preStyle({
 | `libraries`    |                                             | Component libraries to compile, by package name, in addition to dependencies with a `pre-style` field. A config replaces the package's field, and `false` leaves the package out. See [Component libraries](#component-libraries). |
 | `lightningcss` |                                             | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before Pre-Style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
 | `sourceMap`    | `false`                                     | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre-style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
+| `quirksMode`   | `false`                                     | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode). |
 | `quotes`       | `'double-quote'`                            | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`. |
 | `output.file`  | `'prestyle.css'`                            | Path and name of the CSS file, relative to Vite's `build.outDir`. |
 | `output.banner`|                                             | Text added to the start of the CSS file. |
 | `output.footer`|                                             | Text added to the end of the CSS file. |
 
 The CSS isn't minified unless you set `lightningcss: { minify: true }`.
+
+### Quirks mode
+
+> [!WARNING]
+> **You probably don't want `quirksMode`.** It makes every project's output larger, and it only helps pages that can't have a doctype. If your pages start with `<!doctype html>`, as almost every modern page does, leave it off.
+
+Pages without a doctype render in quirks mode, where class selectors ignore case. Pre-Style uses both uppercase and lowercase letters in class names, so `.A` and `.a` would apply to each other's elements. Add `<!doctype html>` to fix this. The plugin warns during the build when an HTML file it processes has no doctype.
+
+If you can't add one, for example because your CSS is loaded into a page you don't control, set `quirksMode: true`. Class names then use only lowercase letters, digits, `-`, and `_`. That leaves 27 one-character names instead of 53, and about 1,050 two-character names instead of 3,445, so names get longer once a project has more than about 27 classes.
 
 ## TypeScript
 
@@ -364,7 +374,7 @@ The build fails, with the file, line, and column, when:
 - Blocks in PHP and other templates aren't supported, because Vite doesn't output them.
 - Component libraries are found among the app's dependencies and the dependencies of other libraries. A library used only through a package that isn't one (a wrapper without a `pre-style` field) isn't found automatically; add it with the `libraries` option.
 - Positions in `scss` blocks point to the start of the block, since Sass's output doesn't match the original lines.
-- Pages need a doctype (`<!doctype html>`). Without one, browsers use quirks mode, where class selectors ignore case, so classes like `.A` and `.a` would apply to each other's elements.
+- Pages need a doctype (`<!doctype html>`). Without one, browsers use quirks mode, where class selectors ignore case, so classes like `.A` and `.a` would apply to each other's elements. See [Quirks mode](#quirks-mode).
 
 ## Packages
 

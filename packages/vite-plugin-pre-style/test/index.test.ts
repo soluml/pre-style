@@ -2,7 +2,7 @@ import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cpSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { build, createServer, defaultClientConditions } from 'vite';
+import { build, createLogger, createServer, defaultClientConditions } from 'vite';
 import type { InlineConfig, Rollup } from 'vite';
 import preStyle from '../src/index.ts';
 import type { PreStyleOptions } from '../src/index.ts';
@@ -34,6 +34,15 @@ async function buildFixture(
   for (const item of result.output)
     files.set(item.fileName, item.type === 'chunk' ? item.code : String(item.source));
   return files;
+}
+
+// Builds a fixture and returns the warnings logged.
+async function warnings(name: string, options: PreStyleOptions = {}) {
+  const logged: string[] = [];
+  const logger = createLogger('silent');
+  logger.warn = (message) => logged.push(message);
+  const files = await buildFixture(name, options, { customLogger: logger });
+  return { files, logged };
 }
 
 // The class string assigned to `button` in transformed code.
@@ -138,6 +147,29 @@ describe('build', () => {
     });
     assert.match(files.get('index.html')!, /<main class="N O P Q A">Hello<\/main>/);
     assert.match(files.get('prestyle.css')!, /\.N\{padding-top:1rem\}/);
+  });
+});
+
+describe('quirks mode', () => {
+  test('warns once when index.html has no doctype', async () => {
+    const { logged } = await warnings('quirks');
+    assert.equal(logged.length, 1);
+    assert.match(logged[0], /index\.html has no doctype.*set quirksMode: true/);
+  });
+
+  test("doesn't warn when index.html has a doctype", async () => {
+    const { logged } = await warnings('basic');
+    assert.deepEqual(logged, []);
+  });
+
+  test('quirksMode uses lowercase class names, without the warning', async () => {
+    const { files, logged } = await warnings('quirks', {
+      quirksMode: true,
+      lightningcss: { minify: true },
+    });
+    assert.deepEqual(logged, []);
+    assert.match(files.get('index.html')!, /<main class="[a-z_ ]+">/);
+    assert.doesNotMatch(files.get('prestyle.css')!, /\.[A-Z]/);
   });
 });
 

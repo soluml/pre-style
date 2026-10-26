@@ -171,6 +171,17 @@ describe('names', () => {
     assert.equal(names[3498], 'A00');
   });
 
+  test('quirksMode leaves uppercase letters out of class names', async () => {
+    const compiler = await createCompiler({ quirksMode: true });
+    const names = Array.from({ length: 1200 }, (_, i) =>
+      compiler.classString({ code: `width: ${i}px`, lang: 'css' }),
+    );
+    for (const name of names) assert.match(name, /^(?!-?[0-9]|--|-$)[-_a-z0-9]+$/);
+    assert.deepEqual(names.slice(0, 3), ['a', 'b', 'c']);
+    assert.equal(names[26], '_');
+    assert.equal(names[27].length, 2);
+  });
+
   test('dev mode names blocks on demand, without a scan', async () => {
     const compiler = await createCompiler({ lightningcss: { minify: true } });
     assert.equal(compiler.classString({ code: 'margin-top: 0', lang: 'css' }), 'A');

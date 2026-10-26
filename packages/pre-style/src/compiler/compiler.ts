@@ -43,6 +43,9 @@ export interface CompilerOptions {
   root?: string;
   // Receives Sass warnings. Defaults to `console.warn`.
   warn?: (message: string) => void;
+  // Lowercase class names only, for pages in quirks mode, where class
+  // selectors ignore case. Names get longer.
+  quirksMode?: boolean;
 }
 
 export interface Block {
@@ -77,6 +80,14 @@ interface Source {
   column: number;
 }
 
+const RANGES = {
+  Digits: { start: '0030', end: '0039' },
+  Uppercase: { start: '0041', end: '005A' },
+  Lowercase: { start: '0061', end: '007A' },
+  Hyphen: { start: '002D', end: '002D' },
+  Underscore: { start: '005F', end: '005F' },
+};
+
 const NAME_OPTIONS = {
   cssSafe: true,
   // Only `0-9`, `A-Z`, `a-z`, `-`, and `_`, with letters first so the
@@ -84,13 +95,15 @@ const NAME_OPTIONS = {
   // names never use other characters, such as U+00A0 (a no-break space),
   // which `cn` would split on. `cssSafe` keeps names from starting with a
   // digit, `--`, or `-` and a digit.
-  ranges: {
-    Digits: { start: '0030', end: '0039' },
-    Uppercase: { start: '0041', end: '005A' },
-    Lowercase: { start: '0061', end: '007A' },
-    Hyphen: { start: '002D', end: '002D' },
-    Underscore: { start: '005F', end: '005F' },
-  },
+  ranges: RANGES,
+};
+
+// In quirks mode, `.A` and `.a` match the same elements, so class names leave
+// out uppercase letters. Prefixes are only used in the `cn` table, so they
+// keep both cases.
+const QUIRKS_NAME_OPTIONS = {
+  cssSafe: true,
+  ranges: Object.fromEntries(Object.entries(RANGES).filter(([name]) => name !== 'Uppercase')),
 };
 
 export async function createCompiler(options: CompilerOptions = {}): Promise<Compiler> {
@@ -114,7 +127,7 @@ export class Compiler {
 
   // One name list for every class, and one for prefixes (the at-rules and
   // selector variant a class is under), which only the `cn` table uses.
-  readonly #names = { atoms: new SweatMap(NAME_OPTIONS), prefixes: new SweatMap(NAME_OPTIONS) };
+  readonly #names: { atoms: SweatMap; prefixes: SweatMap };
   // How often each class and prefix is used across scanned blocks.
   readonly #counts = { atoms: new Map<string, number>(), prefixes: new Map<string, number>() };
 
@@ -126,6 +139,10 @@ export class Compiler {
 
   constructor(options: CompilerOptions, sass: SassCompiler | null) {
     this.#options = options;
+    this.#names = {
+      atoms: new SweatMap(options.quirksMode ? QUIRKS_NAME_OPTIONS : NAME_OPTIONS),
+      prefixes: new SweatMap(NAME_OPTIONS),
+    };
     const root = options.root ?? process.cwd();
     this.#prepend = readPrepend(root, options.prependFiles);
     this.#libraries = (options.libraries ?? [])
