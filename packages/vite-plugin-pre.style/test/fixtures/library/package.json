@@ -1,0 +1,9 @@
+{
+  "name": "fixture-library",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "acme-ui": "1.0.0",
+    "plain-ui": "1.0.0"
+  }
+}

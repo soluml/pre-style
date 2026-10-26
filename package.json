@@ -1,48 +1,37 @@
 {
-  "name": "pre-style",
-  "version": "1.1.0",
-  "description": "Pre-Style is a tool that lets you author CSS-in-JS (or CSS-in-Markup) while outputting highly efficient CSS.",
-  "main": "src/module/prestyle.js",
-  "bin": {
-    "prestyle": "./bin/prestyle"
-  },
+  "name": "pre.style-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/pre.style",
+    "packages/vite-plugin-pre.style",
+    "demo/react/*",
+    "demo/astro"
+  ],
+  "type": "module",
   "scripts": {
-    "lint": "eslint **/*.js bin/prestyle",
-    "test": "mocha"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/soluml/pre-style/"
-  },
-  "bugs": {
-    "url": "https://github.com/soluml/pre-style/issues"
-  },
-  "homepage": "http://pre.style",
-  "author": {
-    "name": "Benjamin Solum",
-    "email": "benjamin@soluml.com",
-    "url": "http://soluml.com"
-  },
-  "engines": {
-    "node": ">=12.0.0"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "chalk": "2.4.2",
-    "commander": "2.20.0",
-    "css-mqpacker": "7.0.0",
-    "csso": "^4.2.0",
-    "gonzales": "1.0.7",
-    "lodash": "4.17.21",
-    "mkdirp": "0.5.1",
-    "sass": "1.22.9",
-    "sweatmap": "0.3.4"
+    "build": "npm run build -w packages/pre.style -w packages/vite-plugin-pre.style",
+    "typecheck": "npm run typecheck -w packages/pre.style -w packages/vite-plugin-pre.style",
+    "test": "npm test -w packages/pre.style -w packages/vite-plugin-pre.style",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "demo:react-router": "npm run dev -w demo/react/react-router",
+    "demo:react-router:build": "npm run build -w demo/react/react-router",
+    "demo:react-router:start": "npm run start -w demo/react/react-router",
+    "demo:tanstack-start": "npm run dev -w demo/react/tanstack-start",
+    "demo:tanstack-start:build": "npm run build -w demo/react/tanstack-start",
+    "demo:tanstack-start:start": "npm run start -w demo/react/tanstack-start",
+    "demo:astro": "npm run dev -w demo/astro",
+    "demo:astro:build": "npm run build -w demo/astro",
+    "demo:astro:start": "npm run start -w demo/astro"
   },
   "devDependencies": {
-    "eslint": "^7.26.0",
-    "eslint-config-airbnb": "^18.2.1",
-    "eslint-plugin-import": "^2.22.1",
-    "expect": "^26.6.2",
-    "mocha": "^8.4.0"
+    "@types/node": "^26.6.5",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
+    "typescript": "^7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

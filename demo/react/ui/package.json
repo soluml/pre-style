@@ -1,0 +1,35 @@
+{
+  "name": "pre.style-demo-react-ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A shared React component library styled with pre.style, used by both React demos.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/tokens.css": "./src/styles/tokens.css",
+    "./styles/_tokens.scss": "./src/styles/_tokens.scss"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "pre.style": "3.0.0-alpha.0",
+    "react": "^19.3.1"
+  },
+  "peerDependencies": {
+    "pre.style": "3.0.0-alpha.0",
+    "react": "^19.3.1"
+  },
+  "pre.style": {
+    "include": "src/**/*.{ts,tsx}",
+    "prependFiles": {
+      "css": [
+        "src/styles/tokens.css"
+      ],
+      "scss": [
+        "src/styles/_tokens.scss"
+      ]
+    }
+  }
+}
