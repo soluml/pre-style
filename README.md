@@ -22,17 +22,17 @@ const button = css`
 `;
 ```
 
-After the build, `button` is a plain string, `"A D G E A-B A_H A_F"`. The block is replaced, and these classes are added to a single CSS file:
+After the build, `button` is a plain string, `"B C E D A G F"`. The block is replaced, and these classes are added to a single CSS file:
 
 ```css
-.A{background-color:#0071ba}
-.D{color:#fff}
-.G{padding-block-start:.5em}
-.E{padding-block-end:.5em}
-.A-B:hover{background-color:#005a94}
+.B{background-color:#0071ba}
+.C{color:#fff}
+.E{padding-block-start:.5em}
+.D{padding-block-end:.5em}
+.A:hover{background-color:#005a94}
 @media (width>=768px) {
-  .A_H{padding-block-start:1em}
-  .A_F{padding-block-end:1em}
+  .G{padding-block-start:1em}
+  .F{padding-block-end:1em}
 }
 ```
 
@@ -259,17 +259,9 @@ The plugin excludes libraries from Vite's dependency pre-bundling and from SSR e
 
 ### Class names
 
-Each class is one declaration, with a prefix for the at-rules and selector variant it's under:
+Each class is one declaration, under the at-rules and selector variant it was written in. Every class gets a name from one list, and the most-used classes get the shortest ones: one character for the first 53, then two characters for the next few thousand. Names don't say what a class is under; `cn` gets that from its lookup table.
 
-| Class   | Meaning                                                      |
-| ------- | ------------------------------------------------------------ |
-| `X`     | Declaration `X` on the element.                              |
-| `A_X`   | Declaration `X` inside at-rule `A`.                          |
-| `A_C_X` | Declaration `X` inside at-rule `C`, nested inside at-rule `A`. |
-| `B-X`   | Declaration `X` under selector variant `B`.                  |
-| `A_B-X` | Declaration `X` under selector variant `B`, inside at-rule `A`. |
-
-At-rules, selector variants, and declarations each have their own list of names, and the most-used entries get the shortest ones. Declarations that mean the same thing share a class: `color: blue` and `color: #00f` are the same class.
+Declarations that mean the same thing share a class: `color: blue` and `color: #00f` are the same class. So do equivalent nestings, such as `@media (…) { &:hover { … } }` and `&:hover { @media (…) { … } }`.
 
 Production builds scan your files first, so names are stable between builds. In dev, names are assigned as files are served. **Dev class names can change between dev sessions and differ from production names, so don't depend on them.**
 
@@ -372,6 +364,7 @@ The build fails, with the file, line, and column, when:
 - Blocks in PHP and other templates aren't supported, because Vite doesn't output them.
 - Component libraries are found among the app's dependencies and the dependencies of other libraries. A library used only through a package that isn't one (a wrapper without a `pre-style` field) isn't found automatically; add it with the `libraries` option.
 - Positions in `scss` blocks point to the start of the block, since Sass's output doesn't match the original lines.
+- Pages need a doctype (`<!doctype html>`). Without one, browsers use quirks mode, where class selectors ignore case, so classes like `.A` and `.a` would apply to each other's elements.
 
 ## Packages
 

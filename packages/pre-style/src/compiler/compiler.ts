@@ -79,13 +79,17 @@ interface Source {
 
 const NAME_OPTIONS = {
   cssSafe: true,
-  // Only `0-9`, `A-Z`, and `a-z` from Basic Latin, so names never contain
-  // `_` or `-`, which separate class name segments.
-  additional_ranges: {
-    'Basic Latin': { start: null, end: null },
+  // Only `0-9`, `A-Z`, `a-z`, `-`, and `_`, with letters first so the
+  // shortest names are letters. These replace Sweatmap's default ranges, so
+  // names never use other characters, such as U+00A0 (a no-break space),
+  // which `cn` would split on. `cssSafe` keeps names from starting with a
+  // digit, `--`, or `-` and a digit.
+  ranges: {
     Digits: { start: '0030', end: '0039' },
     Uppercase: { start: '0041', end: '005A' },
     Lowercase: { start: '0061', end: '007A' },
+    Hyphen: { start: '002D', end: '002D' },
+    Underscore: { start: '005F', end: '005F' },
   },
 };
 
@@ -108,18 +112,11 @@ export class Compiler {
   readonly #libraries: { dir: string; prepend: Record<Lang, string> }[];
   readonly #blocks = new Map<string, ParsedBlock>();
 
-  // Separate name lists for at-rules, selector variants, and declarations.
-  readonly #names = {
-    atRules: new SweatMap(NAME_OPTIONS),
-    variants: new SweatMap(NAME_OPTIONS),
-    declarations: new SweatMap(NAME_OPTIONS),
-  };
-  // How often each entry is used across scanned blocks.
-  readonly #counts = {
-    atRules: new Map<string, number>(),
-    variants: new Map<string, number>(),
-    declarations: new Map<string, number>(),
-  };
+  // One name list for every class, and one for prefixes (the at-rules and
+  // selector variant a class is under), which only the `cn` table uses.
+  readonly #names = { atoms: new SweatMap(NAME_OPTIONS), prefixes: new SweatMap(NAME_OPTIONS) };
+  // How often each class and prefix is used across scanned blocks.
+  readonly #counts = { atoms: new Map<string, number>(), prefixes: new Map<string, number>() };
 
   readonly #atoms = new Map<string, AtomRecord>();
   readonly #globals = new Map<string, GlobalRecord>();
@@ -155,9 +152,9 @@ export class Compiler {
   scan(block: Block): void {
     const parsed = this.#parse(block);
     for (const atom of parsed.atoms) {
-      for (const segment of atom.atRules) count(this.#counts.atRules, segment.key);
-      if (atom.variant) count(this.#counts.variants, atom.variant.key);
-      count(this.#counts.declarations, atom.declaration.key);
+      count(this.#counts.atoms, atomKey(atom));
+      const prefix = prefixKey(atom);
+      if (prefix !== '') count(this.#counts.prefixes, prefix);
     }
     this.#register(block, parsed);
   }
@@ -165,7 +162,7 @@ export class Compiler {
   // Pass 2 of naming: gives the most-used entries the shortest names. Ties
   // are broken by key, so names don't depend on the order files are read.
   assignNames(): void {
-    for (const list of ['atRules', 'variants', 'declarations'] as const) {
+    for (const list of ['atoms', 'prefixes'] as const) {
       const sorted = [...this.#counts[list]].toSorted(
         ([a, countA], [b, countB]) => countB - countA || (a < b ? -1 : a > b ? 1 : 0),
       );
@@ -202,16 +199,18 @@ export class Compiler {
     return print(rules, sources, this.#parseOptions.lightningcss, this.#options.sourceMap ?? false);
   }
 
+  // Classes on the element have an empty prefix.
   cnTable(): CnTable {
     const table: CnTable = {};
-    for (const record of this.#atoms.values()) table[this.#nameOf(record)] = this.#cnEntry(record);
+    for (const record of this.#atoms.values()) {
+      const key = prefixKey(record.atom);
+      const prefix = key === '' ? '' : this.#names.prefixes.set(key);
+      const properties = (table[prefix] ??= {});
+      const { property } = record.atom;
+      const name = this.#nameOf(record);
+      properties[property] = properties[property] ? `${properties[property]} ${name}` : name;
+    }
     return table;
-  }
-
-  #cnEntry(record: AtomRecord): [prefix: string, property: string] {
-    const className = this.#nameOf(record);
-    const declaration = this.#names.declarations.get(record.atom.declaration.key)!;
-    return [className.slice(0, className.length - declaration.length), record.atom.property];
   }
 
   #parse(block: Block): ParsedBlock {
@@ -263,16 +262,7 @@ export class Compiler {
   }
 
   #nameOf(record: AtomRecord): string {
-    return (record.className ??= this.#className(record.atom));
-  }
-
-  // `A_` for each at-rule, `B-` for the selector variant, then the
-  // declaration.
-  #className(atom: Atom): string {
-    let name = '';
-    for (const segment of atom.atRules) name += `${this.#names.atRules.set(segment.key)}_`;
-    if (atom.variant) name += `${this.#names.variants.set(atom.variant.key)}-`;
-    return name + this.#names.declarations.set(atom.declaration.key);
+    return (record.className ??= this.#names.atoms.set(atomKey(record.atom)));
   }
 
   #atomRules(loc: (source: Source | null) => unknown): Rule[] {
@@ -336,8 +326,14 @@ function readPrepend(dir: string, files: PrependFiles | undefined): Record<Lang,
 
 const count = (map: Map<string, number>, key: string) => map.set(key, (map.get(key) ?? 0) + 1);
 
-const atomKey = (atom: Atom) =>
-  `${atom.atRules.map((s) => s.key).join('\n')}\n${atom.variant?.key ?? ''}\n${atom.declaration.key}`;
+// The at-rules and selector variant an atom is under. Empty for atoms on the
+// element.
+const prefixKey = (atom: Atom) =>
+  atom.atRules.length === 0 && !atom.variant
+    ? ''
+    : `${atom.atRules.map((s) => s.key).join('\n')}\n${atom.variant?.key ?? ''}`;
+
+const atomKey = (atom: Atom) => `${prefixKey(atom)}\n${atom.declaration.key}`;
 
 // Base classes, then selector variant classes in LVHFA order. Within each,
 // shorthands that couldn't be expanded come first, so the longhands after

@@ -46,41 +46,46 @@ describe('build', () => {
     const files = await buildFixture('basic', { lightningcss: { minify: true } });
     assert.equal(
       files.get('prestyle.css'),
-      '.Q{padding-top:1rem}.O{padding-right:2rem}.K{padding-bottom:1rem}.M{padding-left:2rem}.A{color:red}' +
-        '.P{padding-top:8px}.N{padding-right:8px}.J{padding-bottom:8px}.L{padding-left:8px}.D{font-size:2rem}' +
-        '.I{margin-top:0}.H{margin-right:0}.F{margin-bottom:0}.G{margin-left:0}.C{color:green}.A-B:hover{color:#00f}' +
-        '@media (width>=768px){.A_E{font-size:3rem}}',
+      '.P{padding-top:1rem}.N{padding-right:2rem}.J{padding-bottom:1rem}.L{padding-left:2rem}.A{color:red}' +
+        '.O{padding-top:8px}.M{padding-right:8px}.I{padding-bottom:8px}.K{padding-left:8px}.D{font-size:2rem}' +
+        '.H{margin-top:0}.G{margin-right:0}.E{margin-bottom:0}.F{margin-left:0}.C{color:green}.B:hover{color:#00f}' +
+        '@media (width>=768px){.Q{font-size:3rem}}',
     );
     const js = chunk(files);
-    assert.match(js, /var base = "A A-B";/);
-    assert.match(js, /var big = "D A_E";/);
+    // Rolldown inlines the short class strings of `base` and `big`.
+    assert.match(js, /cn\("A B", "D Q", window\.location\.hash\)/);
     assert.doesNotMatch(js, /css`|scss`/);
   });
 
   test('replaces blocks in HTML and links the CSS file', async () => {
     const html = (await buildFixture('basic')).get('index.html')!;
-    assert.match(html, /<main class="Q O K M A">Hello<\/main>/);
+    assert.match(html, /<main class="P N J L A">Hello<\/main>/);
     assert.match(html, /<link rel="stylesheet" href="\/prestyle.css">/);
   });
 
   test('resolves cn calls with static arguments at build time', async () => {
     const js = chunk(await buildFixture('basic'));
     // `color: red` is overridden by `color: green`.
-    assert.match(js, /document\.body\.className = "I H F G C";/);
+    assert.match(js, /document\.body\.className = "H G E F C";/);
   });
 
   test('other cn calls use the project lookup table', async () => {
     const js = chunk(await buildFixture('basic'));
     assert.match(js, /var cn = \/\* @__PURE__ \*\/ createCn\(\{/);
-    assert.match(js, /"A_E": \["A_", "font-size"\]/);
-    assert.match(js, /document\.body\.dataset\.dynamic = cn\(base, big, window\.location\.hash\);/);
+    // The default `cn` from pre-style is dropped.
+    assert.doesNotMatch(js, /^createCn\(\{\}\);$/m);
+    assert.match(js, /"B": \{ "font-size": "Q" \}/);
+    assert.match(
+      js,
+      /document\.body\.dataset\.dynamic = cn\("A B", "D Q", window\.location\.hash\);/,
+    );
   });
 
   test('the quotes option sets the quote character', async () => {
     const js = chunk(await buildFixture('basic', { quotes: 'single-quote' }));
-    assert.match(js, /var base = "A A-B";/);
+    assert.match(js, /document\.body\.className = "H G E F C";/);
     const backtick = chunk(await buildFixture('basic', { quotes: 'backtick' }));
-    assert.match(backtick, /var base = `A A-B`;/);
+    assert.match(backtick, /document\.body\.className = `H G E F C`;/);
   });
 
   test('the output option sets the file name, banner, and footer', async () => {
@@ -93,7 +98,7 @@ describe('build', () => {
       },
     });
     const css = files.get('css/pre-style.css')!;
-    assert.ok(css.startsWith('/* Top of file */\n.Q{'));
+    assert.ok(css.startsWith('/* Top of file */\n.P{'));
     assert.ok(css.endsWith('}/* End of file */'));
     assert.match(files.get('index.html')!, /<link rel="stylesheet" href="\/css\/pre-style.css">/);
   });
@@ -250,7 +255,7 @@ describe('dev', () => {
       // Vite rewrites the virtual import to its resolved ID.
       assert.match(main!.code, /^import "\/__pre-style.css";/);
       // Dev names blocks in the order they're served.
-      assert.match(main!.code, /const base = "A A-B";/);
+      assert.match(main!.code, /const base = "A B";/);
 
       const button = await server.transformRequest('/src/button.ts');
       const css = await server.transformRequest('/__pre-style.css');

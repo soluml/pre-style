@@ -13,12 +13,12 @@ import { compile, css } from './helpers.ts';
 describe('spec examples', () => {
   test('flat declarations and a selector variant', async () => {
     const { classes, css: output } = await compile([`color: blue; & > * { color: green; }`]);
-    assert.deepEqual(classes, ['A A-B']);
+    assert.deepEqual(classes, ['B A']);
     assert.equal(
       output,
       css`
-        .A{color:#00f}
-        .A-B>*{color:green}
+        .B{color:#00f}
+        .A>*{color:green}
       `,
     );
   });
@@ -27,32 +27,32 @@ describe('spec examples', () => {
     const { classes, css: output } = await compile([
       `color: black; @media (min-width: 768px) and (prefers-color-scheme: dark) { background-color: red; }`,
     ]);
-    assert.deepEqual(classes, ['B A_A']);
+    assert.deepEqual(classes, ['A B']);
     assert.equal(
       output,
       css`
-        .B{color:#000}
+        .A{color:#000}
         @media (width>=768px) and (prefers-color-scheme:dark) {
-          .A_A{background-color:red}
+          .B{background-color:red}
         }
       `,
     );
   });
 
-  test('blocks combined with cn share the at-rule name', async () => {
+  test('classes under the same at-rule share one group', async () => {
     const { classes, css: output } = await compile([
       `color: yellow; @media (min-width: 768px) { background-color: green; }`,
       `color: orange; @media (min-width: 768px) { background-color: purple; }`,
     ]);
-    assert.deepEqual(classes, ['D A_A', 'C A_B']);
+    assert.deepEqual(classes, ['B C', 'A D']);
     assert.equal(
       output,
       css`
-        .D{color:#ff0}
-        .C{color:orange}
+        .B{color:#ff0}
+        .A{color:orange}
         @media (width>=768px) {
-          .A_A{background-color:green}
-          .A_B{background-color:purple}
+          .C{background-color:green}
+          .D{background-color:purple}
         }
       `,
     );
@@ -106,12 +106,12 @@ describe('names', () => {
       `@media (min-width: 1px) { &:hover { color: red } }`,
       `&:hover { @media (min-width: 1px) { color: red } }`,
     ]);
-    assert.deepEqual(classes, ['A_A-A', 'A_A-A']);
+    assert.deepEqual(classes, ['A', 'A']);
     assert.equal(
       output,
       css`
         @media (width>=1px) {
-          .A_A-A:hover{color:red}
+          .A:hover{color:red}
         }
       `,
     );
@@ -121,13 +121,13 @@ describe('names', () => {
     const { classes, css: output } = await compile([
       `@supports (display: grid) { @media (min-width: 768px) { display: grid } }`,
     ]);
-    assert.deepEqual(classes, ['B_A_A']);
+    assert.deepEqual(classes, ['A']);
     assert.equal(
       output,
       css`
         @supports (display:grid) {
           @media (width>=768px) {
-            .B_A_A{display:grid}
+            .A{display:grid}
           }
         }
       `,
@@ -160,6 +160,17 @@ describe('names', () => {
     );
   });
 
+  test('names are ASCII CSS identifiers, even after the two-character ones run out', async () => {
+    const compiler = await createCompiler();
+    const names = Array.from({ length: 3600 }, (_, i) =>
+      compiler.classString({ code: `width: ${i}px`, lang: 'css' }),
+    );
+    for (const name of names) assert.match(name, /^(?!-?[0-9]|--|-$)[-_A-Za-z0-9]+$/);
+    assert.deepEqual(names.slice(0, 3), ['A', 'B', 'C']);
+    assert.equal(names[52], '_');
+    assert.equal(names[3498], 'A00');
+  });
+
   test('dev mode names blocks on demand, without a scan', async () => {
     const compiler = await createCompiler({ lightningcss: { minify: true } });
     assert.equal(compiler.classString({ code: 'margin-top: 0', lang: 'css' }), 'A');
@@ -169,19 +180,19 @@ describe('names', () => {
 });
 
 describe('selector variants', () => {
-  test('complex selectors are one segment each', async () => {
+  test('complex selectors become selector variants', async () => {
     const { classes, css: output } = await compile([
       `.dark & { color: white } a { color: red } & > *, &:hover { color: green } &.active:hover { color: blue } &:hover { & > span { color: pink } }`,
     ]);
-    assert.deepEqual(classes, ['A-E D-C C-B B-A E-D']);
+    assert.deepEqual(classes, ['A D C B E']);
     assert.equal(
       output,
       css`
-        .dark .A-E{color:#fff}
-        .D-C a{color:red}
-        .C-B>*,.C-B:hover{color:green}
-        .B-A.active:hover{color:#00f}
-        .E-D:hover>span{color:pink}
+        .dark .A{color:#fff}
+        .D a{color:red}
+        .C>*,.C:hover{color:green}
+        .B.active:hover{color:#00f}
+        .E:hover>span{color:pink}
       `,
     );
   });
@@ -197,9 +208,9 @@ describe('output order', () => {
     assert.equal(
       output,
       css`
-        .A{color:red}
-        .F-B:before{content:"x"}
-        .D-A:link,.E-A:visited,.C-A:hover,.B-A:focus,.A-A:active{color:red}
+        .G{color:red}
+        .F:before{content:"x"}
+        .D:link,.E:visited,.C:hover,.B:focus,.A:active{color:red}
       `,
     );
   });
@@ -212,19 +223,19 @@ describe('output order', () => {
       output,
       css`
         @media print {
-          .E_A{color:red}
+          .E{color:red}
         }
         @media (width<=100px) {
-          .D_A{color:red}
+          .D{color:red}
         }
         @media (width>=320px) {
-          .C_A{color:red}
+          .C{color:red}
         }
         @media (width>=40em) {
-          .A_A{color:red}
+          .A{color:red}
         }
         @media (width>=1024px) {
-          .B_A{color:red}
+          .B{color:red}
         }
       `,
     );
@@ -350,14 +361,14 @@ describe('scss blocks', () => {
         lang: 'scss',
       },
     ]);
-    assert.deepEqual(classes, ['B A-A A_C']);
+    assert.deepEqual(classes, ['B A C']);
     assert.equal(
       output,
       css`
         .B{color:red}
-        .A-A:hover{color:#c00}
+        .A:hover{color:#c00}
         @media (width>=1px) {
-          .A_C{margin-top:0}
+          .C{margin-top:0}
         }
       `,
     );
@@ -398,14 +409,14 @@ describe('prependFiles', () => {
       [`gap: var(--gap)`, { code: `color: $brand; @include hover { color: blue }`, lang: 'scss' }],
       { root: dir, prependFiles: { css: ['vars.css'], scss: ['vars.scss'] } },
     );
-    assert.deepEqual(classes, ['C', 'B A-A']);
+    assert.deepEqual(classes, ['C', 'B A']);
     assert.equal(
       output,
       css`
         :root{--gap:4px}
         .C{gap:var(--gap)}
         .B{color:red}
-        .A-A:hover{color:#00f}
+        .A:hover{color:#00f}
       `,
     );
   });
@@ -486,10 +497,10 @@ describe('sourceMap option', () => {
       column: 9,
     });
     const { code, map } = compiler.css();
-    assert.equal(code, '.A{color:red}.A-B:hover{color:#00f}');
+    assert.equal(code, '.A{color:red}.B:hover{color:#00f}');
     const json = JSON.parse(map!);
     assert.deepEqual(json.sources, ['/src/A.tsx']);
-    // `.A` maps to line 5, column 18 (A.tsx's first block), and `.A-B:hover`
+    // `.A` maps to line 5, column 18 (A.tsx's first block), and `.B:hover`
     // to line 7, column 3.
     assert.equal(json.mappings, 'AAIiB,aAEf');
   });

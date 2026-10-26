@@ -40,28 +40,28 @@ test(`@namespace`, async () => {
   const { classes, css: output } = await compile([
     `@namespace svg url("http://www.w3.org/2000/svg"); & svg|a { fill: currentColor }`,
   ]);
-  assert.deepEqual(classes, ['A-A']);
+  assert.deepEqual(classes, ['A']);
   assert.equal(
     output,
     css`
       @namespace svg "http://www.w3.org/2000/svg";
-      .A-A svg|a{fill:currentColor}
+      .A svg|a{fill:currentColor}
     `,
   );
 });
 
-// Atomic. Declarations inside become `A_X` classes, grouped under one `@media`.
+// Atomic. Declarations inside become classes, grouped under one `@media`.
 test(`@media`, async () => {
   const { classes, css: output } = await compile([
     `@media (min-width: 768px) and (prefers-color-scheme: dark) { background-color: #111; color: #eee }`,
   ]);
-  assert.deepEqual(classes, ['A_A A_B']);
+  assert.deepEqual(classes, ['A B']);
   assert.equal(
     output,
     css`
       @media (width>=768px) and (prefers-color-scheme:dark) {
-        .A_A{background-color:#111}
-        .A_B{color:#eee}
+        .A{background-color:#111}
+        .B{color:#eee}
       }
     `,
   );
@@ -72,12 +72,12 @@ test(`@supports`, async () => {
   const { classes, css: output } = await compile([
     `@supports (display: grid) and selector(:has(a)) { display: grid }`,
   ]);
-  assert.deepEqual(classes, ['A_A']);
+  assert.deepEqual(classes, ['A']);
   assert.equal(
     output,
     css`
       @supports (display:grid) and selector(:has(a)) {
-        .A_A{display:grid}
+        .A{display:grid}
       }
     `,
   );
@@ -89,14 +89,14 @@ test(`@container`, async () => {
     `container: card / inline-size`,
     `@container card (min-width: 400px) { display: flex }`,
   ]);
-  assert.deepEqual(classes, ['A B', 'A_C']);
+  assert.deepEqual(classes, ['A B', 'C']);
   assert.equal(
     output,
     css`
       .A{container-name:card}
       .B{container-type:inline-size}
       @container card (width>=400px) {
-        .A_C{display:flex}
+        .C{display:flex}
       }
     `,
   );
@@ -107,13 +107,13 @@ test(`@custom-media`, async () => {
   const { classes, css: output } = await compile([
     `@custom-media --narrow-window (max-width: 30em); @media (--narrow-window) { flex-direction: column }`,
   ]);
-  assert.deepEqual(classes, ['A_A']);
+  assert.deepEqual(classes, ['A']);
   assert.equal(
     output,
     css`
       @custom-media --narrow-window (max-width: 30em);
       @media (--narrow-window) {
-        .A_A{flex-direction:column}
+        .A{flex-direction:column}
       }
     `,
   );
@@ -153,15 +153,15 @@ test(`@layer statement`, async () => {
 // Atomic.
 test(`@layer block`, async () => {
   const { classes, css: output } = await compile([`@layer components { padding: 0.5em 1em }`]);
-  assert.deepEqual(classes, ['A_D A_C A_A A_B']);
+  assert.deepEqual(classes, ['D C A B']);
   assert.equal(
     output,
     css`
       @layer components {
-        .A_D{padding-top:.5em}
-        .A_C{padding-right:1em}
-        .A_A{padding-bottom:.5em}
-        .A_B{padding-left:1em}
+        .D{padding-top:.5em}
+        .C{padding-right:1em}
+        .A{padding-bottom:.5em}
+        .B{padding-left:1em}
       }
     `,
   );
@@ -172,15 +172,15 @@ test(`@scope`, async () => {
   const { classes, css: output } = await compile([
     `@scope (.card) to (.card-content) { img { border-radius: 8px } }`,
   ]);
-  assert.deepEqual(classes, ['A_A-C A_A-D A_A-B A_A-A']);
+  assert.deepEqual(classes, ['C D B A']);
   assert.equal(
     output,
     css`
       @scope(.card) to (.card-content) {
-        .A_A-C img{border-top-left-radius:8px}
-        .A_A-D img{border-top-right-radius:8px}
-        .A_A-B img{border-bottom-right-radius:8px}
-        .A_A-A img{border-bottom-left-radius:8px}
+        .C img{border-top-left-radius:8px}
+        .D img{border-top-right-radius:8px}
+        .B img{border-bottom-right-radius:8px}
+        .A img{border-bottom-left-radius:8px}
       }
     `,
   );
@@ -252,13 +252,13 @@ test(`@keyframes`, async () => {
 // Atomic.
 test(`@starting-style`, async () => {
   const { classes, css: output } = await compile([`opacity: 1; @starting-style { opacity: 0 }`]);
-  assert.deepEqual(classes, ['B A_A']);
+  assert.deepEqual(classes, ['A B']);
   assert.equal(
     output,
     css`
-      .B{opacity:1}
+      .A{opacity:1}
       @starting-style {
-        .A_A{opacity:0}
+        .B{opacity:0}
       }
     `,
   );
@@ -416,12 +416,12 @@ test(`@color-profile`, async () => {
 // Deprecated, atomic. Only the prefixed `@-moz-document` is parsed.
 test(`@document`, async () => {
   const { classes, css: output } = await compile([`@-moz-document url-prefix() { color: green }`]);
-  assert.deepEqual(classes, ['A_A']);
+  assert.deepEqual(classes, ['A']);
   assert.equal(
     output,
     css`
       @-moz-document url-prefix() {
-        .A_A{color:green}
+        .A{color:green}
       }
     `,
   );

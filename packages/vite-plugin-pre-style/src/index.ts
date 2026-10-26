@@ -101,7 +101,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   const inLibrary = (file: string) => libraries.some(({ dir }) => file.startsWith(dir + sep));
   let server: ViteDevServer | undefined;
   let compiler: Compiler;
-  let table: { revision: number; table: CnTable } | undefined;
+  let table: { revision: number; table: CnTable; cn: ReturnType<typeof createCn> } | undefined;
   // In dev, the client and SSR environments share one compiler, so the
   // server renders the same class strings the browser hydrates.
   let devCompiler: Promise<Compiler> | undefined;
@@ -109,10 +109,13 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   // bundles the CSS and the plugin doesn't write `output.file`.
   let cssImported = false;
 
-  const cnTable = () => {
-    if (table === undefined || table.revision !== compiler.revision)
-      table = { revision: compiler.revision, table: compiler.cnTable() };
-    return table.table;
+  // The project's table, and a `cn` bound to it for build-time calls.
+  const current = () => {
+    if (table === undefined || table.revision !== compiler.revision) {
+      const compiled = compiler.cnTable();
+      table = { revision: compiler.revision, table: compiled, cn: createCn(compiled) };
+    }
+    return table;
   };
 
   // Reloads the dev CSS and `cn` modules after new classes are added.
@@ -236,7 +239,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
 
     load(id) {
       if (id === RESOLVED_CN_ID) {
-        return `import { createCn } from 'pre-style';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(cnTable())});\n`;
+        return `import { createCn } from 'pre-style';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(current().table)});\n`;
       }
       if (id === RESOLVED_CSS_ID) {
         if (config.command === 'build' && this.environment.config.consumer === 'client')
@@ -273,7 +276,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
         const resolved = new Set<FoundBlock>();
         for (const call of analysis.cnCalls) {
           if (call.args === null) continue;
-          const cn = createCn(cnTable());
+          const { cn } = current();
           const value = cn(
             ...call.args.map((arg) => (typeof arg === 'string' ? arg : classes.get(arg)!)),
           );

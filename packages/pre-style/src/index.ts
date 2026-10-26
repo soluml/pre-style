@@ -19,7 +19,8 @@ import { createCn } from './cn.ts';
 
 // Without a project's lookup table, `cn` only combines classes and drops
 // duplicates. The bundler plugin rewrites `cn` imports to a version bound
-// to the project's table.
-export const cn = createCn({});
+// to the project's table. Marked pure, so bundlers drop it once the imports
+// are rewritten.
+export const cn = /* @__PURE__ */ createCn({});
 export { createCn };
 export type { ClassDictionary, ClassValue, CnTable } from './cn.ts';

@@ -1,8 +1,14 @@
 import { SHORTHANDS } from './shorthands.ts';
 
-// Each class's prefix (its at-rule and selector variant segments) and the
-// property it sets.
-export type CnTable = Record<string, readonly [prefix: string, property: string]>;
+// Classes grouped by prefix, then by the property they set, as
+// space-separated class names. Classes under the same at-rules and selector
+// variant share a prefix; classes on the element have an empty one. Grouping
+// writes each prefix and property once, which keeps the table small in the
+// bundle.
+export type CnTable = Record<string, Record<string, string>>;
+
+// Each class's prefix and property.
+type Lookup = Map<string, readonly [prefix: string, property: string]>;
 
 export type ClassValue =
   | string
@@ -31,14 +37,14 @@ function collect(value: ClassValue, classes: string[]) {
 // when they have the same prefix and set the same property. A later
 // shorthand also removes earlier longhands it covers. Classes not in the
 // table are kept.
-export function resolve(classes: string[], table: CnTable): string[] {
+function resolve(classes: string[], lookup: Lookup): string[] {
   const seen = new Set<string>();
   const kept: string[] = [];
   for (let i = classes.length - 1; i >= 0; i--) {
     const c = classes[i];
     if (seen.has(c)) continue;
     seen.add(c);
-    const entry = Object.hasOwn(table, c) ? table[c] : undefined;
+    const entry = lookup.get(c);
     if (entry !== undefined) {
       const [prefix, property] = entry;
       const key = `${prefix} ${property}`;
@@ -53,9 +59,13 @@ export function resolve(classes: string[], table: CnTable): string[] {
 }
 
 export function createCn(table: CnTable): (...inputs: ClassValue[]) => string {
+  const lookup: Lookup = new Map();
+  for (const [prefix, properties] of Object.entries(table))
+    for (const [property, classes] of Object.entries(properties))
+      for (const c of classes.split(' ')) lookup.set(c, [prefix, property]);
   return (...inputs) => {
     const classes: string[] = [];
     collect(inputs, classes);
-    return resolve(classes, table).join(' ');
+    return resolve(classes, lookup).join(' ');
   };
 }

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { compile, css } from './helpers.ts';
 
 // Every pseudo-class and pseudo-element on MDN's lists, used as a selector
-// variant (`&:hover { color: red }`). Each becomes its own selector variant
-// segment. Lightning CSS writes some of them differently, as noted.
+// variant (`&:hover { color: red }`). Lightning CSS writes some of them
+// differently, as noted.
 
 // [written in the block, written in the output]
 const PSEUDO_CLASSES: [string, string][] = [
@@ -163,8 +163,8 @@ const PSEUDO_ELEMENTS: [string, string][] = [
 
 const check = async (written: string, output: string) => {
   const { classes, css: result } = await compile([`&${written} { color: red }`]);
-  assert.deepEqual(classes, ['A-A']);
-  assert.equal(result, `.A-A${output}{color:red}`);
+  assert.deepEqual(classes, ['A']);
+  assert.equal(result, `.A${output}{color:red}`);
 };
 
 describe('pseudo-classes', () => {

@@ -4,14 +4,10 @@ import { createCn, cn } from '../src/index.ts';
 import { createCompiler } from '../src/compiler/index.ts';
 
 const table = {
-  A: ['', 'color'],
-  B: ['', 'color'],
-  C: ['', 'margin-top'],
-  D: ['', 'margin'],
-  'E-A': ['E-', 'color'],
-  F_A: ['F_', 'color'],
-  G: ['', 'background-color'],
-} as const;
+  '': { color: 'A B', 'margin-top': 'C', margin: 'D', 'background-color': 'G' },
+  E: { color: 'E-A' },
+  F: { color: 'F_A' },
+};
 
 describe('cn', () => {
   const m = createCn(table);
@@ -56,9 +52,29 @@ describe('cn with a compiled table', () => {
     for (const block of blocks) compiler.scan(block);
     compiler.assignNames();
     const [first, second] = blocks.map((block) => compiler.classString(block));
-    assert.equal(first, 'D A_A');
-    assert.equal(second, 'C A_B');
-    assert.equal(createCn(compiler.cnTable())(first, second), 'C A_B');
+    assert.equal(first, 'B C');
+    assert.equal(second, 'A D');
+    assert.equal(createCn(compiler.cnTable())(first, second), 'A D');
+  });
+
+  test('classes conflict only under the same at-rules and selector variant', async () => {
+    const compiler = await createCompiler();
+    const blocks = [
+      `color: red; &:hover { color: red } @media (min-width: 1px) { color: red }`,
+      `color: blue; &:hover { color: blue } @media (min-width: 1px) { color: blue }`,
+      `@media (min-width: 1px) { &:hover { color: green } }`,
+    ].map((code) => ({ code, lang: 'css' as const }));
+    const [red, blue, green] = blocks.map((block) => compiler.classString(block));
+    const compiled = compiler.cnTable();
+    const prefixOf = (c: string) =>
+      Object.keys(compiled).find((prefix) => compiled[prefix].color?.split(' ').includes(c));
+    const prefixes = (classes: string) => classes.split(' ').map(prefixOf);
+    assert.deepEqual(prefixes(red), prefixes(blue));
+    assert.equal(new Set([...prefixes(red), ...prefixes(green)]).size, 4);
+    assert.equal(prefixes(red)[0], '');
+    const m = createCn(compiled);
+    assert.equal(m(red, blue), blue);
+    assert.equal(m(red, green), `${red} ${green}`);
   });
 
   test('a later class removes an !important one', async () => {
