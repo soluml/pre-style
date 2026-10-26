@@ -377,6 +377,15 @@ The build fails, with the file, line, and column, when:
 
 The repo is an npm workspace with both packages under `packages/`.
 
+### Priorities
+
+Pre-Style aims to be very fast, with the smallest and most performant output possible. When weighing a change, the priorities are, in order:
+
+1. **Output:** the size of what ships (the CSS file, class strings, and the `cn` lookup table) and how quickly the browser renders it.
+2. **Build time:** how long the compiler and plugin take, in production builds and in dev.
+
+A change that makes the output smaller or faster to render is worth a slower build. A faster build isn't worth a larger or slower output.
+
 ```sh
 npm install
 npm test           # node --test, on the TypeScript source
