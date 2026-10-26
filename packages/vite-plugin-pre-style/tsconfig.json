@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "customConditions": ["pre-style-source"]
-  },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["test/fixtures/library/**"]
-}

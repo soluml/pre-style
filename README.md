@@ -1,11 +1,11 @@
-# Pre-Style
+# pre.style
 
-[![npm version](https://badge.fury.io/js/pre-style.svg)](https://www.npmjs.com/package/pre-style)
+[![npm version](https://badge.fury.io/js/pre.style.svg)](https://www.npmjs.com/package/pre.style)
 
-Zero-runtime CSS-in-JS. Write plain CSS or SCSS next to your markup, and Pre-Style compiles it at build time into atomic CSS classes: one small class per declaration, shared across your whole project.
+Zero-runtime CSS-in-JS. Write plain CSS or SCSS next to your markup, and pre.style compiles it at build time into atomic CSS classes: one small class per declaration, shared across your whole project.
 
 ```js
-import { css } from 'pre-style';
+import { css } from 'pre.style';
 
 const button = css`
   background-color: #0071ba;
@@ -43,11 +43,11 @@ After the build, `button` is a plain string, `"B C E D A G F"`. The block is rep
 
 ## Getting started
 
-Pre-Style works with [Vite](https://vite.dev/). It needs Node 24 or later and Vite 8.
+pre.style works with [Vite](https://vite.dev/). It needs Node 24 or later and Vite 8.
 
 ```sh
-npm install pre-style
-npm install --save-dev vite-plugin-pre-style lightningcss
+npm install pre.style
+npm install --save-dev vite-plugin-pre.style lightningcss
 ```
 
 To write SCSS blocks, also install Sass:
@@ -60,17 +60,17 @@ Add the plugin to `vite.config.ts`:
 
 ```ts
 import { defineConfig } from 'vite';
-import preStyle from 'vite-plugin-pre-style';
+import preStyle from 'vite-plugin-pre.style';
 
 export default defineConfig({
   plugins: [preStyle()],
 });
 ```
 
-Then import `css` (or `scss`) from `pre-style` and use the class strings:
+Then import `css` (or `scss`) from `pre.style` and use the class strings:
 
 ```jsx
-import { css } from 'pre-style';
+import { css } from 'pre.style';
 
 export function Card({ children }) {
   return (
@@ -86,14 +86,14 @@ export function Card({ children }) {
 }
 ```
 
-In a build, the plugin writes `prestyle.css` to your output directory and links it from `index.html`. In dev, the CSS is served by Vite and updates as you edit.
+In a build, the plugin writes `pre.style.css` to your output directory and links it from `index.html`. In dev, the CSS is served by Vite and updates as you edit.
 
 ### Frameworks without `index.html`
 
-Frameworks that render on the server, such as React Router's framework mode, don't use `index.html`. Import Pre-Style's CSS in your root module instead:
+Frameworks that render on the server, such as React Router's framework mode, don't use `index.html`. Import pre.style's CSS in your root module instead:
 
 ```ts
-import 'virtual:pre-style.css';
+import 'virtual:pre.style.css';
 ```
 
 Vite then bundles the CSS with your app's other CSS, and the framework links it when rendering on the server, both in builds and in dev. The plugin doesn't write `output.file` when the CSS is imported this way.
@@ -105,7 +105,7 @@ Add the plugin to Astro's Vite config, and import the CSS in your layout's front
 ```js
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import preStyle from 'vite-plugin-pre-style';
+import preStyle from 'vite-plugin-pre.style';
 
 export default defineConfig({
   vite: { plugins: [preStyle()] },
@@ -114,8 +114,8 @@ export default defineConfig({
 
 ```astro
 ---
-import { css } from 'pre-style';
-import 'virtual:pre-style.css';
+import { css } from 'pre.style';
+import 'virtual:pre.style.css';
 
 const title = css`
   font-size: 2rem;
@@ -136,7 +136,7 @@ A block styles one element. Each block is treated as its own small stylesheet, w
 `css` blocks are plain CSS. `scss` blocks are compiled with Sass first, so you can use variables, mixins, functions, and everything else Sass supports:
 
 ```js
-import { scss } from 'pre-style';
+import { scss } from 'pre.style';
 
 const title = scss`
   $size: 2rem;
@@ -145,7 +145,7 @@ const title = scss`
 `;
 ```
 
-Blocks can't contain `${…}` interpolation. Pre-Style needs to know every block's CSS at build time. Share values with [prepended files](#sharing-values-with-prepended-files) instead.
+Blocks can't contain `${…}` interpolation. pre.style needs to know every block's CSS at build time. Share values with [prepended files](#sharing-values-with-prepended-files) instead.
 
 ### Selectors
 
@@ -192,7 +192,7 @@ HTML can't import anything, so blocks in HTML files that Vite processes, such as
 Atomic classes all have the same specificity, so when two classes on one element set the same property, the order of the CSS file decides which wins, not the order in your `class` attribute. Use `cn` to combine class strings: when two classes conflict, it keeps the later one.
 
 ```js
-import { css, cn } from 'pre-style';
+import { css, cn } from 'pre.style';
 
 const button = css`
   background-color: #0071ba;
@@ -232,11 +232,11 @@ Rules the files output, such as `:root { --space: 4px }`, appear in the CSS file
 
 ## Component libraries
 
-A component library styled with Pre-Style ships its blocks uncompiled, and each app's Pre-Style plugin compiles them along with the app's own. The library's classes share names and the CSS file with the app's, so a `color: red` in the library and one in the app are the same class, and `cn` resolves conflicts between them.
+A component library styled with pre.style ships its blocks uncompiled, and each app's pre.style plugin compiles them along with the app's own. The library's classes share names and the CSS file with the app's, so a `color: red` in the library and one in the app are the same class, and `cn` resolves conflicts between them.
 
 ### Using a library
 
-Install it. The plugin finds dependencies with a `pre-style` field in their `package.json` (and the libraries those depend on) and compiles them. There's nothing to configure.
+Install it. The plugin finds dependencies with a `pre.style` field in their `package.json` (and the libraries those depend on) and compiles them. There's nothing to configure.
 
 To compile a package that doesn't have the field, or to change how one is compiled, use the `libraries` option. `false` leaves a package out.
 
@@ -253,17 +253,17 @@ A library's class names depend on the whole app, so they differ between apps. Do
 
 ### Writing a library
 
-- Ship ESM JavaScript (or TypeScript) with the blocks left as they are. Don't run Pre-Style on the library itself.
-- List `pre-style` as a peer dependency, so the library and the app share one copy.
-- Add a `pre-style` field to `package.json`:
+- Ship ESM JavaScript (or TypeScript) with the blocks left as they are. Don't run pre.style on the library itself.
+- List `pre.style` as a peer dependency, so the library and the app share one copy.
+- Add a `pre.style` field to `package.json`:
 
 ```json
 {
   "name": "@acme/ui",
   "peerDependencies": {
-    "pre-style": "^3.0.0"
+    "pre.style": "^3.0.0"
   },
-  "pre-style": {
+  "pre.style": {
     "include": "dist/**/*.js",
     "prependFiles": {
       "css": ["dist/styles/tokens.css"],
@@ -278,7 +278,7 @@ A library's class names depend on the whole app, so they differ between apps. Do
 | `include`      | Every JS, TS, and Astro file | Globs of the files with blocks, relative to the package. |
 | `prependFiles` |                              | Files added to the start of the library's blocks, relative to the package. They apply only to the library's blocks, not the app's, so the library's tokens and mixins are always available to it and never leak into the app. |
 
-`"pre-style": true` uses the defaults.
+`"pre.style": true` uses the defaults.
 
 To let apps use the library's tokens in their own blocks, export the token files, and apps can add them to their own `prependFiles`.
 
@@ -330,11 +330,11 @@ Within one block, a later declaration overrides an earlier one, as in plain CSS.
 
 Utility-first frameworks such as [Tailwind CSS](https://tailwindcss.com/) also produce atomic CSS, so the same styles cost about the same in either. The differences are elsewhere:
 
-- **CSS file.** Each declaration is written once in both, so the classes themselves come to about the same size. Pre-Style adds no reset or base styles, and no supporting rules beyond what your blocks contain. A framework's reset can be larger than all of a small app's classes.
-- **Markup.** Pre-Style's class names are generated and one to three characters long, so class strings are much shorter than utility names like `px-5 py-4 rounded-xl`. Class strings end up in your JS and in every server-rendered page, so this saving grows with your markup. Some shorthands do produce many classes (see [Shorthands](#shorthands)).
+- **CSS file.** Each declaration is written once in both, so the classes themselves come to about the same size. pre.style adds no reset or base styles, and no supporting rules beyond what your blocks contain. A framework's reset can be larger than all of a small app's classes.
+- **Markup.** pre.style's class names are generated and one to three characters long, so class strings are much shorter than utility names like `px-5 py-4 rounded-xl`. Class strings end up in your JS and in every server-rendered page, so this saving grows with your markup. Some shorthands do produce many classes (see [Shorthands](#shorthands)).
 - **Combining classes.** `cn` is resolved during the build when its arguments are known, and otherwise uses a small table generated for your project. Utility frameworks need a separate library that knows every utility to do the same.
 - **In the browser.** No difference. Both are static CSS with single-class selectors and nothing running at runtime, so apart from download size the browser does the same work.
-- **Build speed.** A utility framework only scans your files for class names. Pre-Style parses every block with Lightning CSS, and runs Sass for `scss` blocks. That takes more time during the build, but your users never see it.
+- **Build speed.** A utility framework only scans your files for class names. pre.style parses every block with Lightning CSS, and runs Sass for `scss` blocks. That takes more time during the build, but your users never see it.
 
 ## Configuration
 
@@ -348,8 +348,8 @@ preStyle({
   sourceMap: true,
   quotes: 'single-quote',
   output: {
-    file: 'css/pre-style.css',
-    banner: '/* Generated by Pre-Style */',
+    file: 'css/pre.style.css',
+    banner: '/* Generated by pre.style */',
   },
 });
 ```
@@ -359,12 +359,12 @@ preStyle({
 | `include`      | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html,astro}` | Globs of the files with blocks, relative to Vite's root. Scanned before a build to assign names. `node_modules` and the output directory are always skipped. |
 | `exclude`      |                                                   | Globs removed from `include`. |
 | `prependFiles` |                                                   | Files added to the start of the app's blocks. See [Sharing values with prepended files](#sharing-values-with-prepended-files). |
-| `libraries`    |                                                   | Component libraries to compile, by package name, in addition to dependencies with a `pre-style` field. A config replaces the package's field, and `false` leaves the package out. See [Component libraries](#component-libraries). |
-| `lightningcss` |                                                   | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before Pre-Style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
-| `sourceMap`    | `false`                                           | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre-style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
+| `libraries`    |                                                   | Component libraries to compile, by package name, in addition to dependencies with a `pre.style` field. A config replaces the package's field, and `false` leaves the package out. See [Component libraries](#component-libraries). |
+| `lightningcss` |                                                   | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before pre.style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
+| `sourceMap`    | `false`                                           | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre.style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
 | `quirksMode`   | `false`                                           | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode). |
 | `quotes`       | `'double-quote'`                                  | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`. |
-| `output.file`  | `'prestyle.css'`                                  | Path and name of the CSS file, relative to Vite's `build.outDir`. |
+| `output.file`  | `'pre.style.css'`                                  | Path and name of the CSS file, relative to Vite's `build.outDir`. |
 | `output.banner`|                                                   | Text added to the start of the CSS file. |
 | `output.footer`|                                                   | Text added to the end of the CSS file. |
 
@@ -375,7 +375,7 @@ The CSS isn't minified unless you set `lightningcss: { minify: true }`.
 > [!WARNING]
 > **You probably don't want `quirksMode`.** It makes every project's output larger, and it only helps pages that can't have a doctype. If your pages start with `<!doctype html>`, as almost every modern page does, leave it off.
 
-Pages without a doctype render in quirks mode, where class selectors ignore case. Pre-Style uses both uppercase and lowercase letters in class names, so `.A` and `.a` would apply to each other's elements. Add `<!doctype html>` to fix this. The plugin warns during the build when an HTML file it processes has no doctype.
+Pages without a doctype render in quirks mode, where class selectors ignore case. pre.style uses both uppercase and lowercase letters in class names, so `.A` and `.a` would apply to each other's elements. Add `<!doctype html>` to fix this. The plugin warns during the build when an HTML file it processes has no doctype.
 
 If you can't add one, for example because your CSS is loaded into a page you don't control, set `quirksMode: true`. Class names then use only lowercase letters, digits, `-`, and `_`. That leaves 27 one-character names instead of 53, and about 1,050 two-character names instead of 3,445, so names get longer once a project has more than about 27 classes.
 
@@ -401,8 +401,8 @@ The build fails, with the file, line, and column, when:
 - At-rules Lightning CSS doesn't parse, such as `@when`, `@function`, and `@custom-selector`, are copied to the output as they are.
 - Nested pseudo-elements, such as `::before::marker`, aren't supported yet.
 - Blocks in PHP and other templates aren't supported, because Vite doesn't output them.
-- Component libraries are found among the app's dependencies and the dependencies of other libraries. A library used only through a package that isn't one (a wrapper without a `pre-style` field) isn't found automatically; add it with the `libraries` option.
-- Before a build, Astro components are scanned like HTML, by matching `` css` `` and `` scss` ``. In a component that imports from `pre-style`, text that only looks like a block, such as a code sample, is compiled too, and fails the build if it isn't valid CSS.
+- Component libraries are found among the app's dependencies and the dependencies of other libraries. A library used only through a package that isn't one (a wrapper without a `pre.style` field) isn't found automatically; add it with the `libraries` option.
+- Before a build, Astro components are scanned like HTML, by matching `` css` `` and `` scss` ``. In a component that imports from `pre.style`, text that only looks like a block, such as a code sample, is compiled too, and fails the build if it isn't valid CSS.
 - Positions in `scss` blocks point to the start of the block, since Sass's output doesn't match the original lines.
 - Pages need a doctype (`<!doctype html>`). Without one, browsers use quirks mode, where class selectors ignore case, so classes like `.A` and `.a` would apply to each other's elements. See [Quirks mode](#quirks-mode).
 
@@ -410,8 +410,8 @@ The build fails, with the file, line, and column, when:
 
 | Package                 | Description                                            |
 | ----------------------- | ------------------------------------------------------ |
-| `pre-style`             | `css`, `scss`, and `cn`, plus the compiler at `pre-style/compiler` for bundler plugins. |
-| `vite-plugin-pre-style` | The Vite plugin.                                       |
+| `pre.style`             | `css`, `scss`, and `cn`, plus the compiler at `pre.style/compiler` for bundler plugins. |
+| `vite-plugin-pre.style` | The Vite plugin.                                       |
 
 ## Development
 
@@ -419,7 +419,7 @@ The repo is an npm workspace with both packages under `packages/`.
 
 ### Priorities
 
-Pre-Style aims to be very fast, with the smallest and most performant output possible. When weighing a change, the priorities are, in order:
+pre.style aims to be very fast, with the smallest and most performant output possible. When weighing a change, the priorities are, in order:
 
 1. **Output:** the size of what ships (the CSS file, class strings, and the `cn` lookup table) and how quickly the browser renders it.
 2. **Build time:** how long the compiler and plugin take, in production builds and in dev.
@@ -435,7 +435,7 @@ npm run format     # Oxfmt
 npm run build
 ```
 
-`demo/` has three apps for trying Pre-Style on the client and server: a React Router app in framework mode (`react/react-router`), a TanStack Start app (`react/tanstack-start`), and an Astro app with React islands (`astro`). They have the same pages, and share a small React component library (`react/ui`), which ships its source with the blocks still in it and its design tokens, for each app's Pre-Style plugin to compile. The demos use the packages' TypeScript source, so changes to them show up without a build.
+`demo/` has three apps for trying pre.style on the client and server: a React Router app in framework mode (`react/react-router`), a TanStack Start app (`react/tanstack-start`), and an Astro app with React islands (`astro`). They have the same pages, and share a small React component library (`react/ui`), which ships its source with the blocks still in it and its design tokens, for each app's pre.style plugin to compile. The demos use the packages' TypeScript source, so changes to them show up without a build.
 
 ```sh
 npm run demo:react-router          # dev server

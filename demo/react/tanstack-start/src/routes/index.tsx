@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { css } from 'pre-style';
-import { Button } from 'pre-style-demo-react-ui';
+import { css } from 'pre.style';
+import { Button } from 'pre.style-demo-react-ui';
 
 export const Route = createFileRoute('/')({
-  head: () => ({ meta: [{ title: 'Basics · Pre-Style demo' }] }),
+  head: () => ({ meta: [{ title: 'Basics · pre.style demo' }] }),
   component: Home,
 });
 
@@ -88,7 +88,7 @@ const FEATURES = [
 function Home() {
   return (
     <>
-      <h1 className={title}>Pre-Style, dogfooded</h1>
+      <h1 className={title}>pre.style, dogfooded</h1>
       <p className={lead}>
         Every style on this site is a <code>css</code> or <code>scss</code> block, compiled to
         atomic classes at build time. <span className={pulse}>No runtime.</span>

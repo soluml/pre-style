@@ -7,11 +7,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from 'react-router';
-import { css } from 'pre-style';
-// Pre-Style's CSS. Vite bundles it in builds, and React Router links it when
+import { css } from 'pre.style';
+// pre.style's CSS. Vite bundles it in builds, and React Router links it when
 // rendering on the server.
 // oxlint-disable-next-line import/no-unassigned-import
-import 'virtual:pre-style.css';
+import 'virtual:pre.style.css';
 
 import type { Route } from './+types/root';
 
@@ -74,7 +74,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body className={body}>
         <header className={header}>
           <nav className={nav}>
-            <span className={brand}>Pre-Style demo</span>
+            <span className={brand}>pre.style demo</span>
             <NavLink to="/" end className={link}>
               Basics
             </NavLink>

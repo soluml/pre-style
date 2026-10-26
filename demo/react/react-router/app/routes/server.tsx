@@ -1,9 +1,9 @@
 import { Form, useNavigation } from 'react-router';
-import { scss } from 'pre-style';
-import { Button } from 'pre-style-demo-react-ui';
+import { scss } from 'pre.style';
+import { Button } from 'pre.style-demo-react-ui';
 import type { Route } from './+types/server';
 
-export const meta: Route.MetaFunction = () => [{ title: 'Server · Pre-Style demo' }];
+export const meta: Route.MetaFunction = () => [{ title: 'Server · pre.style demo' }];
 
 const notes: string[] = ['Rendered on the server first.'];
 

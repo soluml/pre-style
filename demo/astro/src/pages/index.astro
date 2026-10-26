@@ -1,6 +1,6 @@
 ---
-import { css } from 'pre-style';
-import { Button } from 'pre-style-demo-react-ui';
+import { css } from 'pre.style';
+import { Button } from 'pre.style-demo-react-ui';
 import Layout from '../layouts/Layout.astro';
 
 const title = css`
@@ -84,7 +84,7 @@ const FEATURES = [
 ---
 
 <Layout title="Basics">
-  <h1 class={title}>Pre-Style, dogfooded</h1>
+  <h1 class={title}>pre.style, dogfooded</h1>
   <p class={lead}>
     Every style on this site is a <code>css</code> or <code>scss</code> block, compiled to atomic
     classes at build time. <span class={pulse}>No runtime.</span>
@@ -112,7 +112,7 @@ const FEATURES = [
 </Layout>
 
 <script>
-  import { css } from 'pre-style';
+  import { css } from 'pre.style';
 
   // Astro bundles this script for the browser. Its block is compiled like
   // any other, and its classes are in the same CSS file.

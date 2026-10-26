@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { css, cn } from 'pre-style';
-import { Button, buttonClass, type ButtonVariant } from 'pre-style-demo-react-ui';
+import { css, cn } from 'pre.style';
+import { Button, buttonClass, type ButtonVariant } from 'pre.style-demo-react-ui';
 
 export const Route = createFileRoute('/cn')({
-  head: () => ({ meta: [{ title: 'cn · Pre-Style demo' }] }),
+  head: () => ({ meta: [{ title: 'cn · pre.style demo' }] }),
   component: CnRoute,
 });
 

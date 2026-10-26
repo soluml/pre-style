@@ -1,8 +1,8 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { scss } from 'pre-style';
+import { scss } from 'pre.style';
 import { useState } from 'react';
-import { Button } from 'pre-style-demo-react-ui';
+import { Button } from 'pre.style-demo-react-ui';
 
 const savedNotes: string[] = ['Rendered on the server first.'];
 
@@ -18,7 +18,7 @@ const addNote = createServerFn({ method: 'POST' })
   });
 
 export const Route = createFileRoute('/server')({
-  head: () => ({ meta: [{ title: 'Server · Pre-Style demo' }] }),
+  head: () => ({ meta: [{ title: 'Server · pre.style demo' }] }),
   loader: () => getNotes(),
   component: ServerRoute,
 });

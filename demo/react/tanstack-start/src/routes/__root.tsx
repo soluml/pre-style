@@ -1,16 +1,16 @@
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from '@tanstack/react-router';
-import { css } from 'pre-style';
-// Pre-Style's CSS. Vite bundles it in builds, and TanStack Start links it
+import { css } from 'pre.style';
+// pre.style's CSS. Vite bundles it in builds, and TanStack Start links it
 // when rendering on the server.
 // oxlint-disable-next-line import/no-unassigned-import
-import 'virtual:pre-style.css';
+import 'virtual:pre.style.css';
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Pre-Style demo' },
+      { title: 'pre.style demo' },
     ],
   }),
   shellComponent: RootDocument,
@@ -73,7 +73,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className={body}>
         <header className={header}>
           <nav className={nav}>
-            <span className={brand}>Pre-Style demo · TanStack Start</span>
+            <span className={brand}>pre.style demo · TanStack Start</span>
             <Link to="/" className={link} activeOptions={{ exact: true }}>
               Basics
             </Link>

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { css, cn } from 'pre-style';
-import { Button, buttonClass, type ButtonVariant } from 'pre-style-demo-react-ui';
+import { css, cn } from 'pre.style';
+import { Button, buttonClass, type ButtonVariant } from 'pre.style-demo-react-ui';
 import type { Route } from './+types/cn';
 
-export const meta: Route.MetaFunction = () => [{ title: 'cn · Pre-Style demo' }];
+export const meta: Route.MetaFunction = () => [{ title: 'cn · pre.style demo' }];
 
 const controls = css`
   display: flex;

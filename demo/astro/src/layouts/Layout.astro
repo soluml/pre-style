@@ -1,9 +1,9 @@
 ---
-import { css } from 'pre-style';
-// Pre-Style's CSS. Astro bundles it in builds, and links it on every page
+import { css } from 'pre.style';
+// pre.style's CSS. Astro bundles it in builds, and links it on every page
 // that uses this layout.
 // oxlint-disable-next-line import/no-unassigned-import
-import 'virtual:pre-style.css';
+import 'virtual:pre.style.css';
 
 interface Props {
   title: string;
@@ -65,12 +65,12 @@ const LINKS = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title} · Pre-Style demo</title>
+    <title>{title} · pre.style demo</title>
   </head>
   <body class={body}>
     <header class={header}>
       <nav class={nav}>
-        <span class={brand}>Pre-Style demo · Astro</span>
+        <span class={brand}>pre.style demo · Astro</span>
         {
           LINKS.map(([href, label]) => (
             <a href={href} class={link} aria-current={path === href ? 'page' : undefined}>

@@ -1,17 +1,17 @@
 {
-  "name": "pre-style-monorepo",
+  "name": "pre.style-monorepo",
   "private": true,
   "workspaces": [
-    "packages/pre-style",
-    "packages/vite-plugin-pre-style",
+    "packages/pre.style",
+    "packages/vite-plugin-pre.style",
     "demo/react/*",
     "demo/astro"
   ],
   "type": "module",
   "scripts": {
-    "build": "npm run build -w packages/pre-style -w packages/vite-plugin-pre-style",
-    "typecheck": "npm run typecheck -w packages/pre-style -w packages/vite-plugin-pre-style",
-    "test": "npm test -w packages/pre-style -w packages/vite-plugin-pre-style",
+    "build": "npm run build -w packages/pre.style -w packages/vite-plugin-pre.style",
+    "typecheck": "npm run typecheck -w packages/pre.style -w packages/vite-plugin-pre.style",
+    "test": "npm test -w packages/pre.style -w packages/vite-plugin-pre.style",
     "lint": "oxlint",
     "format": "oxfmt",
     "format:check": "oxfmt --check",

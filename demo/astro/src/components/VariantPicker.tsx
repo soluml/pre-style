@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { css } from 'pre-style';
-import { Button, buttonClass, type ButtonVariant } from 'pre-style-demo-react-ui';
+import { css } from 'pre.style';
+import { Button, buttonClass, type ButtonVariant } from 'pre.style-demo-react-ui';
 
 const controls = css`
   display: flex;
