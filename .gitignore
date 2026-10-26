@@ -5,6 +5,10 @@ npm-debug.log*
 
 # Dependency directories
 node_modules
-_prestyle.scss
-_prestyle.scss.classNames.js
-tmp
+
+# Build output
+dist
+
+# Copied into each package by prepack, removed by postpack
+packages/*/README.md
+packages/*/LICENSE

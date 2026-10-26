@@ -1,0 +1,77 @@
+{
+  "name": "pre.style",
+  "version": "3.0.0-alpha.0",
+  "description": "Zero-runtime CSS-in-JS that compiles css and scss blocks into atomic CSS classes.",
+  "keywords": [
+    "atomic-css",
+    "css",
+    "css-in-js",
+    "lightningcss",
+    "sass",
+    "scss",
+    "zero-runtime"
+  ],
+  "homepage": "https://pre.style",
+  "bugs": {
+    "url": "https://github.com/soluml/pre.style/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Benjamin Solum",
+    "email": "benjamin@soluml.com",
+    "url": "https://soluml.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soluml/pre.style/",
+    "directory": "packages/pre.style"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "pre.style-source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./compiler": {
+      "pre.style-source": "./src/compiler/index.ts",
+      "types": "./dist/compiler/index.d.ts",
+      "default": "./dist/compiler/index.js"
+    }
+  },
+  "publishConfig": {
+    "tag": "next"
+  },
+  "scripts": {
+    "prepack": "npm run build && cp ../../README.md ../../LICENSE .",
+    "postpack": "rm README.md LICENSE",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "test": "node --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "sweatmap": "^0.5.0"
+  },
+  "devDependencies": {
+    "lightningcss": "^1.33.0",
+    "sass": "^1.106.1"
+  },
+  "peerDependencies": {
+    "lightningcss": "^1.33.0",
+    "sass": "^1.106.1"
+  },
+  "peerDependenciesMeta": {
+    "lightningcss": {
+      "optional": true
+    },
+    "sass": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
