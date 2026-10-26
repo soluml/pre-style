@@ -1,4 +1,4 @@
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 import { button, icon } from 'acme-ui';
 import { plain } from 'plain-ui';
 

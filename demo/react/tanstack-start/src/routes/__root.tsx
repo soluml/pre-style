@@ -1,5 +1,5 @@
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from '@tanstack/react-router';
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 // pre.style's CSS. Vite bundles it in builds, and TanStack Start links it
 // when rendering on the server.
 // oxlint-disable-next-line import/no-unassigned-import

@@ -1,4 +1,4 @@
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 import { Button } from 'pre.style-demo-react-ui';
 import type { Route } from './+types/home';
 

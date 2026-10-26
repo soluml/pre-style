@@ -1,4 +1,4 @@
-import { css, cn } from 'pre.style';
+import { css, cn } from '@pre.style/core';
 
 const base = css`
   appearance: none;

@@ -3,7 +3,7 @@
 // resolve the imports, and so code that missed the transform fails loudly.
 function notTransformed(): never {
   throw new Error(
-    'pre.style transform not applied. css and scss blocks must be compiled by a pre.style bundler plugin, such as vite-plugin-pre.style.',
+    'pre.style transform not applied. css and scss blocks must be compiled by a pre.style bundler plugin, such as @pre.style/vite.',
   );
 }
 

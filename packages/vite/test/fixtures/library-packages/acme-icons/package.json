@@ -4,7 +4,7 @@
   "type": "module",
   "exports": "./index.js",
   "peerDependencies": {
-    "pre.style": "*"
+    "@pre.style/core": "*"
   },
   "pre.style": {
     "prependFiles": {

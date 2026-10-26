@@ -1,4 +1,4 @@
-import { scss } from 'pre.style';
+import { scss } from '@pre.style/core';
 
 export { icon } from 'acme-icons';
 

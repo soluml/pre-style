@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type { PrependFiles } from 'pre.style/compiler';
+import type { PrependFiles } from '@pre.style/core/compiler';
 
 // How a component library is compiled, from the `pre.style` field in its
 // package.json or the plugin's `libraries` option.

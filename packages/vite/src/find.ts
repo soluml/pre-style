@@ -1,5 +1,5 @@
 import { parseSync } from 'oxc-parser';
-import type { Lang } from 'pre.style/compiler';
+import type { Lang } from '@pre.style/core/compiler';
 
 export interface FoundBlock {
   // The whole block, `` css`…` ``, in the source.
@@ -115,7 +115,7 @@ function isReference(node: Node, parent: Node | null): boolean {
 }
 
 // Finds blocks in a JS or TS file. Only `css` and `scss` imported from
-// `pre.style` mark blocks. Returns null when the file doesn't import them.
+// `@pre.style/core` mark blocks. Returns null when the file doesn't import them.
 export function findInScript(filename: string, code: string): ScriptAnalysis | null {
   const { program } = parseSync(filename, code);
   const locate = locator(code);
@@ -125,7 +125,7 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
   for (const statement of program.body as Node[]) {
     if (
       statement.type !== 'ImportDeclaration' ||
-      statement.source.value !== 'pre.style' ||
+      statement.source.value !== '@pre.style/core' ||
       statement.importKind === 'type'
     )
       continue;

@@ -1,4 +1,4 @@
-import { scss } from 'pre.style';
+import { scss } from '@pre.style/core';
 
 export const button = scss`
   $space: 4px;

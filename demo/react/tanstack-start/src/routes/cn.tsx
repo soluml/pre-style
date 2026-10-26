@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
-import { css, cn } from 'pre.style';
+import { css, cn } from '@pre.style/core';
 import { Button, buttonClass, type ButtonVariant } from 'pre.style-demo-react-ui';
 
 export const Route = createFileRoute('/cn')({

@@ -1,10 +1,10 @@
 import { readFile, glob } from 'node:fs/promises';
 import { matchesGlob, relative, resolve, sep } from 'node:path';
 import { MagicString } from 'magic-string';
-import { createCn } from 'pre.style';
-import type { CnTable } from 'pre.style';
-import { createCompiler, PreStyleError } from 'pre.style/compiler';
-import type { Block, Compiler, LightningOptions, PrependFiles } from 'pre.style/compiler';
+import { createCn } from '@pre.style/core';
+import type { CnTable } from '@pre.style/core';
+import { createCompiler, PreStyleError } from '@pre.style/core/compiler';
+import type { Block, Compiler, LightningOptions, PrependFiles } from '@pre.style/core/compiler';
 import type { Plugin, ResolvedConfig, Rollup, ViteDevServer } from 'vite';
 import { FindError, findInHtml, findInScript, locateIn } from './find.ts';
 import type { FoundBlock, FoundImport, ScriptAnalysis } from './find.ts';
@@ -166,7 +166,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
   };
 
   // Replaces a script's blocks with their class strings, and rewrites its
-  // `pre.style` imports. `source` is the file it was compiled from, if any,
+  // `@pre.style/core` imports. `source` is the file it was compiled from, if any,
   // which errors and source maps point to instead.
   const rewrite = (
     context: Parameters<typeof fail>[0],
@@ -290,7 +290,8 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       // Sorted, so names don't depend on the order the file system lists files.
       for (const id of [...files].toSorted()) {
         const code = await readFile(id, 'utf8');
-        if (!code.includes('css`') || (ASTRO.test(id) && !code.includes('pre.style'))) continue;
+        if (!code.includes('css`') || (ASTRO.test(id) && !code.includes('@pre.style/core')))
+          continue;
         try {
           // Astro components aren't scripts until Astro compiles them, so
           // their blocks are found like HTML's. Only counts depend on the
@@ -314,7 +315,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
 
     load(id) {
       if (id === RESOLVED_CN_ID) {
-        return `import { createCn } from 'pre.style';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(current().table)});\n`;
+        return `import { createCn } from '@pre.style/core';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(current().table)});\n`;
       }
       if (id === RESOLVED_CSS_ID) {
         if (config.command === 'build') cssImported = true;
@@ -331,7 +332,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       if (
         !SCRIPT.test(file) ||
         (file.includes('/node_modules/') && !inLibrary(file)) ||
-        !code.includes('pre.style')
+        !code.includes('@pre.style/core')
       )
         return;
       return rewrite(this, code, file);
@@ -406,7 +407,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       if (
         !(ASTRO.test(id) || ASTRO_SCRIPT.test(id)) ||
         (file.includes('/node_modules/') && !inLibrary(file)) ||
-        !code.includes('pre.style')
+        !code.includes('@pre.style/core')
       )
         return;
       return rewrite(this, code, file, await readFile(file, 'utf8'));
@@ -420,20 +421,20 @@ function quoted(value: string, quote: string): string {
   return `${quote}${value}${quote}`;
 }
 
-// Removes `css` and `scss` from `pre.style` imports (the blocks are gone),
+// Removes `css` and `scss` from `@pre.style/core` imports (the blocks are gone),
 // and imports `cn` from the virtual module bound to the project's table.
 function rewriteImport(statement: FoundImport): string {
   const named: string[] = [];
   const cn: string[] = [];
   const others: string[] = [];
   for (const specifier of statement.specifiers) {
-    if (specifier.kind !== 'named') others.push(`import ${specifier.text} from 'pre.style';`);
+    if (specifier.kind !== 'named') others.push(`import ${specifier.text} from '@pre.style/core';`);
     else if (specifier.imported === 'cn') cn.push(specifier.text);
     else if (specifier.imported !== 'css' && specifier.imported !== 'scss')
       named.push(specifier.text);
   }
   const statements = [...others];
-  if (named.length > 0) statements.push(`import { ${named.join(', ')} } from 'pre.style';`);
+  if (named.length > 0) statements.push(`import { ${named.join(', ')} } from '@pre.style/core';`);
   if (cn.length > 0) statements.push(`import { ${cn.join(', ')} } from ${JSON.stringify(CN_ID)};`);
   return statements.join(' ');
 }

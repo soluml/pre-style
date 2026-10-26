@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 import { Button, buttonClass, type ButtonVariant } from 'pre.style-demo-react-ui';
 
 const controls = css`

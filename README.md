@@ -5,7 +5,7 @@
 Zero-runtime CSS-in-JS. Write plain CSS or SCSS next to your markup, and pre.style compiles it at build time into atomic CSS classes: one small class per declaration, shared across your whole project.
 
 ```js
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 
 const button = css`
   background-color: #0071ba;
@@ -46,8 +46,8 @@ After the build, `button` is a plain string, `"B C E D A G F"`. The block is rep
 pre.style works with [Vite](https://vite.dev/). It needs Node 24 or later and Vite 8.
 
 ```sh
-npm install pre.style
-npm install --save-dev vite-plugin-pre.style lightningcss
+npm install @pre.style/core
+npm install --save-dev @pre.style/vite lightningcss
 ```
 
 To write SCSS blocks, also install Sass:
@@ -60,17 +60,17 @@ Add the plugin to `vite.config.ts`:
 
 ```ts
 import { defineConfig } from 'vite';
-import preStyle from 'vite-plugin-pre.style';
+import preStyle from '@pre.style/vite';
 
 export default defineConfig({
   plugins: [preStyle()],
 });
 ```
 
-Then import `css` (or `scss`) from `pre.style` and use the class strings:
+Then import `css` (or `scss`) from `@pre.style/core` and use the class strings:
 
 ```jsx
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 
 export function Card({ children }) {
   return (
@@ -105,7 +105,7 @@ Add the plugin to Astro's Vite config, and import the CSS in your layout's front
 ```js
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import preStyle from 'vite-plugin-pre.style';
+import preStyle from '@pre.style/vite';
 
 export default defineConfig({
   vite: { plugins: [preStyle()] },
@@ -114,7 +114,7 @@ export default defineConfig({
 
 ```astro
 ---
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 import 'virtual:pre.style.css';
 
 const title = css`
@@ -136,7 +136,7 @@ A block styles one element. Each block is treated as its own small stylesheet, w
 `css` blocks are plain CSS. `scss` blocks are compiled with Sass first, so you can use variables, mixins, functions, and everything else Sass supports:
 
 ```js
-import { scss } from 'pre.style';
+import { scss } from '@pre.style/core';
 
 const title = scss`
   $size: 2rem;
@@ -192,7 +192,7 @@ HTML can't import anything, so blocks in HTML files that Vite processes, such as
 Atomic classes all have the same specificity, so when two classes on one element set the same property, the order of the CSS file decides which wins, not the order in your `class` attribute. Use `cn` to combine class strings: when two classes conflict, it keeps the later one.
 
 ```js
-import { css, cn } from 'pre.style';
+import { css, cn } from '@pre.style/core';
 
 const button = css`
   background-color: #0071ba;
@@ -254,14 +254,14 @@ A library's class names depend on the whole app, so they differ between apps. Do
 ### Writing a library
 
 - Ship ESM JavaScript (or TypeScript) with the blocks left as they are. Don't run pre.style on the library itself.
-- List `pre.style` as a peer dependency, so the library and the app share one copy.
+- List `@pre.style/core` as a peer dependency, so the library and the app share one copy.
 - Add a `pre.style` field to `package.json`:
 
 ```json
 {
   "name": "@acme/ui",
   "peerDependencies": {
-    "pre.style": "^3.0.0"
+    "@pre.style/core": "^3.0.0"
   },
   "pre.style": {
     "include": "dist/**/*.js",
@@ -402,7 +402,7 @@ The build fails, with the file, line, and column, when:
 - Nested pseudo-elements, such as `::before::marker`, aren't supported yet.
 - Blocks in PHP and other templates aren't supported, because Vite doesn't output them.
 - Component libraries are found among the app's dependencies and the dependencies of other libraries. A library used only through a package that isn't one (a wrapper without a `pre.style` field) isn't found automatically; add it with the `libraries` option.
-- Before a build, Astro components are scanned like HTML, by matching `` css` `` and `` scss` ``. In a component that imports from `pre.style`, text that only looks like a block, such as a code sample, is compiled too, and fails the build if it isn't valid CSS.
+- Before a build, Astro components are scanned like HTML, by matching `` css` `` and `` scss` ``. In a component that imports from `@pre.style/core`, text that only looks like a block, such as a code sample, is compiled too, and fails the build if it isn't valid CSS.
 - Positions in `scss` blocks point to the start of the block, since Sass's output doesn't match the original lines.
 - Pages need a doctype (`<!doctype html>`). Without one, browsers use quirks mode, where class selectors ignore case, so classes like `.A` and `.a` would apply to each other's elements. See [Quirks mode](#quirks-mode).
 
@@ -410,8 +410,8 @@ The build fails, with the file, line, and column, when:
 
 | Package                 | Description                                            |
 | ----------------------- | ------------------------------------------------------ |
-| `pre.style`             | `css`, `scss`, and `cn`, plus the compiler at `pre.style/compiler` for bundler plugins. |
-| `vite-plugin-pre.style` | The Vite plugin.                                       |
+| `@pre.style/core`             | `css`, `scss`, and `cn`, plus the compiler at `@pre.style/core/compiler` for bundler plugins. |
+| `@pre.style/vite` | The Vite plugin.                                       |
 
 ## Development
 

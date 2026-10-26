@@ -1,4 +1,4 @@
-import { css, cn } from 'pre.style';
+import { css, cn } from '@pre.style/core';
 import { button } from './button.ts';
 
 const base = css`

@@ -7,7 +7,7 @@
     "acme-icons": "1.0.0"
   },
   "peerDependencies": {
-    "pre.style": "*"
+    "@pre.style/core": "*"
   },
   "pre.style": {
     "include": "*.js",

@@ -12,7 +12,7 @@ const fixture = (name: string) => fileURLToPath(new URL(`./fixtures/${name}`, im
 const config = (name: string, options: PreStyleOptions): InlineConfig => ({
   root: fixture(name),
   logLevel: 'silent',
-  // Resolve `pre.style` to its TypeScript source, so tests don't need a build.
+  // Resolve `@pre.style/core` to its TypeScript source, so tests don't need a build.
   resolve: { conditions: ['pre.style-source', ...defaultClientConditions] },
   build: { write: false, minify: false },
   plugins: [preStyle(options)],
@@ -307,7 +307,7 @@ describe('errors', () => {
   after(() => writeFileSync(main, 'export const ok = true;\n'));
 
   test('css used other than as a tagged template', async () => {
-    writeFileSync(main, "import { css } from 'pre.style';\nexport const f = css;\n");
+    writeFileSync(main, "import { css } from '@pre.style/core';\nexport const f = css;\n");
     await assert.rejects(
       buildFixture('errors'),
       /`css` from pre.style can only be used as a tagged template/,
@@ -317,7 +317,7 @@ describe('errors', () => {
   test('interpolation in a block', async () => {
     writeFileSync(
       main,
-      "import { css } from 'pre.style';\nconst c = 'red';\nexport const f = css`color: ${c}`;\n",
+      "import { css } from '@pre.style/core';\nconst c = 'red';\nexport const f = css`color: ${c}`;\n",
     );
     await assert.rejects(buildFixture('errors'), /Blocks cannot contain \$\{…\} interpolation/);
   });
@@ -325,7 +325,7 @@ describe('errors', () => {
   test('invalid CSS reports the file and position', async () => {
     writeFileSync(
       main,
-      "import { css } from 'pre.style';\nexport const f = css`\n  color: red;\n  & > { }}`;\n",
+      "import { css } from '@pre.style/core';\nexport const f = css`\n  color: red;\n  & > { }}`;\n",
     );
     await assert.rejects(buildFixture('errors'), (error: Error) =>
       error.message.includes(`${main}:4:7: Invalid CSS`),

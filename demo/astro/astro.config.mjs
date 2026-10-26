@@ -1,7 +1,7 @@
 import node from '@astrojs/node';
 import react from '@astrojs/react';
 import { defineConfig } from 'astro/config';
-import preStyle from 'vite-plugin-pre.style';
+import preStyle from '@pre.style/vite';
 import { defaultClientConditions, defaultExternalConditions, defaultServerConditions } from 'vite';
 
 // `pre.style-source` resolves pre.style's packages to their TypeScript

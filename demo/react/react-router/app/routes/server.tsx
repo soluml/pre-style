@@ -1,5 +1,5 @@
 import { Form, useNavigation } from 'react-router';
-import { scss } from 'pre.style';
+import { scss } from '@pre.style/core';
 import { Button } from 'pre.style-demo-react-ui';
 import type { Route } from './+types/server';
 

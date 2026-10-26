@@ -1,6 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { createServerFn } from '@tanstack/react-start';
-import { scss } from 'pre.style';
+import { scss } from '@pre.style/core';
 import { useState } from 'react';
 import { Button } from 'pre.style-demo-react-ui';
 

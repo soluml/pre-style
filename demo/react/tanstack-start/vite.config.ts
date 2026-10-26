@@ -15,8 +15,8 @@ const SOURCE = 'pre.style-source';
 // Vite bundles this config, including linked workspace packages, without
 // that condition. Importing the plugin through a variable leaves it to Node,
 // which the npm scripts run with `--conditions=pre.style-source`.
-const plugin = 'vite-plugin-pre.style';
-const { default: preStyle }: typeof import('vite-plugin-pre.style') = await import(plugin);
+const plugin = '@pre.style/vite';
+const { default: preStyle }: typeof import('@pre.style/vite') = await import(plugin);
 
 export default defineConfig(({ command }) => ({
   plugins: [

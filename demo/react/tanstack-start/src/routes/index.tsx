@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { css } from 'pre.style';
+import { css } from '@pre.style/core';
 import { Button } from 'pre.style-demo-react-ui';
 
 export const Route = createFileRoute('/')({
