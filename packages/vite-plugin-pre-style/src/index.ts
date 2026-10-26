@@ -5,8 +5,8 @@ import { createCn } from 'pre-style';
 import type { CnTable } from 'pre-style';
 import { createCompiler, PreStyleError } from 'pre-style/compiler';
 import type { Block, Compiler, LightningOptions, PrependFiles } from 'pre-style/compiler';
-import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite';
-import { FindError, findInHtml, findInScript } from './find.ts';
+import type { Plugin, ResolvedConfig, Rollup, ViteDevServer } from 'vite';
+import { FindError, findInHtml, findInScript, locateIn } from './find.ts';
 import type { FoundBlock, FoundImport, ScriptAnalysis } from './find.ts';
 import { findLibraries } from './libraries.ts';
 import type { LibraryConfig, ResolvedLibrary } from './libraries.ts';
@@ -48,7 +48,10 @@ export interface PreStyleOptions {
 
 const SCRIPT = /\.(?:[cm]?[jt]sx?)$/;
 const HTML = /\.html$/;
-const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html}'];
+const ASTRO = /\.astro$/;
+// An Astro component's client script, compiled to its own module.
+const ASTRO_SCRIPT = /\.astro\?astro&type=script&/;
+const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html,astro}'];
 const NODE_MODULES = '**/node_modules/**';
 // A doctype at the start of an HTML file, after any whitespace and comments.
 // Legacy doctypes that still trigger quirks mode aren't detected.
@@ -97,7 +100,7 @@ const fail = (
   throw error;
 };
 
-export default function preStyle(options: PreStyleOptions = {}): Plugin {
+export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
   const quote = QUOTES[options.quotes ?? 'double-quote'];
   const outputFile = options.output?.file ?? 'prestyle.css';
   const banner = options.output?.banner ?? '';
@@ -112,8 +115,10 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
   // In dev, the client and SSR environments share one compiler, so the
   // server renders the same class strings the browser hydrates.
   let devCompiler: Promise<Compiler> | undefined;
-  // Whether the client build imported the CSS module, in which case Vite
-  // bundles the CSS and the plugin doesn't write `output.file`.
+  // Whether a build environment imported the CSS module, in which case Vite
+  // or the framework bundles the CSS and the plugin doesn't write
+  // `output.file`. Astro, for one, imports it only in its server
+  // environments, which it builds before the client.
   let cssImported = false;
   // HTML files already warned about a missing doctype.
   const warnedDoctype = new Set<string>();
@@ -160,11 +165,66 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
     };
   };
 
-  return {
+  // Replaces a script's blocks with their class strings, and rewrites its
+  // `pre-style` imports. `source` is the file it was compiled from, if any,
+  // which errors and source maps point to instead.
+  const rewrite = (
+    context: Parameters<typeof fail>[0],
+    code: string,
+    file: string,
+    source?: string,
+  ): Rollup.TransformResult => {
+    const revision = compiler.revision;
+
+    let analysis: ScriptAnalysis | null;
+    const s = new MagicString(code);
+    try {
+      // Compiled Astro components are TypeScript.
+      analysis = findInScript(source === undefined ? file : `${file}.ts`, code);
+      if (analysis === null) return;
+      if (source !== undefined) locateIn(analysis.blocks, source);
+      const classes = new Map<FoundBlock, string>();
+      for (const found of analysis.blocks)
+        classes.set(found, compiler.classString(block(found, file)));
+
+      // `cn` calls with static arguments are resolved now. Blocks inside
+      // them are replaced along with the call.
+      const resolved = new Set<FoundBlock>();
+      for (const call of analysis.cnCalls) {
+        if (call.args === null) continue;
+        const { cn } = current();
+        const value = cn(
+          ...call.args.map((arg) => (typeof arg === 'string' ? arg : classes.get(arg)!)),
+        );
+        for (const arg of call.args) if (typeof arg !== 'string') resolved.add(arg);
+        s.overwrite(call.start, call.end, quoted(value, quote));
+      }
+      for (const [found, value] of classes)
+        if (!resolved.has(found)) s.overwrite(found.start, found.end, quoted(value, quote));
+      for (const statement of analysis.imports)
+        s.overwrite(statement.start, statement.end, rewriteImport(statement));
+    } catch (error) {
+      return fail(context, error, file);
+    }
+
+    // In dev, the CSS is a module that each file with blocks imports, so
+    // it loads after the file's classes are known.
+    if (config.command !== 'build') {
+      s.prepend(`import ${JSON.stringify(CSS_ID)};\n`);
+      update(revision);
+    }
+    return {
+      code: s.toString(),
+      map: s.generateMap({ source: file, hires: 'boundary', includeContent: true }),
+    };
+  };
+
+  const main: Plugin = {
     name: 'pre-style',
     enforce: 'pre',
 
     config(userConfig) {
+      cssImported = false;
       libraries = findLibraries(resolve(userConfig.root ?? process.cwd()), options.libraries);
       const names = libraries.map(({ name }) => name);
       return {
@@ -208,7 +268,6 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       // same names.
       compiler = await create();
       table = undefined;
-      cssImported = false;
 
       // The app's files, then each library's, as absolute paths.
       const files = new Set<string>();
@@ -231,9 +290,15 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       // Sorted, so names don't depend on the order the file system lists files.
       for (const id of [...files].toSorted()) {
         const code = await readFile(id, 'utf8');
-        if (!code.includes('css`')) continue;
+        if (!code.includes('css`') || (ASTRO.test(id) && !code.includes('pre-style'))) continue;
         try {
-          const found = HTML.test(id) ? findInHtml(code) : (findInScript(id, code)?.blocks ?? []);
+          // Astro components aren't scripts until Astro compiles them, so
+          // their blocks are found like HTML's. Only counts depend on the
+          // scan, so a block Astro leaves out costs no more than a longer name.
+          const found =
+            HTML.test(id) || ASTRO.test(id)
+              ? findInHtml(code)
+              : (findInScript(id, code)?.blocks ?? []);
           for (const b of found) compiler.scan(block(b, id));
         } catch (error) {
           fail(this, error, id);
@@ -252,8 +317,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
         return `import { createCn } from 'pre-style';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(current().table)});\n`;
       }
       if (id === RESOLVED_CSS_ID) {
-        if (config.command === 'build' && this.environment.config.consumer === 'client')
-          cssImported = true;
+        if (config.command === 'build') cssImported = true;
         // Vite combines this map with its own, for the browser in dev and for
         // the bundled CSS in builds (with `build.sourcemap`).
         const { code, map } = outputCss();
@@ -270,47 +334,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
         !code.includes('pre-style')
       )
         return;
-      const revision = compiler.revision;
-
-      let analysis: ScriptAnalysis | null;
-      const s = new MagicString(code);
-      try {
-        analysis = findInScript(file, code);
-        if (analysis === null) return;
-        const classes = new Map<FoundBlock, string>();
-        for (const found of analysis.blocks)
-          classes.set(found, compiler.classString(block(found, file)));
-
-        // `cn` calls with static arguments are resolved now. Blocks inside
-        // them are replaced along with the call.
-        const resolved = new Set<FoundBlock>();
-        for (const call of analysis.cnCalls) {
-          if (call.args === null) continue;
-          const { cn } = current();
-          const value = cn(
-            ...call.args.map((arg) => (typeof arg === 'string' ? arg : classes.get(arg)!)),
-          );
-          for (const arg of call.args) if (typeof arg !== 'string') resolved.add(arg);
-          s.overwrite(call.start, call.end, quoted(value, quote));
-        }
-        for (const [found, value] of classes)
-          if (!resolved.has(found)) s.overwrite(found.start, found.end, quoted(value, quote));
-        for (const statement of analysis.imports)
-          s.overwrite(statement.start, statement.end, rewriteImport(statement));
-      } catch (error) {
-        return fail(this, error, file);
-      }
-
-      // In dev, the CSS is a module that each file with blocks imports, so
-      // it loads after the file's classes are known.
-      if (config.command !== 'build') {
-        s.prepend(`import ${JSON.stringify(CSS_ID)};\n`);
-        update(revision);
-      }
-      return {
-        code: s.toString(),
-        map: s.generateMap({ source: file, hires: 'boundary', includeContent: true }),
-      };
+      return rewrite(this, code, file);
     },
 
     transformIndexHtml: {
@@ -370,6 +394,26 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin {
       this.emitFile({ type: 'asset', fileName: mapFile, source: JSON.stringify(map) });
     },
   };
+
+  // Astro components are compiled to TypeScript by Astro's own `pre`
+  // plugin, so their blocks are replaced after it, in its output. Their
+  // client scripts are separate modules (`Foo.astro?astro&type=script&…`).
+  const astro: Plugin = {
+    name: 'pre-style:astro',
+
+    async transform(code, id) {
+      const file = cleanId(id);
+      if (
+        !(ASTRO.test(id) || ASTRO_SCRIPT.test(id)) ||
+        (file.includes('/node_modules/') && !inLibrary(file)) ||
+        !code.includes('pre-style')
+      )
+        return;
+      return rewrite(this, code, file, await readFile(file, 'utf8'));
+    },
+  };
+
+  return [main, astro];
 }
 
 function quoted(value: string, quote: string): string {

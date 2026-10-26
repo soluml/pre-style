@@ -1,0 +1,93 @@
+---
+import { css } from 'pre-style';
+// Pre-Style's CSS. Astro bundles it in builds, and links it on every page
+// that uses this layout.
+// oxlint-disable-next-line import/no-unassigned-import
+import 'virtual:pre-style.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+const body = css`
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  margin: 0;
+`;
+
+const header = css`
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+`;
+
+const nav = css`
+  display: flex;
+  gap: calc(var(--space) * 6);
+  align-items: center;
+  max-width: 60rem;
+  margin-inline: auto;
+  padding: calc(var(--space) * 4) calc(var(--space) * 5);
+`;
+
+const brand = css`
+  font-weight: 700;
+  margin-right: auto;
+`;
+
+const link = css`
+  color: var(--color-muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-text);
+  }
+
+  &[aria-current='page'] {
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+`;
+
+const LINKS = [
+  ['/', 'Basics'],
+  ['/cn', 'cn'],
+  ['/server', 'Server'],
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · Pre-Style demo</title>
+  </head>
+  <body class={body}>
+    <header class={header}>
+      <nav class={nav}>
+        <span class={brand}>Pre-Style demo · Astro</span>
+        {
+          LINKS.map(([href, label]) => (
+            <a href={href} class={link} aria-current={path === href ? 'page' : undefined}>
+              {label}
+            </a>
+          ))
+        }
+      </nav>
+    </header>
+    <main
+      class={css`
+        max-width: 60rem;
+        margin-inline: auto;
+        padding: calc(var(--space) * 8) calc(var(--space) * 5);
+      `}
+    >
+      <slot />
+    </main>
+  </body>
+</html>

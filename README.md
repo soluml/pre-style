@@ -98,6 +98,35 @@ import 'virtual:pre-style.css';
 
 Vite then bundles the CSS with your app's other CSS, and the framework links it when rendering on the server, both in builds and in dev. The plugin doesn't write `output.file` when the CSS is imported this way.
 
+### Astro
+
+Add the plugin to Astro's Vite config, and import the CSS in your layout's frontmatter:
+
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import preStyle from 'vite-plugin-pre-style';
+
+export default defineConfig({
+  vite: { plugins: [preStyle()] },
+});
+```
+
+```astro
+---
+import { css } from 'pre-style';
+import 'virtual:pre-style.css';
+
+const title = css`
+  font-size: 2rem;
+`;
+---
+
+<h1 class={title}>Hello</h1>
+```
+
+Blocks work in frontmatter, in template expressions such as `` class={css`…`} ``, in `<script>` tags, and in the islands of any framework. Astro links the CSS on every page that uses the layout, prerendered or rendered on demand. Astro compiles components before the plugin sees them, but errors and source maps still point to the component.
+
 ## Writing blocks
 
 A block styles one element. Each block is treated as its own small stylesheet, where declarations at the top level apply to the element.
@@ -244,10 +273,10 @@ A library's class names depend on the whole app, so they differ between apps. Do
 }
 ```
 
-| Field          | Default             | Description |
-| -------------- | ------------------- | ----------- |
-| `include`      | Every JS and TS file | Globs of the files with blocks, relative to the package. |
-| `prependFiles` |                     | Files added to the start of the library's blocks, relative to the package. They apply only to the library's blocks, not the app's, so the library's tokens and mixins are always available to it and never leak into the app. |
+| Field          | Default                      | Description |
+| -------------- | ---------------------------- | ----------- |
+| `include`      | Every JS, TS, and Astro file | Globs of the files with blocks, relative to the package. |
+| `prependFiles` |                              | Files added to the start of the library's blocks, relative to the package. They apply only to the library's blocks, not the app's, so the library's tokens and mixins are always available to it and never leak into the app. |
 
 `"pre-style": true` uses the defaults.
 
@@ -325,19 +354,19 @@ preStyle({
 });
 ```
 
-| Option         | Default                                     | Description |
-| -------------- | ------------------------------------------- | ----------- |
-| `include`      | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html}` | Globs of the files with blocks, relative to Vite's root. Scanned before a build to assign names. `node_modules` and the output directory are always skipped. |
-| `exclude`      |                                             | Globs removed from `include`. |
-| `prependFiles` |                                             | Files added to the start of the app's blocks. See [Sharing values with prepended files](#sharing-values-with-prepended-files). |
-| `libraries`    |                                             | Component libraries to compile, by package name, in addition to dependencies with a `pre-style` field. A config replaces the package's field, and `false` leaves the package out. See [Component libraries](#component-libraries). |
-| `lightningcss` |                                             | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before Pre-Style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
-| `sourceMap`    | `false`                                     | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre-style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
-| `quirksMode`   | `false`                                     | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode). |
-| `quotes`       | `'double-quote'`                            | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`. |
-| `output.file`  | `'prestyle.css'`                            | Path and name of the CSS file, relative to Vite's `build.outDir`. |
-| `output.banner`|                                             | Text added to the start of the CSS file. |
-| `output.footer`|                                             | Text added to the end of the CSS file. |
+| Option         | Default                                           | Description |
+| -------------- | ------------------------------------------------- | ----------- |
+| `include`      | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html,astro}` | Globs of the files with blocks, relative to Vite's root. Scanned before a build to assign names. `node_modules` and the output directory are always skipped. |
+| `exclude`      |                                                   | Globs removed from `include`. |
+| `prependFiles` |                                                   | Files added to the start of the app's blocks. See [Sharing values with prepended files](#sharing-values-with-prepended-files). |
+| `libraries`    |                                                   | Component libraries to compile, by package name, in addition to dependencies with a `pre-style` field. A config replaces the package's field, and `false` leaves the package out. See [Component libraries](#component-libraries). |
+| `lightningcss` |                                                   | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before Pre-Style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
+| `sourceMap`    | `false`                                           | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre-style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
+| `quirksMode`   | `false`                                           | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode). |
+| `quotes`       | `'double-quote'`                                  | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`. |
+| `output.file`  | `'prestyle.css'`                                  | Path and name of the CSS file, relative to Vite's `build.outDir`. |
+| `output.banner`|                                                   | Text added to the start of the CSS file. |
+| `output.footer`|                                                   | Text added to the end of the CSS file. |
 
 The CSS isn't minified unless you set `lightningcss: { minify: true }`.
 
@@ -373,6 +402,7 @@ The build fails, with the file, line, and column, when:
 - Nested pseudo-elements, such as `::before::marker`, aren't supported yet.
 - Blocks in PHP and other templates aren't supported, because Vite doesn't output them.
 - Component libraries are found among the app's dependencies and the dependencies of other libraries. A library used only through a package that isn't one (a wrapper without a `pre-style` field) isn't found automatically; add it with the `libraries` option.
+- Before a build, Astro components are scanned like HTML, by matching `` css` `` and `` scss` ``. In a component that imports from `pre-style`, text that only looks like a block, such as a code sample, is compiled too, and fails the build if it isn't valid CSS.
 - Positions in `scss` blocks point to the start of the block, since Sass's output doesn't match the original lines.
 - Pages need a doctype (`<!doctype html>`). Without one, browsers use quirks mode, where class selectors ignore case, so classes like `.A` and `.a` would apply to each other's elements. See [Quirks mode](#quirks-mode).
 
@@ -405,7 +435,7 @@ npm run format     # Oxfmt
 npm run build
 ```
 
-`demo/react/` has two apps for trying Pre-Style on the client and server: a React Router app in framework mode (`react-router`) and a TanStack Start app (`tanstack-start`). They have the same pages, and share a small component library (`ui`), which ships its source with the blocks still in it and its design tokens, for each app's Pre-Style plugin to compile. The demos use the packages' TypeScript source, so changes to them show up without a build.
+`demo/` has three apps for trying Pre-Style on the client and server: a React Router app in framework mode (`react/react-router`), a TanStack Start app (`react/tanstack-start`), and an Astro app with React islands (`astro`). They have the same pages, and share a small React component library (`react/ui`), which ships its source with the blocks still in it and its design tokens, for each app's Pre-Style plugin to compile. The demos use the packages' TypeScript source, so changes to them show up without a build.
 
 ```sh
 npm run demo:react-router          # dev server
@@ -415,6 +445,10 @@ npm run demo:react-router:start    # serve the production build
 npm run demo:tanstack-start        # likewise for TanStack Start
 npm run demo:tanstack-start:build
 npm run demo:tanstack-start:start
+
+npm run demo:astro                 # likewise for Astro
+npm run demo:astro:build
+npm run demo:astro:start
 ```
 
 ## License

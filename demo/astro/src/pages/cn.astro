@@ -1,0 +1,42 @@
+---
+import { css, cn } from 'pre-style';
+import { VariantPicker } from '../components/VariantPicker';
+import Layout from '../layouts/Layout.astro';
+
+const output = css`
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-x: auto;
+  padding: calc(var(--space) * 4);
+  white-space: pre-wrap;
+`;
+
+// Resolved at build time: every argument is a block.
+const staticCn = cn(
+  css`
+    color: red;
+    padding: 1rem;
+  `,
+  css`
+    color: green;
+    padding-left: 2rem;
+  `,
+);
+---
+
+<Layout title="cn">
+  <h1>cn</h1>
+  <p>
+    Pick a variant. The button's classes are combined with <code>cn</code> in the browser, using the
+    project's lookup table.
+  </p>
+  <VariantPicker client:load outputClass={output} />
+  <h2>Resolved at build time</h2>
+  <p>
+    <span class={staticCn}>This text is green, with 2rem of left padding.</span>
+  </p>
+  <pre class={output}>{staticCn}</pre>
+</Layout>

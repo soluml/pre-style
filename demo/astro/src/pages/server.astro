@@ -1,0 +1,91 @@
+---
+import { scss } from 'pre-style';
+import { Button } from 'pre-style-demo-react-ui';
+import Layout from '../layouts/Layout.astro';
+import { notes } from '../notes';
+
+// Rendered on each request, by the Node adapter.
+export const prerender = false;
+
+if (Astro.request.method === 'POST') {
+  const note = String((await Astro.request.formData()).get('note') ?? '').trim();
+  if (note) notes.push(note);
+  return Astro.redirect('/server', 303);
+}
+
+const renderedAt = new Date().toISOString();
+
+// scss blocks use the mixins prepended from the component library's
+// _tokens.scss.
+const layout = scss`
+  display: grid;
+  gap: calc(var(--space) * 4);
+
+  @include md {
+    grid-template-columns: 2fr 1fr;
+  }
+`;
+
+const panel = scss`
+  @include card;
+
+  h2 {
+    font-size: 1rem;
+    margin-top: 0;
+  }
+`;
+
+const list = scss`
+  margin: 0;
+  padding-left: 1.25rem;
+
+  li + li {
+    margin-top: var(--space);
+  }
+`;
+
+const field = scss`
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) / 1.5);
+  color: inherit;
+  font: inherit;
+  padding: calc(var(--space) * 2);
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: calc(var(--space) * 2);
+
+  &:focus {
+    border-color: var(--color-accent);
+    outline: none;
+  }
+`;
+
+const time = scss`
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+`;
+---
+
+<Layout title="Server">
+  <h1>Server</h1>
+  <p>
+    This page renders on each request, and adds notes with a plain form post. The other pages are
+    prerendered at build time. Their class strings are the same either way.
+  </p>
+  <div class={layout}>
+    <section class={panel}>
+      <h2>Notes</h2>
+      <ul class={list}>{notes.map((text) => <li>{text}</li>)}</ul>
+    </section>
+    <section class={panel}>
+      <h2>Add a note</h2>
+      <form method="post">
+        <input name="note" class={field} placeholder="Something to remember" />
+        <Button type="submit">Add</Button>
+      </form>
+      <p class={time}>Rendered at {renderedAt}</p>
+    </section>
+  </div>
+</Layout>

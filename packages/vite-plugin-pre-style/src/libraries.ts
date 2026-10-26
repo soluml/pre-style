@@ -20,7 +20,7 @@ export interface ResolvedLibrary {
   prependFiles?: PrependFiles;
 }
 
-const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}'];
+const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,astro}'];
 
 interface PackageJson {
   dependencies?: Record<string, string>;

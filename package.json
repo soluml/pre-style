@@ -4,7 +4,8 @@
   "workspaces": [
     "packages/pre-style",
     "packages/vite-plugin-pre-style",
-    "demo/react/*"
+    "demo/react/*",
+    "demo/astro"
   ],
   "type": "module",
   "scripts": {
@@ -19,7 +20,10 @@
     "demo:react-router:start": "npm run start -w demo/react/react-router",
     "demo:tanstack-start": "npm run dev -w demo/react/tanstack-start",
     "demo:tanstack-start:build": "npm run build -w demo/react/tanstack-start",
-    "demo:tanstack-start:start": "npm run start -w demo/react/tanstack-start"
+    "demo:tanstack-start:start": "npm run start -w demo/react/tanstack-start",
+    "demo:astro": "npm run dev -w demo/astro",
+    "demo:astro:build": "npm run build -w demo/astro",
+    "demo:astro:start": "npm run start -w demo/astro"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

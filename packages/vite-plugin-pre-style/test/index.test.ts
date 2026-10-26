@@ -1,9 +1,9 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { build, createLogger, createServer, defaultClientConditions } from 'vite';
-import type { InlineConfig, Rollup } from 'vite';
+import type { InlineConfig, Plugin, Rollup } from 'vite';
 import preStyle from '../src/index.ts';
 import type { PreStyleOptions } from '../src/index.ts';
 
@@ -239,6 +239,63 @@ describe('component libraries', () => {
       const client = await server.environments.client.transformRequest(id);
       const ssr = await server.environments.ssr.transformRequest(id);
       assert.equal(classString(client!.code), classString(ssr!.code));
+    } finally {
+      await server.close();
+    }
+  });
+});
+
+describe('Astro components', () => {
+  // Stands in for Astro's own `pre` plugin, which compiles components to
+  // TypeScript. The frontmatter moves down a line, as Astro's compiler moves
+  // it, so the compiled positions differ from the component's.
+  const astro: Plugin = {
+    name: 'fake-astro',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!id.endsWith('.astro')) return;
+      const [, frontmatter, template] = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(code)!;
+      return {
+        code: `// Compiled.\n${frontmatter}\nexport default ${JSON.stringify(template)};\n`,
+        moduleType: 'js',
+      };
+    },
+  };
+  const astroConfig = (options: PreStyleOptions = {}): InlineConfig => {
+    const base = config('astro', options);
+    return { ...base, plugins: [...base.plugins!, astro] };
+  };
+  const card = `${fixture('astro')}/src/Card.astro`;
+  const original = readFileSync(card, 'utf8');
+  after(() => writeFileSync(card, original));
+
+  test("replaces blocks in Astro's output, after scanning the component", async () => {
+    const result = (await build(
+      astroConfig({ lightningcss: { minify: true } }),
+    )) as Rollup.RollupOutput;
+    const files = new Map(
+      result.output.map((item) => [
+        item.fileName,
+        item.type === 'chunk' ? item.code : String(item.source),
+      ]),
+    );
+    assert.equal(files.get('prestyle.css'), '.C{color:red}.B{color:green}.A{color:#00f}');
+    const js = chunk(files);
+    assert.match(js, /document\.body\.className = "C";/);
+    assert.match(js, /document\.body\.dataset\.both = "A";/);
+    assert.doesNotMatch(js, /css`/);
+  });
+
+  test("errors report the position in the component, not Astro's output", async () => {
+    writeFileSync(card, original.replace('color: red;', 'color: red;\n  & > { }}'));
+    const server = await createServer({
+      ...astroConfig(),
+      server: { middlewareMode: true, ws: false },
+    });
+    try {
+      await assert.rejects(server.transformRequest('/src/Card.astro'), (error: Error) =>
+        error.message.includes(`${card}:5:7: Invalid CSS`),
+      );
     } finally {
       await server.close();
     }

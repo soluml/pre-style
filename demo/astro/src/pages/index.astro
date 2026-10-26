@@ -1,0 +1,130 @@
+---
+import { css } from 'pre-style';
+import { Button } from 'pre-style-demo-react-ui';
+import Layout from '../layouts/Layout.astro';
+
+const title = css`
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0 0 calc(var(--space) * 2);
+
+  @media (min-width: 768px) {
+    font-size: 2.75rem;
+  }
+`;
+
+const lead = css`
+  color: var(--color-muted);
+  font-size: 1.125rem;
+  margin: 0 0 calc(var(--space) * 8);
+`;
+
+// A container query: cards switch to two columns when the grid is wide
+// enough, whatever the viewport.
+const grid = css`
+  container-type: inline-size;
+`;
+
+const cards = css`
+  display: grid;
+  gap: calc(var(--space) * 4);
+
+  @container (min-width: 36rem) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+const card = css`
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  padding: calc(var(--space) * 5);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
+  }
+
+  & > h2 {
+    font-size: 1.125rem;
+    margin: 0 0 var(--space);
+  }
+
+  & > p {
+    color: var(--color-muted);
+    margin: 0;
+  }
+`;
+
+const pulse = css`
+  @keyframes pulse {
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  animation: pulse 2s ease-in-out infinite;
+  color: var(--color-accent);
+`;
+
+const arrow = css`
+  &::after {
+    content: ' →';
+  }
+`;
+
+const FEATURES = [
+  ['Atomic classes', 'Every declaration is one class, shared by every block that uses it.'],
+  ['Selector variants', 'Hover a card: `&:hover` and `& > h2` become their own classes.'],
+  ['Container queries', 'This grid switches to two columns with `@container`, not the viewport.'],
+  ['Client scripts', 'Click a card: a `<script>` adds the classes of a block it contains.'],
+];
+---
+
+<Layout title="Basics">
+  <h1 class={title}>Pre-Style, dogfooded</h1>
+  <p class={lead}>
+    Every style on this site is a <code>css</code> or <code>scss</code> block, compiled to atomic
+    classes at build time. <span class={pulse}>No runtime.</span>
+  </p>
+  <div class={grid}>
+    <div class={cards}>
+      {
+        FEATURES.map(([heading, text]) => (
+          <article class={card} data-card>
+            <h2>{heading}</h2>
+            <p>{text}</p>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+  <p
+    class={css`
+      margin-top: calc(var(--space) * 8);
+    `}
+  >
+    <!-- A React component from the shared library, rendered on the server only. -->
+    <Button className={arrow}>A button with an ::after</Button>
+  </p>
+</Layout>
+
+<script>
+  import { css } from 'pre-style';
+
+  // Astro bundles this script for the browser. Its block is compiled like
+  // any other, and its classes are in the same CSS file.
+  const selected = css`
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  `.split(' ');
+
+  for (const card of document.querySelectorAll('[data-card]')) {
+    card.addEventListener('click', () => {
+      const on = !card.classList.contains(selected[0]);
+      for (const name of selected) card.classList.toggle(name, on);
+    });
+  }
+</script>

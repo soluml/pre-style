@@ -225,3 +225,18 @@ export function findInHtml(code: string): FoundBlock[] {
   }
   return blocks;
 }
+
+// Moves each block's line and column to where it's written in `source`, the
+// file a script was compiled from, such as an Astro component. Compilers
+// copy blocks unchanged, so each is matched to the next unused block in
+// `source` with the same code. Blocks it can't find keep their positions.
+export function locateIn(blocks: FoundBlock[], source: string): void {
+  const unused = findInHtml(source);
+  for (const found of blocks) {
+    const index = unused.findIndex((b) => b.lang === found.lang && b.code === found.code);
+    if (index === -1) continue;
+    const [match] = unused.splice(index, 1);
+    found.line = match.line;
+    found.column = match.column;
+  }
+}
