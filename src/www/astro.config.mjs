@@ -1,4 +1,4 @@
-import { defineConfig } from 'astro/config';
+import { defineConfig, fontProviders } from 'astro/config';
 import preStyle from '@pre.style/vite';
 
 // Unlike the demos, the site uses pre.style's published packages from npm,
@@ -7,6 +7,17 @@ import preStyle from '@pre.style/vite';
 export default defineConfig({
   site: 'https://pre.style',
   output: 'static',
+  // Self-hosted as one variable font file, so every weight the site uses
+  // comes from a single request.
+  fonts: [
+    {
+      provider: fontProviders.fontsource(),
+      name: 'Geist',
+      cssVariable: '--font-geist',
+      weights: ['100 900'],
+      styles: ['normal'],
+    },
+  ],
   vite: {
     plugins: [
       preStyle({

@@ -1,4 +1,5 @@
 ---
+import { Font } from 'astro:assets';
 import { css } from '@pre.style/core';
 // pre.style's CSS. Astro bundles it in builds, and links it on every page
 // that uses this layout.
@@ -12,11 +13,17 @@ interface Props {
 const { title, description } = Astro.props;
 
 const body = css`
-  background-color: #1a1a1a;
-  color: #fff;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background-color: #da5b06;
+  background-image: linear-gradient(165deg, oklch(95% 0.24 77), oklch(92% 0.41 64));
+  background-repeat: no-repeat;
+  color: rgb(0 0 0 / 0.85);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-geist);
   line-height: 1.5;
   margin: 0;
+  min-height: 100%;
+  width: 100%;
 `;
 ---
 
@@ -29,8 +36,22 @@ const body = css`
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <Font cssVariable="--font-geist" preload />
   </head>
   <body class={body}>
     <slot />
   </body>
 </html>
+
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :root {
+    height: 100%;
+    width: 100%;
+  }
+</style>
