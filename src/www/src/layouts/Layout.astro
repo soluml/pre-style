@@ -1,8 +1,8 @@
 ---
 import { Font } from 'astro:assets';
 import { css } from '@pre.style/core';
-// pre.style's CSS. Astro bundles it in builds, and links it on every page
-// that uses this layout.
+
+import './reset.css' with { type: 'pre.style' };
 import 'virtual:pre.style.css';
 
 interface Props {
@@ -42,16 +42,3 @@ const body = css`
     <slot />
   </body>
 </html>
-
-<style is:global>
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  :root {
-    height: 100%;
-    width: 100%;
-  }
-</style>

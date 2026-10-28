@@ -10,16 +10,21 @@
     "typecheck": "astro sync && tsc"
   },
   "dependencies": {
-    "@pre.style/core": "3.0.0-alpha.0",
+    "@pre.style/core": "3.1.0-alpha.0",
     "astro": "^7.4.2"
   },
   "devDependencies": {
-    "@pre.style/vite": "3.0.0-alpha.0",
+    "@pre.style/vite": "3.1.0-alpha.0",
     "lightningcss": "^1.33.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.5"
   },
   "engines": {
     "node": ">=24"
+  },
+  "pre.style": {
+    "include": [
+      "src/**/*.{ts,tsx,astro}"
+    ]
   }
 }
