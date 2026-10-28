@@ -1,0 +1,12 @@
+{
+  "name": "fixture-prepend",
+  "private": true,
+  "type": "module",
+  "pre.style": {
+    "prependFiles": {
+      "scss": [
+        "vars.scss"
+      ]
+    }
+  }
+}

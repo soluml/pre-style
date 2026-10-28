@@ -3,37 +3,37 @@ import { matchesGlob, relative, resolve, sep } from 'node:path';
 import { MagicString } from 'magic-string';
 import { createCn } from '@pre.style/core';
 import type { CnTable } from '@pre.style/core';
-import { createCompiler, PreStyleError } from '@pre.style/core/compiler';
-import type { Block, Compiler, LightningOptions, PrependFiles } from '@pre.style/core/compiler';
-import type { Plugin, ResolvedConfig, Rollup, ViteDevServer } from 'vite';
-import { FindError, findInHtml, findInScript, locateIn } from './find.ts';
-import type { FoundBlock, FoundImport, ScriptAnalysis } from './find.ts';
-import { findLibraries } from './libraries.ts';
-import type { LibraryConfig, ResolvedLibrary } from './libraries.ts';
+import {
+  createCompiler,
+  findLibraries,
+  isIdentifier,
+  PreStyleError,
+  readConfig,
+} from '@pre.style/core/compiler';
+import type {
+  Block,
+  CompiledStylesheet,
+  Compiler,
+  Lang,
+  LibraryConfig,
+  LightningOptions,
+  PackageConfig,
+  ResolvedLibrary,
+} from '@pre.style/core/compiler';
+import type { EnvironmentModuleNode, Plugin, ResolvedConfig, Rollup, ViteDevServer } from 'vite';
+import { FindError, findInHtml, findInScript, locateIn, SHEET_IMPORT } from './find.ts';
+import type { FoundBlock, FoundImport, ScriptAnalysis, SheetClass } from './find.ts';
 
-export type { LibraryConfig };
+export type { LibraryConfig, PackageConfig };
 
+// Options about how the build writes its output. Options every tool must
+// agree on (`include`, `exclude`, `prependFiles`, `libraries`, and
+// `quirksMode`) are set in the `pre.style` field of the app's package.json.
 export interface PreStyleOptions {
-  // Globs of every source file that contains blocks, relative to Vite's
-  // root. Scanned before the build to assign stable names.
-  include?: string | string[];
-  // Globs removed from `include`.
-  exclude?: string | string[];
-  // Files prepended to the app's blocks: an array for every block, or
-  // separate arrays for `css` and `scss` blocks. Relative to Vite's root.
-  prependFiles?: PrependFiles;
-  // Component libraries to compile, by package name, in addition to the
-  // dependencies with a `pre.style` field in their package.json. A config
-  // replaces the package's field, and `false` leaves the package out.
-  libraries?: Record<string, LibraryConfig | boolean>;
   // Options passed through to Lightning CSS.
   lightningcss?: LightningOptions;
   // Generate a source map for the output CSS.
   sourceMap?: boolean;
-  // Lowercase class names only, for pages in quirks mode (no doctype), where
-  // class selectors ignore case. Names get longer, so only use it for pages
-  // you can't add a doctype to.
-  quirksMode?: boolean;
   // Quote character around the class string that replaces each block.
   quotes?: 'single-quote' | 'double-quote' | 'backtick';
   output?: {
@@ -57,6 +57,16 @@ const NODE_MODULES = '**/node_modules/**';
 // Legacy doctypes that still trigger quirks mode aren't detected.
 const DOCTYPE = /^\uFEFF?(?:\s|<!--[\s\S]*?-->)*<!doctype\s/i;
 const QUOTES = { 'single-quote': "'", 'double-quote': '"', backtick: '`' };
+
+// Options that moved to the `pre.style` field in package.json in 3.1.
+const MOVED_OPTIONS = ['include', 'exclude', 'prependFiles', 'libraries', 'quirksMode'];
+
+// Stylesheet imports are rewritten to this query, which the plugin resolves
+// to a module ID that Vite's CSS plugins don't match.
+const SHEET_QUERY = '?pre.style';
+const SHEET_PREFIX = '\0pre.style-sheet:';
+const SHEET_SUFFIX = '.js';
+const sheetLang = (file: string): Lang => (file.endsWith('.scss') ? 'scss' : 'css');
 
 const CN_ID = 'virtual:pre.style/cn';
 const RESOLVED_CN_ID = '\0virtual:pre.style/cn';
@@ -101,12 +111,22 @@ const fail = (
 };
 
 export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
+  for (const key of MOVED_OPTIONS) {
+    if (Object.hasOwn(options, key))
+      throw new Error(
+        `[pre.style] The \`${key}\` option moved to the "pre.style" field in your package.json, so every tool that reads your styles shares it.`,
+      );
+  }
   const quote = QUOTES[options.quotes ?? 'double-quote'];
   const outputFile = options.output?.file ?? 'pre.style.css';
   const banner = options.output?.banner ?? '';
   const footer = options.output?.footer ?? '';
 
   let config: ResolvedConfig;
+  // The app's package.json field, and the directory its paths are relative
+  // to.
+  let app: { dir: string; config: PackageConfig } = { dir: process.cwd(), config: {} };
+  let configWarnings: string[] = [];
   let libraries: ResolvedLibrary[] = [];
   const inLibrary = (file: string) => libraries.some(({ dir }) => file.startsWith(dir + sep));
   let server: ViteDevServer | undefined;
@@ -122,6 +142,20 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
   let cssImported = false;
   // HTML files already warned about a missing doctype.
   const warnedDoctype = new Set<string>();
+  // For each file a module's class strings depend on (through `composes`
+  // or Sass loads), the IDs of those modules, so dev updates them.
+  const dependents = new Map<string, Set<string>>();
+  const track = (context: { addWatchFile(file: string): void }, files: string[], id: string) => {
+    for (const file of files) {
+      context.addWatchFile(file);
+      let ids = dependents.get(file);
+      if (ids === undefined) dependents.set(file, (ids = new Set()));
+      ids.add(id);
+    }
+  };
+
+  const compileSheet = async (file: string): Promise<CompiledStylesheet> =>
+    compiler.stylesheet({ code: await readFile(file, 'utf8'), lang: sheetLang(file), file });
 
   // The project's table, and a `cn` bound to it for build-time calls.
   const current = () => {
@@ -168,12 +202,13 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
   // Replaces a script's blocks with their class strings, and rewrites its
   // `@pre.style/core` imports. `source` is the file it was compiled from, if any,
   // which errors and source maps point to instead.
-  const rewrite = (
-    context: Parameters<typeof fail>[0],
+  const rewrite = async (
+    context: Rollup.TransformPluginContext,
     code: string,
+    id: string,
     file: string,
     source?: string,
-  ): Rollup.TransformResult => {
+  ): Promise<Rollup.TransformResult> => {
     const revision = compiler.revision;
 
     let analysis: ScriptAnalysis | null;
@@ -184,25 +219,51 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       if (analysis === null) return;
       if (source !== undefined) locateIn(analysis.blocks, source);
       const classes = new Map<FoundBlock, string>();
-      for (const found of analysis.blocks)
-        classes.set(found, compiler.classString(block(found, file)));
+      for (const found of analysis.blocks) {
+        const b = block(found, file);
+        classes.set(found, compiler.classString(b));
+        track(context, compiler.dependencies(b), id);
+      }
+
+      // Classes from stylesheet files, for `cn` calls.
+      const sheets = new Map<string, Promise<Map<string, string>>>();
+      const sheetClass = async ({ sheet, name }: SheetClass) => {
+        let exports = sheets.get(sheet.specifier);
+        if (exports === undefined) {
+          exports = (async () => {
+            const resolved = await context.resolve(sheet.specifier, file);
+            if (resolved === null) return new Map();
+            return new Map((await compileSheet(cleanId(resolved.id))).exports);
+          })();
+          sheets.set(sheet.specifier, exports);
+        }
+        return (await exports).get(name) ?? '';
+      };
 
       // `cn` calls with static arguments are resolved now. Blocks inside
       // them are replaced along with the call.
       const resolved = new Set<FoundBlock>();
       for (const call of analysis.cnCalls) {
         if (call.args === null) continue;
-        const { cn } = current();
-        const value = cn(
-          ...call.args.map((arg) => (typeof arg === 'string' ? arg : classes.get(arg)!)),
-        );
-        for (const arg of call.args) if (typeof arg !== 'string') resolved.add(arg);
-        s.overwrite(call.start, call.end, quoted(value, quote));
+        const args: string[] = [];
+        for (const arg of call.args) {
+          if (typeof arg === 'string') args.push(arg);
+          else if ('sheet' in arg) args.push(await sheetClass(arg));
+          else {
+            args.push(classes.get(arg)!);
+            resolved.add(arg);
+          }
+        }
+        s.overwrite(call.start, call.end, quoted(current().cn(...args), quote));
       }
       for (const [found, value] of classes)
         if (!resolved.has(found)) s.overwrite(found.start, found.end, quoted(value, quote));
       for (const statement of analysis.imports)
         s.overwrite(statement.start, statement.end, rewriteImport(statement));
+      // The attributes are removed (browsers reject unknown types), and the
+      // query marks the import for `resolveId`.
+      for (const sheet of analysis.sheets)
+        s.overwrite(sheet.start, sheet.end, JSON.stringify(sheet.specifier + SHEET_QUERY));
     } catch (error) {
       return fail(context, error, file);
     }
@@ -225,7 +286,12 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
 
     config(userConfig) {
       cssImported = false;
-      libraries = findLibraries(resolve(userConfig.root ?? process.cwd()), options.libraries);
+      const read = readConfig(resolve(userConfig.root ?? process.cwd()));
+      app = read;
+      configWarnings = [...read.warnings];
+      libraries = findLibraries(app.dir, app.config.libraries, (message) =>
+        configWarnings.push(message),
+      );
       const names = libraries.map(({ name }) => name);
       return {
         // Vite only passes CSS source maps to the browser in dev with
@@ -242,6 +308,8 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
 
     configResolved(resolved) {
       config = resolved;
+      for (const message of configWarnings) config.logger.warn(`[pre.style] ${message}`);
+      configWarnings = [];
     },
 
     configureServer(devServer) {
@@ -251,13 +319,13 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
     async buildStart() {
       const create = () =>
         createCompiler({
-          prependFiles: options.prependFiles,
+          prependFiles: app.config.prependFiles,
           libraries: libraries.map(({ dir, prependFiles }) => ({ dir, prependFiles })),
           lightningcss: options.lightningcss,
           sourceMap: options.sourceMap,
-          root: config.root,
+          root: app.dir,
           warn: (message) => config.logger.warn(`[pre.style] ${message}`),
-          quirksMode: options.quirksMode,
+          quirksMode: app.config.quirksMode,
         });
       // Dev names blocks on demand, as they're served.
       if (config.command !== 'build') {
@@ -279,41 +347,93 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
           files.add(resolve(cwd, file));
         }
       };
-      const outDir = `${relative(config.root, resolve(config.root, config.build.outDir))}/**`;
-      await add(config.root, options.include ? toArray(options.include) : DEFAULT_INCLUDE, [
-        ...toArray(options.exclude),
+      const outDir = `${relative(app.dir, resolve(config.root, config.build.outDir))}/**`;
+      const { include, exclude } = app.config;
+      await add(app.dir, include ? toArray(include) : DEFAULT_INCLUDE, [
+        ...toArray(exclude),
         NODE_MODULES,
         outDir,
       ]);
-      for (const library of libraries) await add(library.dir, library.include, [NODE_MODULES]);
+      for (const library of libraries)
+        await add(library.dir, library.include, [...library.exclude, NODE_MODULES]);
 
+      // Stylesheet files the scanned files import, which are scanned after
+      // them.
+      const sheets = new Set<string>();
       // Sorted, so names don't depend on the order the file system lists files.
       for (const id of [...files].toSorted()) {
         const code = await readFile(id, 'utf8');
-        if (!code.includes('css`') || (ASTRO.test(id) && !code.includes('@pre.style/core')))
-          continue;
+        const imported = [...code.matchAll(SHEET_IMPORT)].map((match) => match[2]);
+        if (!code.includes('css`') && imported.length === 0) continue;
+        let specifiers: string[] = [];
         try {
           // Astro components aren't scripts until Astro compiles them, so
-          // their blocks are found like HTML's. Only counts depend on the
-          // scan, so a block Astro leaves out costs no more than a longer name.
-          const found =
-            HTML.test(id) || ASTRO.test(id)
-              ? findInHtml(code)
-              : (findInScript(id, code)?.blocks ?? []);
+          // their blocks and imports are found by text matching, like
+          // HTML's. Only counts depend on the scan, so a block Astro leaves
+          // out costs no more than a longer name.
+          let found: FoundBlock[] = [];
+          if (HTML.test(id)) found = findInHtml(code);
+          else if (ASTRO.test(id)) {
+            if (code.includes('@pre.style/core')) found = findInHtml(code);
+            specifiers = imported;
+          } else {
+            const analysis = findInScript(id, code);
+            found = analysis?.blocks ?? [];
+            specifiers = analysis?.sheets.map((sheet) => sheet.specifier) ?? [];
+          }
           for (const b of found) compiler.scan(block(b, id));
         } catch (error) {
           fail(this, error, id);
+        }
+        for (const specifier of specifiers) {
+          const resolved = await this.resolve(specifier, id);
+          if (resolved !== null) sheets.add(cleanId(resolved.id));
+        }
+      }
+      for (const file of [...sheets].toSorted()) {
+        try {
+          compiler.scanStylesheet({
+            code: await readFile(file, 'utf8'),
+            lang: sheetLang(file),
+            file,
+          });
+        } catch (error) {
+          fail(this, error, file);
         }
       }
       compiler.assignNames();
     },
 
-    resolveId(id) {
+    async resolveId(id, importer) {
       if (id === CN_ID) return RESOLVED_CN_ID;
       if (id === CSS_ID) return RESOLVED_CSS_ID;
+      if (id.endsWith(SHEET_QUERY)) {
+        const resolved = await this.resolve(id.slice(0, -SHEET_QUERY.length), importer, {
+          skipSelf: true,
+        });
+        if (resolved === null) return null;
+        return `${SHEET_PREFIX}${cleanId(resolved.id)}${SHEET_SUFFIX}`;
+      }
     },
 
-    load(id) {
+    async load(id) {
+      if (id.startsWith(SHEET_PREFIX)) {
+        const file = id.slice(SHEET_PREFIX.length, -SHEET_SUFFIX.length);
+        const revision = compiler.revision;
+        let compiled: CompiledStylesheet;
+        try {
+          compiled = await compileSheet(file);
+        } catch (error) {
+          return fail(this, error, file);
+        }
+        track(this, [file, ...compiled.dependencies], id);
+        let code = sheetModule(compiled.exports);
+        if (config.command !== 'build') {
+          code = `import ${JSON.stringify(CSS_ID)};\n${code}`;
+          update(revision);
+        }
+        return { code, map: { mappings: '' } };
+      }
       if (id === RESOLVED_CN_ID) {
         return `import { createCn } from '@pre.style/core';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(current().table)});\n`;
       }
@@ -332,20 +452,34 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       if (
         !SCRIPT.test(file) ||
         (file.includes('/node_modules/') && !inLibrary(file)) ||
-        !code.includes('@pre.style/core')
+        !code.includes('pre.style')
       )
         return;
-      return rewrite(this, code, file);
+      return rewrite(this, code, id, file);
+    },
+
+    // Modules whose class strings depend on a changed file (a stylesheet
+    // file, a file it composes from, or a file Sass loaded) are updated
+    // with it.
+    hotUpdate({ file, modules }) {
+      const ids = dependents.get(file);
+      if (ids === undefined) return;
+      const graph = this.environment.moduleGraph;
+      const affected = [...ids]
+        .map((id) => graph.getModuleById(id))
+        .filter((module): module is EnvironmentModuleNode => module !== undefined);
+      if (affected.length === 0) return;
+      return [...new Set([...modules, ...affected])];
     },
 
     transformIndexHtml: {
       order: 'pre',
       handler(html, context) {
         const id = context.filename;
-        if (!options.quirksMode && !DOCTYPE.test(html) && !warnedDoctype.has(id)) {
+        if (!app.config.quirksMode && !DOCTYPE.test(html) && !warnedDoctype.has(id)) {
           warnedDoctype.add(id);
           config.logger.warn(
-            `[pre.style] ${relative(config.root, id)} has no doctype, so browsers render it in quirks mode, where class selectors ignore case and pre.style's classes collide. Add <!doctype html>, or set quirksMode: true if you can't.`,
+            `[pre.style] ${relative(config.root, id)} has no doctype, so browsers render it in quirks mode, where class selectors ignore case and pre.style's classes collide. Add <!doctype html>, or set "quirksMode": true in the "pre.style" field of your package.json if you can't.`,
           );
         }
         const revision = compiler.revision;
@@ -407,14 +541,28 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       if (
         !(ASTRO.test(id) || ASTRO_SCRIPT.test(id)) ||
         (file.includes('/node_modules/') && !inLibrary(file)) ||
-        !code.includes('@pre.style/core')
+        !code.includes('pre.style')
       )
         return;
-      return rewrite(this, code, file, await readFile(file, 'utf8'));
+      return rewrite(this, code, id, file, await readFile(file, 'utf8'));
     },
   };
 
   return [main, astro];
+}
+
+// A stylesheet file's module: one constant export per class. Classes that
+// aren't valid identifiers (such as `primary-button`) are exported by
+// string name, imported as `import { 'primary-button' as primaryButton }`.
+function sheetModule(exports: CompiledStylesheet['exports']): string {
+  let local = 0;
+  return exports
+    .map(([name, value]) => {
+      if (isIdentifier(name)) return `export const ${name} = ${JSON.stringify(value)};\n`;
+      const binding = `__pre_style_${local++}`;
+      return `const ${binding} = ${JSON.stringify(value)};\nexport { ${binding} as ${JSON.stringify(name)} };\n`;
+    })
+    .join('');
 }
 
 function quoted(value: string, quote: string): string {

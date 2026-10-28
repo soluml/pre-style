@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "pre.style package.json field",
+  "description": "The \"pre.style\" field in package.json. In an app, it holds the options every tool that reads the project's styles shares. In a component library, it marks the package as a library for apps to compile.",
+  "definitions": {
+    "globs": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "prependFiles": {
+      "description": "Files added to the start of every block and stylesheet file, for custom properties, Sass variables, and mixins. An array applies to both languages; `css` and `scss` apply to one. Relative to the package.",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "css": {
+              "description": "Files added to the start of every css block and .css stylesheet file.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scss": {
+              "description": "Files added to the start of every scss block and .scss stylesheet file.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "library": {
+      "type": "object",
+      "properties": {
+        "include": {
+          "$ref": "#/definitions/globs",
+          "description": "Globs of the library's files with blocks, relative to the package. Defaults to every JS, TS, and Astro file."
+        },
+        "exclude": {
+          "$ref": "#/definitions/globs",
+          "description": "Globs removed from `include`."
+        },
+        "prependFiles": {
+          "$ref": "#/definitions/prependFiles"
+        }
+      }
+    }
+  },
+  "anyOf": [
+    {
+      "type": "boolean",
+      "const": true,
+      "description": "A component library compiled with the default settings."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "include": {
+          "$ref": "#/definitions/globs",
+          "description": "Globs of every source file with blocks, relative to the package. Scanned before a build to assign names. Defaults to every JS, TS, HTML, and Astro file."
+        },
+        "exclude": {
+          "$ref": "#/definitions/globs",
+          "description": "Globs removed from `include`."
+        },
+        "prependFiles": {
+          "$ref": "#/definitions/prependFiles"
+        },
+        "libraries": {
+          "description": "App only. Component libraries to compile, by package name, in addition to dependencies with a \"pre.style\" field. A config replaces the package's field, `true` uses the defaults, and `false` leaves the package out.",
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "$ref": "#/definitions/library"
+              }
+            ]
+          }
+        },
+        "quirksMode": {
+          "description": "App only. You probably don't want this: lowercase class names only, for pages in quirks mode (no doctype). Names get longer.",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

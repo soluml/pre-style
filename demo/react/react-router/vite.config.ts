@@ -20,14 +20,13 @@ const { default: preStyle }: typeof import('@pre.style/vite') = await import(plu
 export default defineConfig(({ command }) => ({
   plugins: [
     preStyle({
-      // The shared component library (pre.style-demo-react-ui) is found
-      // through the `pre.style` field in its package.json, and compiled with
-      // its own tokens.
-      include: ['app/**/*.{ts,tsx}'],
-      // The app's own blocks use the component library's Sass mixins too.
-      // Its design tokens need no prepending: the library's own blocks
-      // already write them to the CSS file.
-      prependFiles: { scss: ['../ui/src/styles/_tokens.scss'] },
+      // `include` and `prependFiles` are in the `pre.style` field of
+      // package.json. The shared component library
+      // (pre.style-demo-react-ui) is found through the same field in its
+      // package.json, and compiled with its own tokens. The app's blocks
+      // prepend the library's Sass mixins; its design tokens need no
+      // prepending, since the library's own blocks write them to the CSS
+      // file.
       lightningcss: { minify: true },
       // Source maps in dev only.
       sourceMap: command === 'serve',

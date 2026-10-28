@@ -25,17 +25,37 @@ export interface FoundImport {
   }[];
 }
 
+// An import of a stylesheet file with `with { type: 'pre.style' }`, or a
+// re-export or dynamic import of one.
+export interface SheetImport {
+  // The specifier and its attributes, which are replaced with a specifier
+  // the plugin resolves.
+  start: number;
+  end: number;
+  specifier: string;
+  // Local bindings to the stylesheet's exports: the class each names, or
+  // `*` for a namespace import.
+  locals: Map<string, string>;
+}
+
+// A class exported by a stylesheet file, used as a `cn` argument.
+export interface SheetClass {
+  sheet: SheetImport;
+  name: string;
+}
+
 export interface CnCall {
   start: number;
   end: number;
-  // Static arguments: string literals and blocks. Null when any argument
-  // isn't static.
-  args: (string | FoundBlock)[] | null;
+  // Static arguments: string literals, blocks, and classes imported from
+  // stylesheet files. Null when any argument isn't static.
+  args: (string | FoundBlock | SheetClass)[] | null;
 }
 
 export interface ScriptAnalysis {
   blocks: FoundBlock[];
   imports: FoundImport[];
+  sheets: SheetImport[];
   cnCalls: CnCall[];
 }
 
@@ -50,6 +70,18 @@ export class FindError extends Error {
 }
 
 const IMPORTS = new Set(['css', 'scss', 'cn']);
+
+type Attribute = { key: { name?: string; value?: string }; value: { value: unknown } };
+
+// Whether import attributes are `{ type: 'pre.style' }`.
+const isSheet = (attributes: Attribute[] | undefined) =>
+  attributes?.length === 1 &&
+  (attributes[0].key.name ?? attributes[0].key.value) === 'type' &&
+  attributes[0].value.value === 'pre.style';
+
+// Text that marks a stylesheet import, for files that aren't parsed.
+export const SHEET_IMPORT =
+  /\bfrom\s*(['"])([^'"]+)\1\s*with\s*\{\s*type\s*:\s*(['"])pre\.style\3\s*,?\s*\}/g;
 
 // Converts offsets to lines and columns, from 1.
 function locator(code: string) {
@@ -114,15 +146,51 @@ function isReference(node: Node, parent: Node | null): boolean {
   }
 }
 
-// Finds blocks in a JS or TS file. Only `css` and `scss` imported from
-// `@pre.style/core` mark blocks. Returns null when the file doesn't import them.
+// Finds blocks in a JS or TS file, and imports of stylesheet files. Only
+// `css` and `scss` imported from `@pre.style/core` mark blocks. Returns null
+// when the file imports neither.
 export function findInScript(filename: string, code: string): ScriptAnalysis | null {
   const { program } = parseSync(filename, code);
   const locate = locator(code);
 
   const imports: FoundImport[] = [];
+  const sheets: SheetImport[] = [];
+  // The specifier and attributes of a static import or re-export.
+  const sheetImport = (statement: Node): SheetImport => {
+    const last = (statement.attributes as Node[]).at(-1)!;
+    return {
+      start: statement.source.start,
+      end: code.indexOf('}', last.end) + 1,
+      specifier: statement.source.value,
+      locals: new Map(),
+    };
+  };
   const locals = new Map<string, string>();
   for (const statement of program.body as Node[]) {
+    if (
+      (statement.type === 'ExportNamedDeclaration' || statement.type === 'ExportAllDeclaration') &&
+      statement.source &&
+      isSheet(statement.attributes)
+    ) {
+      sheets.push(sheetImport(statement));
+      continue;
+    }
+    if (statement.type === 'ImportDeclaration' && isSheet(statement.attributes)) {
+      const sheet = sheetImport(statement);
+      if (statement.importKind !== 'type') {
+        for (const specifier of statement.specifiers as Node[]) {
+          if (specifier.type === 'ImportNamespaceSpecifier')
+            sheet.locals.set(specifier.local.name, '*');
+          else if (specifier.type === 'ImportSpecifier' && specifier.importKind !== 'type')
+            sheet.locals.set(
+              specifier.local.name,
+              specifier.imported.name ?? specifier.imported.value,
+            );
+        }
+      }
+      sheets.push(sheet);
+      continue;
+    }
     if (
       statement.type !== 'ImportDeclaration' ||
       statement.source.value !== '@pre.style/core' ||
@@ -144,13 +212,33 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
     }
     imports.push({ start: statement.start, end: statement.end, specifiers });
   }
-  if (locals.size === 0) return null;
 
   const blocks: FoundBlock[] = [];
   const blockAt = new Map<Node, FoundBlock>();
   const cnNodes: Node[] = [];
 
   walk(program, null, (node, parent) => {
+    // `import('./file.css', { with: { type: 'pre.style' } })`.
+    if (node.type === 'ImportExpression') {
+      const options = node.options as Node | null;
+      const attributes = options?.properties?.find(
+        (p: Node) => p.type === 'Property' && (p.key.name ?? p.key.value) === 'with',
+      )?.value;
+      const typed = attributes?.properties?.map((p: Node) => ({ key: p.key, value: p.value }));
+      if (
+        node.source.type === 'Literal' &&
+        typeof node.source.value === 'string' &&
+        attributes?.type === 'ObjectExpression' &&
+        isSheet(typed)
+      )
+        sheets.push({
+          start: node.source.start,
+          end: options!.end,
+          specifier: node.source.value,
+          locals: new Map(),
+        });
+      return;
+    }
     if (node.type !== 'Identifier' || !locals.has(node.name) || !isReference(node, parent)) return;
     const imported = locals.get(node.name)!;
     if (imported === 'cn') {
@@ -188,21 +276,48 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
     blockAt.set(parent, block);
   });
 
-  // `cn` calls with only string literals and blocks can be resolved at
-  // build time.
+  if (locals.size === 0 && sheets.length === 0) return null;
+
+  // The stylesheet import a local name is bound to.
+  const find = (local: string) => sheets.find((sheet) => sheet.locals.has(local));
+  // A class imported from a stylesheet file: a named import, or a member of
+  // a namespace import.
+  const sheetClass = (arg: Node): SheetClass | null => {
+    if (arg.type === 'Identifier') {
+      const sheet = find(arg.name);
+      const name = sheet?.locals.get(arg.name);
+      return sheet && name !== '*' ? { sheet, name: name! } : null;
+    }
+    if (arg.type === 'MemberExpression' && arg.object.type === 'Identifier') {
+      const sheet = find(arg.object.name);
+      if (sheet?.locals.get(arg.object.name) !== '*') return null;
+      const name = arg.computed
+        ? arg.property.type === 'Literal' && typeof arg.property.value === 'string'
+          ? arg.property.value
+          : null
+        : arg.property.name;
+      return name === null ? null : { sheet: sheet!, name };
+    }
+    return null;
+  };
+
+  // `cn` calls with only string literals, blocks, and stylesheet classes
+  // can be resolved at build time.
   const cnCalls = cnNodes.map((node): CnCall => {
-    const args: (string | FoundBlock)[] = [];
+    const args: (string | FoundBlock | SheetClass)[] = [];
     for (const arg of node.arguments as Node[]) {
+      const sheet = sheetClass(arg);
       if (arg.type === 'Literal' && typeof arg.value === 'string') args.push(arg.value);
       else if (arg.type === 'TemplateLiteral' && arg.expressions.length === 0)
         args.push(arg.quasis[0].value.cooked);
       else if (blockAt.has(arg)) args.push(blockAt.get(arg)!);
+      else if (sheet !== null) args.push(sheet);
       else return { start: node.start, end: node.end, args: null };
     }
     return { start: node.start, end: node.end, args };
   });
 
-  return { blocks, imports, cnCalls };
+  return { blocks, imports, sheets, cnCalls };
 }
 
 const HTML_BLOCK = /\b(s?css)`([^`]*)`/g;

@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs';
-import { resolve as resolvePath, sep } from 'node:path';
+import { dirname, relative, resolve as resolvePath, sep } from 'node:path';
 import type { Rule, SelectorList } from 'lightningcss';
 import SweatMap from 'sweatmap';
-import { parseBlock, PreStyleError, valueOf } from './block.ts';
+import { dropOverridden, parseBlock, PreStyleError, valueOf } from './block.ts';
 import type {
   Atom,
   AtRuleSegment,
+  Compose,
   GlobalRule,
   Lang,
   LightningOptions,
@@ -17,6 +18,8 @@ import type {
 import { print } from './print.ts';
 import type { Printed } from './print.ts';
 import { lvhfaRank, withClass } from './selectors.ts';
+import { MARKER_PREFIX, markerKey, parseStylesheet } from './stylesheet.ts';
+import type { ParsedStylesheet } from './stylesheet.ts';
 import type { CnTable } from '../cn.ts';
 
 // Files prepended to blocks: an array for every block, or separate arrays
@@ -56,6 +59,32 @@ export interface Block {
   file?: string;
   line?: number;
   column?: number;
+}
+
+// A stylesheet file, imported with `with { type: 'pre.style' }`. Each class
+// is exported with its class string.
+export interface Stylesheet {
+  code: string;
+  lang: Lang;
+  // The file's absolute path. `composes … from` and Sass loads resolve from
+  // it.
+  file: string;
+}
+
+export interface CompiledStylesheet {
+  // Each exported class and its class string, in the order the classes
+  // first appear.
+  exports: [name: string, classString: string][];
+  // Other files the class strings depend on, as absolute paths: files
+  // composed from, and files Sass loaded.
+  dependencies: string[];
+}
+
+// Atoms a class string is made of, and the rest of its names: markers
+// (as marker keys) and global classes from `composes … from global`.
+interface Resolved {
+  atoms: Atom[];
+  extras: string[];
 }
 
 interface AtomRecord {
@@ -124,6 +153,8 @@ export class Compiler {
   readonly #prepend: Record<Lang, string>;
   readonly #libraries: { dir: string; prepend: Record<Lang, string> }[];
   readonly #blocks = new Map<string, ParsedBlock>();
+  readonly #stylesheets = new Map<string, ParsedStylesheet>();
+  readonly #root: string;
 
   // One name list for every class, and one for prefixes (the at-rules and
   // selector variant a class is under), which only the `cn` table uses.
@@ -144,6 +175,7 @@ export class Compiler {
       prefixes: new SweatMap(NAME_OPTIONS),
     };
     const root = options.root ?? process.cwd();
+    this.#root = root;
     this.#prepend = readPrepend(root, options.prependFiles);
     this.#libraries = (options.libraries ?? [])
       .map((library) => {
@@ -168,12 +200,15 @@ export class Compiler {
   // block before `assignNames`.
   scan(block: Block): void {
     const parsed = this.#parse(block);
-    for (const atom of parsed.atoms) {
-      count(this.#counts.atoms, atomKey(atom));
-      const prefix = prefixKey(atom);
-      if (prefix !== '') count(this.#counts.prefixes, prefix);
-    }
     this.#register(block, parsed);
+    this.#count(this.#resolveBlock(block, parsed, []));
+  }
+
+  // Pass 1 of naming for a stylesheet file: counts what each class uses.
+  scanStylesheet(sheet: Stylesheet): void {
+    const parsed = this.#parseSheet(sheet);
+    for (const name of parsed.classes.keys())
+      this.#count(this.#resolveClass(sheet.file, parsed, name, [], []));
   }
 
   // Pass 2 of naming: gives the most-used entries the shortest names. Ties
@@ -192,7 +227,46 @@ export class Compiler {
   classString(block: Block): string {
     const parsed = this.#parse(block);
     this.#register(block, parsed);
-    return parsed.atoms.map((atom) => this.#nameOf(this.#atoms.get(atomKey(atom))!)).join(' ');
+    return this.#classString(this.#resolveBlock(block, parsed, []));
+  }
+
+  // The files a block's class string depends on, through `composes … from`.
+  dependencies(block: Block): string[] {
+    const dependencies: string[] = [];
+    this.#resolveBlock(block, this.#parse(block), dependencies);
+    return [...new Set(dependencies)];
+  }
+
+  // The classes a stylesheet file exports, without compiling or keeping
+  // anything, for tools that only need the names (such as the TypeScript
+  // content mapper).
+  classNames(sheet: Stylesheet): string[] {
+    const { prepend } = this.#library(sheet.file);
+    try {
+      const parsed = parseStylesheet(
+        sheet.code,
+        sheet.lang,
+        sheet.file,
+        relative(this.#root, sheet.file),
+        { ...this.#parseOptions, prepend },
+      );
+      return [...parsed.classes.keys()];
+    } catch (error) {
+      throw error instanceof PreStyleError ? locate(error, fileBlock(sheet.file)) : error;
+    }
+  }
+
+  // Each class of a stylesheet file, with its class string.
+  stylesheet(sheet: Stylesheet): CompiledStylesheet {
+    const parsed = this.#parseSheet(sheet);
+    const dependencies = [...parsed.dependencies];
+    const exports: CompiledStylesheet['exports'] = [];
+    for (const name of parsed.classes.keys())
+      exports.push([
+        name,
+        this.#classString(this.#resolveClass(sheet.file, parsed, name, [], dependencies)),
+      ]);
+    return { exports, dependencies: [...new Set(dependencies)] };
   }
 
   css(): Printed {
@@ -210,7 +284,12 @@ export class Compiler {
       .filter((g) => g.global.hoist !== false)
       .toSorted((a, b) => (a.global.hoist as number) - (b.global.hoist as number));
     const rest = globals.filter((g) => g.global.hoist === false);
-    const rules: Rule[] = [...hoisted, ...rest].map((g) => withLoc(g.global.rule, loc(g.source)));
+    const rules: Rule[] = [...hoisted, ...rest].map((g) =>
+      withLoc(
+        g.global.key.includes(MARKER_KEY) ? this.#named(g.global.rule) : g.global.rule,
+        loc(g.source),
+      ),
+    );
     rules.push(...this.#atomRules(loc));
 
     return print(rules, sources, this.#parseOptions.lightningcss, this.#options.sourceMap ?? false);
@@ -230,13 +309,16 @@ export class Compiler {
     return table;
   }
 
-  #parse(block: Block): ParsedBlock {
-    // A library's blocks get its prepended files instead of the app's.
+  // A library's blocks and files get its prepended files instead of the
+  // app's.
+  #library(file: string | undefined) {
     const library =
-      block.file === undefined
-        ? -1
-        : this.#libraries.findIndex(({ dir }) => block.file!.startsWith(dir));
-    const prepend = library === -1 ? this.#prepend : this.#libraries[library].prepend;
+      file === undefined ? -1 : this.#libraries.findIndex(({ dir }) => file.startsWith(dir));
+    return { library, prepend: library === -1 ? this.#prepend : this.#libraries[library].prepend };
+  }
+
+  #parse(block: Block): ParsedBlock {
+    const { library, prepend } = this.#library(block.file);
     const cacheKey = `${library}\n${block.lang}\n${block.code}`;
     let parsed = this.#blocks.get(cacheKey);
     if (parsed === undefined) {
@@ -248,6 +330,168 @@ export class Compiler {
       this.#blocks.set(cacheKey, parsed);
     }
     return parsed;
+  }
+
+  // Parses a stylesheet file and registers its classes and global rules, so
+  // the output includes them once the file is used.
+  #parseSheet(sheet: Stylesheet): ParsedStylesheet {
+    const { library, prepend } = this.#library(sheet.file);
+    const cacheKey = `${library}\n${sheet.lang}\n${sheet.file}\n${sheet.code}`;
+    let parsed = this.#stylesheets.get(cacheKey);
+    if (parsed === undefined) {
+      try {
+        parsed = parseStylesheet(
+          sheet.code,
+          sheet.lang,
+          sheet.file,
+          relative(this.#root, sheet.file),
+          {
+            ...this.#parseOptions,
+            prepend,
+          },
+        );
+      } catch (error) {
+        throw error instanceof PreStyleError ? locate(error, fileBlock(sheet.file)) : error;
+      }
+      this.#stylesheets.set(cacheKey, parsed);
+    }
+    const block = fileBlock(sheet.file);
+    for (const target of parsed.classes.values())
+      this.#register(block, { atoms: target.atoms, globals: [], composes: [] });
+    this.#register(block, { atoms: [], globals: parsed.globals, composes: [] });
+    return parsed;
+  }
+
+  // Reads a file named by `composes … from`.
+  #readSheet(file: string): ParsedStylesheet {
+    let code: string;
+    try {
+      code = readFileSync(file, 'utf8');
+    } catch (error) {
+      throw new PreStyleError(`Can't read ${file}, named by \`composes\`.`, null, { cause: error });
+    }
+    return this.#parseSheet({ code, lang: file.endsWith('.scss') ? 'scss' : 'css', file });
+  }
+
+  // A class's atoms and other names, after its `composes`. Composed atoms
+  // come first, so the class's own declarations replace the ones they
+  // conflict with, as in `cn`. `stack` holds the classes being resolved, to
+  // find cycles. Files composed from are added to `dependencies`.
+  #resolveClass(
+    file: string,
+    parsed: ParsedStylesheet,
+    name: string,
+    stack: string[],
+    dependencies: string[],
+  ): Resolved {
+    const target = parsed.classes.get(name);
+    if (target === undefined)
+      throw new PreStyleError(`${file} has no class \`${name}\` to compose.`, null);
+    const id = `${file}\0${name}`;
+    if (stack.includes(id))
+      throw new PreStyleError(
+        `\`composes\` cycle: ${[...stack, id].map((entry) => entry.replace('\0', ' .')).join(' -> ')}.`,
+        null,
+      );
+    const composed = this.#resolveComposes(
+      file,
+      parsed,
+      target.composes,
+      [...stack, id],
+      dependencies,
+    );
+    if (target.marker) composed.extras.push(markerKey(relative(this.#root, file), name));
+    return {
+      atoms:
+        composed.atoms.length === 0
+          ? target.atoms
+          : dropOverridden([...composed.atoms, ...target.atoms]),
+      extras: composed.extras,
+    };
+  }
+
+  #resolveBlock(block: Block, parsed: ParsedBlock, dependencies: string[]): Resolved {
+    if (parsed.composes.length === 0) return { atoms: parsed.atoms, extras: [] };
+    for (const c of parsed.composes) {
+      if (c.from.type === 'local')
+        throw new PreStyleError(
+          'Blocks have no classes of their own to compose. Use `composes: a from "./file.css";` or `composes: a from global;`.',
+          c.position,
+        );
+    }
+    const file = block.file ?? resolvePath(this.#root, 'block.css');
+    let composed: Resolved;
+    try {
+      composed = this.#resolveComposes(file, null, parsed.composes, [], dependencies);
+    } catch (error) {
+      throw error instanceof PreStyleError ? locate(error, block) : error;
+    }
+    return { atoms: dropOverridden([...composed.atoms, ...parsed.atoms]), extras: composed.extras };
+  }
+
+  #resolveComposes(
+    file: string,
+    parsed: ParsedStylesheet | null,
+    composes: Compose[],
+    stack: string[],
+    dependencies: string[],
+  ): Resolved {
+    const atoms: Atom[] = [];
+    const extras: string[] = [];
+    for (const c of composes) {
+      if (c.from.type === 'global') {
+        extras.push(...c.names);
+        continue;
+      }
+      let from = file;
+      let sheet = parsed!;
+      if (c.from.type === 'file') {
+        from = resolvePath(dirname(file), c.from.path);
+        dependencies.push(from);
+        sheet = this.#readSheet(from);
+        dependencies.push(...sheet.dependencies);
+      }
+      for (const name of c.names) {
+        const resolved = this.#resolveClass(from, sheet, name, stack, dependencies);
+        atoms.push(...resolved.atoms);
+        extras.push(...resolved.extras);
+      }
+    }
+    return { atoms, extras };
+  }
+
+  #count(resolved: Resolved) {
+    for (const atom of resolved.atoms) {
+      count(this.#counts.atoms, atomKey(atom));
+      const prefix = prefixKey(atom);
+      if (prefix !== '') count(this.#counts.prefixes, prefix);
+    }
+    for (const extra of resolved.extras)
+      if (extra.startsWith(MARKER_PREFIX)) count(this.#counts.atoms, extra);
+  }
+
+  #classString(resolved: Resolved): string {
+    const names = resolved.atoms.map((atom) => this.#nameOf(this.#atoms.get(atomKey(atom))!));
+    for (const extra of resolved.extras)
+      names.push(extra.startsWith(MARKER_PREFIX) ? this.#names.atoms.set(extra) : extra);
+    return [...new Set(names)].join(' ');
+  }
+
+  // Replaces markers in selectors with their names.
+  #named<T>(value: T): T {
+    const visit = (node: unknown): unknown => {
+      if (Array.isArray(node)) return node.map(visit);
+      if (node === null || typeof node !== 'object') return node;
+      const record = node as Record<string, unknown>;
+      if (
+        record.type === 'class' &&
+        typeof record.name === 'string' &&
+        record.name.startsWith(MARKER_PREFIX)
+      )
+        return { ...record, name: this.#names.atoms.set(record.name) };
+      return Object.fromEntries(Object.entries(record).map(([k, v]) => [k, visit(v)]));
+    };
+    return visit(value) as T;
   }
 
   #register(block: Block, parsed: ParsedBlock) {
@@ -302,9 +546,10 @@ export class Compiler {
       const rules: Rule[] = sortAtoms(group.atoms).map((record) => {
         const { atom, source } = record;
         const className = this.#nameOf(record);
-        const selectors: SelectorList = atom.variant
+        let selectors: SelectorList = atom.variant
           ? withClass(atom.variant.selectors, className)
           : [[{ type: 'class', name: className }]];
+        if (atom.variant?.key.includes(MARKER_KEY)) selectors = this.#named(selectors);
         const declarations = atom.declaration.important
           ? { importantDeclarations: [atom.declaration.value] }
           : { declarations: [atom.declaration.value] };
@@ -331,6 +576,12 @@ interface Group {
   atoms: AtomRecord[];
   children: Map<string, Group>;
 }
+
+// Markers as they appear in JSON keys, which escape the `\0`.
+const MARKER_KEY = JSON.stringify(MARKER_PREFIX).slice(1, -1);
+
+// A stylesheet file, for positions and source maps.
+const fileBlock = (file: string): Block => ({ code: '', lang: 'css', file, line: 1, column: 1 });
 
 // Reads prepended files, relative to `dir`, once.
 function readPrepend(dir: string, files: PrependFiles | undefined): Record<Lang, string> {

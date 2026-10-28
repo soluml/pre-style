@@ -1,5 +1,5 @@
 import { css } from '@pre.style/core';
-import { Button } from 'pre.style-demo-react-ui';
+import { Badge, Button } from 'pre.style-demo-react-ui';
 import type { Route } from './+types/home';
 
 export const meta: Route.MetaFunction = () => [{ title: 'Basics · pre.style demo' }];
@@ -105,7 +105,8 @@ export default function Home() {
           margin-top: calc(var(--space) * 8);
         `}
       >
-        <Button className={arrow}>A button with an ::after</Button>
+        <Button className={arrow}>A button with an ::after</Button>{' '}
+        <Badge tone="accent">Styled from a .scss file</Badge>
       </p>
     </>
   );

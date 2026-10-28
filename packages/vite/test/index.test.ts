@@ -1,6 +1,6 @@
 import { after, before, describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { build, createLogger, createServer, defaultClientConditions } from 'vite';
 import type { InlineConfig, Plugin, Rollup } from 'vite';
@@ -43,6 +43,23 @@ async function warnings(name: string, options: PreStyleOptions = {}) {
   logger.warn = (message) => logged.push(message);
   const files = await buildFixture(name, options, { customLogger: logger });
   return { files, logged };
+}
+
+// Sets the `pre.style` field in a fixture's package.json while `run` runs.
+async function withField<T>(name: string, field: unknown, run: () => Promise<T>): Promise<T> {
+  const file = `${fixture(name)}/package.json`;
+  const original = existsSync(file) ? readFileSync(file, 'utf8') : null;
+  const pkg =
+    original === null
+      ? { name: `fixture-${name}`, private: true, type: 'module' }
+      : JSON.parse(original);
+  writeFileSync(file, `${JSON.stringify({ ...pkg, 'pre.style': field }, null, 2)}\n`);
+  try {
+    return await run();
+  } finally {
+    if (original === null) rmSync(file);
+    else writeFileSync(file, original);
+  }
 }
 
 // The class string assigned to `button` in transformed code.
@@ -129,22 +146,18 @@ describe('build', () => {
     assert.ok(map.mappings.startsWith(';;'));
   });
 
-  test('prependFiles applies to scss blocks, and other imports from pre.style are kept', async () => {
-    const files = await buildFixture('prepend', {
-      prependFiles: { scss: ['vars.scss'] },
-      lightningcss: { minify: true },
-    });
+  test('prependFiles in package.json applies to scss blocks, and other imports from pre.style are kept', async () => {
+    const files = await buildFixture('prepend', { lightningcss: { minify: true } });
     assert.equal(files.get('pre.style.css'), '.A{color:#639}');
     assert.match(chunk(files), /const value = "A";|var value = "A";/);
   });
 
-  test('include and exclude choose the files scanned before the build', async () => {
+  test('include and exclude in package.json choose the files scanned before the build', async () => {
     // Without the HTML file, its block isn't scanned. It's still replaced,
     // and named on demand after the scanned blocks.
-    const files = await buildFixture('basic', {
-      exclude: '**/*.html',
-      lightningcss: { minify: true },
-    });
+    const files = await withField('basic', { exclude: '**/*.html' }, () =>
+      buildFixture('basic', { lightningcss: { minify: true } }),
+    );
     assert.match(files.get('index.html')!, /<main class="N O P Q A">Hello<\/main>/);
     assert.match(files.get('pre.style.css')!, /\.N\{padding-top:1rem\}/);
   });
@@ -154,7 +167,10 @@ describe('quirks mode', () => {
   test('warns once when index.html has no doctype', async () => {
     const { logged } = await warnings('quirks');
     assert.equal(logged.length, 1);
-    assert.match(logged[0], /index\.html has no doctype.*set quirksMode: true/);
+    assert.match(
+      logged[0],
+      /index\.html has no doctype.*set "quirksMode": true in the "pre\.style" field of your package\.json/,
+    );
   });
 
   test("doesn't warn when index.html has a doctype", async () => {
@@ -162,11 +178,10 @@ describe('quirks mode', () => {
     assert.deepEqual(logged, []);
   });
 
-  test('quirksMode uses lowercase class names, without the warning', async () => {
-    const { files, logged } = await warnings('quirks', {
-      quirksMode: true,
-      lightningcss: { minify: true },
-    });
+  test('quirksMode in package.json uses lowercase class names, without the warning', async () => {
+    const { files, logged } = await withField('quirks', { quirksMode: true }, () =>
+      warnings('quirks', { lightningcss: { minify: true } }),
+    );
     assert.deepEqual(logged, []);
     assert.match(files.get('index.html')!, /<main class="[a-z_ ]+">/);
     assert.doesNotMatch(files.get('pre.style.css')!, /\.[A-Z]/);
@@ -213,11 +228,12 @@ describe('component libraries', () => {
     assert.match(js, /var plain = css`margin-top: 0;`;/);
   });
 
-  test('the libraries option adds packages and leaves them out', async () => {
-    const files = await buildFixture('library', {
-      lightningcss: { minify: true },
-      libraries: { 'plain-ui': true, 'acme-icons': false },
-    });
+  test('the libraries setting in package.json adds packages and leaves them out', async () => {
+    const files = await withField(
+      'library',
+      { libraries: { 'plain-ui': true, 'acme-icons': false } },
+      () => buildFixture('library', { lightningcss: { minify: true } }),
+    );
     assert.equal(files.get('pre.style.css'), '.C{padding-top:4px}.A{color:red}.B{margin-top:0}');
     const js = chunk(files);
     assert.match(js, /document\.body\.dataset\.plain = "B";/);
@@ -299,6 +315,143 @@ describe('Astro components', () => {
     } finally {
       await server.close();
     }
+  });
+});
+
+describe('stylesheet files', () => {
+  test('imports with the pre.style attribute export each class string, and are built away', async () => {
+    const files = await buildFixture('sheets', { lightningcss: { minify: true } });
+    const css = files.get('pre.style.css')!;
+    // `button.css`, `theme.scss`, and the block that composes from it.
+    assert.match(css, /\.[A-Za-z]+\{color:red\}/);
+    assert.match(css, /\.[A-Za-z]+:hover\{color:#00f\}/);
+    assert.match(css, /\.[A-Za-z]+\{background-color:#fff\}/);
+    assert.match(css, /\.[A-Za-z]+:hover \.[A-Za-z]+\{color:purple\}/);
+    // Unused classes are still written, as CSS Modules does.
+    assert.match(css, /letter-spacing:1px/);
+    const js = chunk(files);
+    assert.doesNotMatch(js, /pre\.style'|with \{|\.css|\.scss|__pre_style_/);
+  });
+
+  test('cn calls with stylesheet classes are resolved at build time', async () => {
+    const js = chunk(await buildFixture('sheets'));
+    // Static: `button` and `theme.surface` become one string.
+    assert.match(js, /document\.body\.className = "[A-Za-z]+( [A-Za-z]+){2}";/);
+    // `primary-button` composes `button`, so its own `color: green`
+    // replaces `color: red`; with a runtime argument, cn runs in the browser.
+    assert.match(
+      js,
+      /document\.body\.dataset\.primary = cn\("[A-Za-z]+ [A-Za-z]+", window\.location\.hash\);/,
+    );
+  });
+
+  test('context classes get a marker, and blocks compose from stylesheet files', async () => {
+    const files = await buildFixture('sheets', { lightningcss: { minify: true } });
+    const css = files.get('pre.style.css')!;
+    const [, marker, titleClass] = /\.([A-Za-z]+):hover \.([A-Za-z]+)\{color:purple\}/.exec(css)!;
+    const js = chunk(files);
+    // `card` is its `padding-top` class and its marker; `title` is its class.
+    const card = /dataset\.card = "([\w ]+)";/.exec(js)![1].split(' ');
+    assert.equal(card.length, 2);
+    assert.ok(card.includes(marker));
+    assert.match(js, new RegExp(`dataset\\.title = "${titleClass}";`));
+    // The block composes `surface`, then adds `padding-top: 0`.
+    const surface = /\.([A-Za-z]+)\{background-color:#fff\}/.exec(css)![1];
+    assert.match(js, new RegExp(`composed = "${surface} [A-Za-z]+"`));
+  });
+
+  test('in dev, imports are rewritten to a stylesheet module that imports the CSS', async () => {
+    const server = await createServer({
+      ...config('sheets', {}),
+      server: { middlewareMode: true, ws: false },
+    });
+    try {
+      const main = await server.transformRequest('/src/main.ts');
+      assert.doesNotMatch(main!.code, /with \{/);
+      const url = /from "(\/@id\/__x00__pre\.style-sheet:[^"]+\/button\.css\.js)"/.exec(
+        main!.code,
+      )![1];
+      // The browser's URL for the module's `\0` ID.
+      const sheet = await server.transformRequest(url.replace('/@id/__x00__', '\0'));
+      assert.match(sheet!.code, /^import "\/__pre\.style\.css";/);
+      assert.match(sheet!.code, /export const button = "[A-Za-z]+ [A-Za-z]+";/);
+      assert.match(
+        sheet!.code,
+        /const __pre_style_0 = "[\w ]+";\nexport \{ __pre_style_0 as "primary-button" \};/,
+      );
+      assert.match(sheet!.code, /export const unused = "[A-Za-z]+";/);
+
+      // Changing the file updates its module, and the modules that compose from it.
+      const file = `${fixture('sheets')}/src/theme.scss`;
+      const graph = server.environments.client.moduleGraph;
+      const themeId = `\0pre.style-sheet:${file}.js`;
+      await server.environments.client.transformRequest(themeId);
+      const plugin = (server.config.plugins as Plugin[]).find((p) => p.name === 'pre.style')!;
+      const hotUpdate = plugin.hotUpdate as (
+        this: unknown,
+        options: { file: string; modules: unknown[] },
+      ) => { id: string }[] | undefined;
+      const affected = hotUpdate.call(
+        { environment: server.environments.client },
+        { file, modules: [] },
+      );
+      assert.deepEqual(
+        affected?.map((module) => module.id).toSorted(),
+        [`${fixture('sheets')}/src/main.ts`, themeId].toSorted(),
+      );
+      assert.ok(graph.getModuleById(themeId));
+    } finally {
+      await server.close();
+    }
+  });
+
+  test('errors in a stylesheet file report the file', async () => {
+    const file = `${fixture('sheets')}/src/button.css`;
+    const original = readFileSync(file, 'utf8');
+    writeFileSync(file, `${original}\n.bad { composes: missing; }\n`);
+    try {
+      await assert.rejects(buildFixture('sheets'), /has no class `missing` to compose/);
+    } finally {
+      writeFileSync(file, original);
+    }
+  });
+});
+
+describe('package.json config', () => {
+  test('options that moved to package.json fail with a pointer to it', () => {
+    assert.throws(
+      () => preStyle({ prependFiles: ['x.css'] } as PreStyleOptions),
+      /The `prependFiles` option moved to the "pre\.style" field in your package\.json/,
+    );
+  });
+
+  test('warns about unknown keys, and fails on invalid values', async () => {
+    const { logged } = await withField('basic', { includes: 'src/**' }, () => warnings('basic'));
+    assert.equal(logged.length, 1);
+    assert.match(logged[0], /"pre\.style" in .*basic\/package\.json: unknown key `includes`/);
+    await assert.rejects(
+      withField('basic', { quirksMode: 'yes' }, () => buildFixture('basic')),
+      /`quirksMode` must be `true` or `false`/,
+    );
+  });
+});
+
+describe('component library fields', () => {
+  const modules = `${fixture('library')}/node_modules`;
+  before(() => cpSync(fixture('library-packages'), modules, { recursive: true }));
+  after(() => rmSync(modules, { recursive: true, force: true }));
+
+  test('app-only keys in a library field are ignored with a warning', async () => {
+    const file = `${modules}/acme-icons/package.json`;
+    const pkg = JSON.parse(readFileSync(file, 'utf8'));
+    writeFileSync(
+      file,
+      JSON.stringify({ ...pkg, 'pre.style': { ...pkg['pre.style'], quirksMode: true } }),
+    );
+    const { files, logged } = await warnings('library', { lightningcss: { minify: true } });
+    assert.equal(logged.length, 1);
+    assert.match(logged[0], /acme-icons\/package\.json: `quirksMode` only applies to the app/);
+    assert.match(files.get('pre.style.css')!, /\.[A-Z]\{width:16px\}/);
   });
 });
 
