@@ -1,11 +1,11 @@
 # pre.style
 
-[![npm version](https://badge.fury.io/js/pre.style.svg)](https://www.npmjs.com/package/pre.style)
+[![npm version](https://badge.fury.io/js/pre.style.svg)](https://www.npmjs.com/package/@pre.style/core)
 
 Zero-runtime CSS-in-JS. Write plain CSS or SCSS next to your markup, and pre.style compiles it at build time into atomic CSS classes: one small class per declaration, shared across your whole project.
 
 ```js
-import { css } from '@pre.style/core';
+import { css } from "@pre.style/core";
 
 const button = css`
   background-color: #0071ba;
@@ -25,14 +25,28 @@ const button = css`
 After the build, `button` is a plain string, `"B C E D A G F"`. The block is replaced, and these classes are added to a single CSS file:
 
 ```css
-.B{background-color:#0071ba}
-.C{color:#fff}
-.E{padding-block-start:.5em}
-.D{padding-block-end:.5em}
-.A:hover{background-color:#005a94}
+.B {
+  background-color: #0071ba;
+}
+.C {
+  color: #fff;
+}
+.E {
+  padding-block-start: 0.5em;
+}
+.D {
+  padding-block-end: 0.5em;
+}
+.A:hover {
+  background-color: #005a94;
+}
 @media (width>=768px) {
-  .G{padding-block-start:1em}
-  .F{padding-block-end:1em}
+  .G {
+    padding-block-start: 1em;
+  }
+  .F {
+    padding-block-end: 1em;
+  }
 }
 ```
 
@@ -59,8 +73,8 @@ npm install --save-dev sass
 Add the plugin to `vite.config.ts`:
 
 ```ts
-import { defineConfig } from 'vite';
-import preStyle from '@pre.style/vite';
+import { defineConfig } from "vite";
+import preStyle from "@pre.style/vite";
 
 export default defineConfig({
   plugins: [preStyle()],
@@ -70,7 +84,7 @@ export default defineConfig({
 Then import `css` (or `scss`) from `@pre.style/core` and use the class strings:
 
 ```jsx
-import { css } from '@pre.style/core';
+import { css } from "@pre.style/core";
 
 export function Card({ children }) {
   return (
@@ -95,7 +109,7 @@ You can also write styles in `.css` and `.scss` files and import their classes, 
 Frameworks that render on the server, such as React Router's framework mode, don't use `index.html`. Import pre.style's CSS in your root module instead:
 
 ```ts
-import 'virtual:pre.style.css';
+import "virtual:pre.style.css";
 ```
 
 Vite then bundles the CSS with your app's other CSS, and the framework links it when rendering on the server, both in builds and in dev. The plugin doesn't write `output.file` when the CSS is imported this way.
@@ -106,8 +120,8 @@ Add the plugin to Astro's Vite config, and import the CSS in your layout's front
 
 ```js
 // astro.config.mjs
-import { defineConfig } from 'astro/config';
-import preStyle from '@pre.style/vite';
+import { defineConfig } from "astro/config";
+import preStyle from "@pre.style/vite";
 
 export default defineConfig({
   vite: { plugins: [preStyle()] },
@@ -127,7 +141,7 @@ const title = css`
 <h1 class={title}>Hello</h1>
 ```
 
-Blocks work in frontmatter, in template expressions such as `` class={css`…`} ``, in `<script>` tags, and in the islands of any framework. Astro links the CSS on every page that uses the layout, prerendered or rendered on demand. Astro compiles components before the plugin sees them, but errors and source maps still point to the component.
+Blocks work in frontmatter, in template expressions such as ``class={css`…`}``, in `<script>` tags, and in the islands of any framework. Astro links the CSS on every page that uses the layout, prerendered or rendered on demand. Astro compiles components before the plugin sees them, but errors and source maps still point to the component.
 
 ## Writing blocks
 
@@ -138,7 +152,7 @@ A block styles one element. Each block is treated as its own small stylesheet, w
 `css` blocks are plain CSS. `scss` blocks are compiled with Sass first, so you can use variables, mixins, functions, and everything else Sass supports:
 
 ```js
-import { scss } from '@pre.style/core';
+import { scss } from "@pre.style/core";
 
 const title = scss`
   $size: 2rem;
@@ -161,7 +175,8 @@ css`
   &::before { content: '→'; }
   & > * + * { margin-top: 1rem; }
   .dark & { color: white; }
-  a { text-decoration: underline; } /* the same as `& a` */
+  a { text-decoration: underline; } /* the same as ` &
+  a` */
 `;
 ```
 
@@ -174,7 +189,9 @@ Other at-rules, such as `@keyframes`, `@font-face`, and `@property`, are copied 
 ```js
 css`
   @keyframes fade-in {
-    from { opacity: 0; }
+    from {
+      opacity: 0;
+    }
   }
 
   animation: fade-in 200ms ease-out;
@@ -187,7 +204,7 @@ A block can build on classes from a [stylesheet file](#stylesheet-files), or on 
 
 ```js
 css`
-  composes: button from './button.css';
+  composes: button from "./button.css";
   composes: legacy-btn from global;
   color: white;
 `;
@@ -208,7 +225,7 @@ HTML can't import anything, so blocks in HTML files that Vite processes, such as
 Atomic classes all have the same specificity, so when two classes on one element set the same property, the order of the CSS file decides which wins, not the order in your `class` attribute. Use `cn` to combine class strings: when two classes conflict, it keeps the later one.
 
 ```js
-import { css, cn } from '@pre.style/core';
+import { css, cn } from "@pre.style/core";
 
 const button = css`
   background-color: #0071ba;
@@ -251,7 +268,10 @@ Styles can also live in `.css` and `.scss` files, imported with the `pre.style` 
 ```
 
 ```jsx
-import { button, 'primary-button' as primaryButton } from './button.css' with { type: 'pre.style' };
+import {
+  button,
+  "primary-button" as primaryButton,
+} from "./button.css" with { type: "pre.style" };
 
 <button className={primaryButton}>Save</button>;
 ```
@@ -276,15 +296,27 @@ In `.scss` files, relative `@use`, `@forward`, and `@import` resolve from the fi
 Atomic classes are shared, so no single class in a class string identifies one export. When an exported class is used as context for another, as `card` is in `.card:hover .title`, pre.style gives it a **marker**: one extra class, added to `card`'s class string, that the selector uses.
 
 ```css
-.card { padding-top: 1rem; }
-.title { color: black; }
-.card:hover .title { color: red; }
+.card {
+  padding-top: 1rem;
+}
+.title {
+  color: black;
+}
+.card:hover .title {
+  color: red;
+}
 ```
 
 ```css
-.D{padding-top:1rem}
-.C{color:#000}
-.A:hover .B{color:red}
+.D {
+  padding-top: 1rem;
+}
+.C {
+  color: #000;
+}
+.A:hover .B {
+  color: red;
+}
 ```
 
 `card` is `"D A"`, where `A` is its marker, and `title` is `"C B"`.
@@ -297,10 +329,20 @@ Atomic classes are shared, so no single class in a class string identifies one e
 `composes` works as in CSS Modules:
 
 ```css
-.base { color: gray; padding: 1rem; }
-.primary { composes: base; color: blue; }
-.wide { composes: card from './card.css'; }
-.legacy { composes: old-btn from global; }
+.base {
+  color: gray;
+  padding: 1rem;
+}
+.primary {
+  composes: base;
+  color: blue;
+}
+.wide {
+  composes: card from "./card.css";
+}
+.legacy {
+  composes: old-btn from global;
+}
 ```
 
 > [!IMPORTANT]
@@ -318,7 +360,9 @@ TypeScript 7.1 adds [content mappers](https://devblogs.microsoft.com/typescript/
 
 ```json
 {
-  "contentMappers": [{ "package": "@pre.style/core", "extensions": [".css", ".scss"] }]
+  "contentMappers": [
+    { "package": "@pre.style/core", "extensions": [".css", ".scss"] }
+  ]
 }
 ```
 
@@ -327,11 +371,11 @@ Content mappers run code from a package, so `tsc` needs the `--runExternalCode` 
 Before TypeScript 7.1, add this declaration to your project instead (for example as `src/stylesheets.d.ts`):
 
 ```ts
-declare module '*.css' {
+declare module "*.css" {
   const classes: { readonly [name: string]: string };
   export = classes;
 }
-declare module '*.scss' {
+declare module "*.scss" {
   const classes: { readonly [name: string]: string };
   export = classes;
 }
@@ -340,7 +384,7 @@ declare module '*.scss' {
 TypeScript can't type named imports from it, so use a namespace import:
 
 ```ts
-import * as styles from './button.css' with { type: 'pre.style' };
+import * as styles from "./button.css" with { type: "pre.style" };
 
 styles.button;
 ```
@@ -411,10 +455,10 @@ A library's class names depend on the whole app, so they differ between apps. Do
 }
 ```
 
-| Field          | Default                      | Description |
-| -------------- | ---------------------------- | ----------- |
-| `include`      | Every JS, TS, and Astro file | Globs of the files with blocks, relative to the package. A glob or an array of them. Stylesheet files the library imports are found from its imports. |
-| `exclude`      |                              | Globs removed from `include`. |
+| Field          | Default                      | Description                                                                                                                                                                                                                                 |
+| -------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `include`      | Every JS, TS, and Astro file | Globs of the files with blocks, relative to the package. A glob or an array of them. Stylesheet files the library imports are found from its imports.                                                                                       |
+| `exclude`      |                              | Globs removed from `include`.                                                                                                                                                                                                               |
 | `prependFiles` |                              | Files added to the start of the library's blocks and stylesheet files, relative to the package. They apply only to the library's, not the app's, so the library's tokens and mixins are always available to it and never leak into the app. |
 
 `"pre.style": true` uses the defaults. A library's field uses the same name and shape as an app's (see [Configuration](#configuration)). `libraries` and `quirksMode` only apply to the app, so in a library's field they're ignored, with a warning. A package that is both, such as a library with its own demo app, is read as the app when it's the Vite root, and as a library when it's a dependency.
@@ -438,20 +482,33 @@ Production builds scan your files first, so names are stable between builds. In 
 Shorthand properties are expanded into their longhands, so `cn` can resolve conflicts between them:
 
 ```js
-css`margin: auto;`;
+css`
+  margin: auto;
+`;
 ```
 
 ```css
-.D{margin-top:auto}
-.C{margin-right:auto}
-.A{margin-bottom:auto}
-.B{margin-left:auto}
+.D {
+  margin-top: auto;
+}
+.C {
+  margin-right: auto;
+}
+.A {
+  margin-bottom: auto;
+}
+.B {
+  margin-left: auto;
+}
 ```
 
 `border` (which sets 12 longhands), shorthands whose values aren't known until runtime (values with `var()`, `env()`, or `attr()`), and shorthands set to a CSS-wide keyword (`font: inherit`, `margin: initial`) are kept as one class. They're written before longhands, so a longhand still wins:
 
 ```js
-css`padding: var(--space); padding-top: 0;`;
+css`
+  padding: var(--space);
+  padding-top: 0;
+`;
 ```
 
 Expanding means some shorthands produce many classes. For example, `font` also resets the `font-variant-*` properties, among others, so it becomes about 20 classes. The CSS file barely grows, because the classes are shared across your project, but class strings get longer.
@@ -492,13 +549,13 @@ Options every tool that reads your styles has to agree on (the bundler plugin, a
 }
 ```
 
-| Option         | Default                                           | Description |
-| -------------- | ------------------------------------------------- | ----------- |
-| `include`      | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html,astro}` | Globs of the files with blocks, relative to the `package.json`. A glob or an array of them. Scanned before a build to assign names; stylesheet files are found from the scanned files' imports. `node_modules` and the output directory are always skipped. |
-| `exclude`      |                                                   | Globs removed from `include`. |
-| `prependFiles` |                                                   | Files added to the start of the app's blocks and stylesheet files. See [Sharing values with prepended files](#sharing-values-with-prepended-files). |
+| Option         | Default                                           | Description                                                                                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `include`      | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html,astro}` | Globs of the files with blocks, relative to the `package.json`. A glob or an array of them. Scanned before a build to assign names; stylesheet files are found from the scanned files' imports. `node_modules` and the output directory are always skipped.  |
+| `exclude`      |                                                   | Globs removed from `include`.                                                                                                                                                                                                                                |
+| `prependFiles` |                                                   | Files added to the start of the app's blocks and stylesheet files. See [Sharing values with prepended files](#sharing-values-with-prepended-files).                                                                                                          |
 | `libraries`    |                                                   | Component libraries to compile, by package name, in addition to dependencies with a `pre.style` field. A config replaces the package's field, `true` uses the defaults, and `false` leaves the package out. See [Component libraries](#component-libraries). |
-| `quirksMode`   | `false`                                           | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode). |
+| `quirksMode`   | `false`                                           | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode).                                                                                                               |
 
 The plugin warns about keys it doesn't know, and fails the build on values of the wrong type. For completion and validation in your editor, `@pre.style/core` includes a JSON Schema for the field, at `node_modules/@pre.style/core/package.schema.json`. In VS Code, add it to your settings:
 
@@ -509,7 +566,9 @@ The plugin warns about keys it doesn't know, and fails the build on values of th
       "fileMatch": ["package.json"],
       "schema": {
         "properties": {
-          "pre.style": { "$ref": "./node_modules/@pre.style/core/package.schema.json" }
+          "pre.style": {
+            "$ref": "./node_modules/@pre.style/core/package.schema.json"
+          }
         }
       }
     }
@@ -525,22 +584,22 @@ Options about how a build writes its output go to the plugin. All options are op
 preStyle({
   lightningcss: { minify: true, targets: { safari: 16 << 16 } },
   sourceMap: true,
-  quotes: 'single-quote',
+  quotes: "single-quote",
   output: {
-    file: 'css/pre.style.css',
-    banner: '/* Generated by pre.style */',
+    file: "css/pre.style.css",
+    banner: "/* Generated by pre.style */",
   },
 });
 ```
 
-| Option         | Default                                           | Description |
-| -------------- | ------------------------------------------------- | ----------- |
-| `lightningcss` |                                                   | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before pre.style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored. |
-| `sourceMap`    | `false`                                           | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre.style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
-| `quotes`       | `'double-quote'`                                  | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`. |
-| `output.file`  | `'pre.style.css'`                                  | Path and name of the CSS file, relative to Vite's `build.outDir`. |
-| `output.banner`|                                                   | Text added to the start of the CSS file. |
-| `output.footer`|                                                   | Text added to the end of the CSS file. |
+| Option          | Default           | Description                                                                                                                                                                                                                                                                                                                                        |
+| --------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lightningcss`  |                   | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before pre.style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored.                                                                   |
+| `sourceMap`     | `false`           | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre.style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
+| `quotes`        | `'double-quote'`  | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`.                                                                                                                                                                                                                                |
+| `output.file`   | `'pre.style.css'` | Path and name of the CSS file, relative to Vite's `build.outDir`.                                                                                                                                                                                                                                                                                  |
+| `output.banner` |                   | Text added to the start of the CSS file.                                                                                                                                                                                                                                                                                                           |
+| `output.footer` |                   | Text added to the end of the CSS file.                                                                                                                                                                                                                                                                                                             |
 
 The CSS isn't minified unless you set `lightningcss: { minify: true }`.
 
@@ -591,10 +650,10 @@ The build fails, with the file, line, and column, when:
 
 ## Packages
 
-| Package                 | Description                                            |
-| ----------------------- | ------------------------------------------------------ |
-| `@pre.style/core`             | `css`, `scss`, and `cn`, the compiler at `@pre.style/core/compiler` for bundler plugins, TypeScript's content mapper for stylesheet files, and the JSON Schema for the `package.json` field. |
-| `@pre.style/vite` | The Vite plugin.                                       |
+| Package           | Description                                                                                                                                                                                  |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@pre.style/core` | `css`, `scss`, and `cn`, the compiler at `@pre.style/core/compiler` for bundler plugins, TypeScript's content mapper for stylesheet files, and the JSON Schema for the `package.json` field. |
+| `@pre.style/vite` | The Vite plugin.                                                                                                                                                                             |
 
 ## Development
 
