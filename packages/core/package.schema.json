@@ -29,12 +29,14 @@
           "type": "object",
           "properties": {
             "css": {
+              "description": "Files added to the start of every css block and .css stylesheet file.",
               "type": "array",
               "items": {
                 "type": "string"
               }
             },
             "scss": {
+              "description": "Files added to the start of every scss block and .scss stylesheet file.",
               "type": "array",
               "items": {
                 "type": "string"
@@ -64,6 +66,7 @@
   },
   "anyOf": [
     {
+      "type": "boolean",
       "const": true,
       "description": "A component library compiled with the default settings."
     },
