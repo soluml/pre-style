@@ -1,0 +1,41 @@
+// A stylesheet file, imported with `with { type: 'pre.style' }`. Each class
+// is compiled like an scss block and exported with its class string, and the
+// library's prepended tokens and mixins work here too.
+.badge {
+  align-items: center;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-muted);
+  display: inline-flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: calc(var(--space) * 1.5);
+  padding: calc(var(--space) * 0.5) calc(var(--space) * 2.5);
+
+  @include md {
+    font-size: 0.8125rem;
+  }
+}
+
+// `composes` builds on `badge`. Its own declarations replace the ones they
+// conflict with, so the accent badge has one `color` class, not two.
+.accent {
+  composes: badge;
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.dot {
+  background-color: currentColor;
+  border-radius: 50%;
+  height: 0.5em;
+  opacity: 0.5;
+  width: 0.5em;
+}
+
+// `badge` is context here, so its class string gets a marker class that
+// this selector uses.
+.badge:hover .dot {
+  opacity: 1;
+}

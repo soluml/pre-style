@@ -1,0 +1,24 @@
+.button {
+  color: red;
+
+  &:hover {
+    color: blue;
+  }
+}
+
+.primary-button {
+  composes: button;
+  color: green;
+}
+
+.card {
+  padding-top: 1rem;
+}
+
+.card:hover .title {
+  color: purple;
+}
+
+.unused {
+  letter-spacing: 1px;
+}

@@ -5,5 +5,6 @@
     "customConditions": ["pre.style-source"]
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
-  "exclude": ["test/fixtures/library/**"]
+  // Named imports from stylesheet files need TypeScript 7.1's content mapper.
+  "exclude": ["test/fixtures/library/**", "test/fixtures/sheets/**"]
 }

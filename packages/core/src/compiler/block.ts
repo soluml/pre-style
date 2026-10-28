@@ -54,9 +54,19 @@ export interface GlobalRule {
   position: Position | null;
 }
 
+// A `composes` declaration: classes from the same stylesheet, from another
+// stylesheet file (a path as written, relative to the file it's in), or
+// global class names, included as they are.
+export interface Compose {
+  names: string[];
+  from: { type: 'local' } | { type: 'global' } | { type: 'file'; path: string };
+  position: Position | null;
+}
+
 export interface ParsedBlock {
   atoms: Atom[];
   globals: GlobalRule[];
+  composes: Compose[];
 }
 
 export class PreStyleError extends Error {
@@ -71,8 +81,12 @@ export class PreStyleError extends Error {
 export interface SassCompiler {
   compileString(
     source: string,
-    options?: { logger?: { warn?(message: string): void; debug?(message: string): void } },
-  ): { css: string };
+    options?: {
+      // Relative loads resolve from this file.
+      url?: URL;
+      logger?: { warn?(message: string): void; debug?(message: string): void };
+    },
+  ): { css: string; loadedUrls?: URL[] };
 }
 
 export interface ParseOptions {
@@ -86,7 +100,8 @@ export interface ParseOptions {
 
 // JSON keys used to deduplicate. Locations are left out, so identical rules
 // from different places share a key.
-const key = (value: unknown) => JSON.stringify(value, (k, v) => (k === 'loc' ? undefined : v));
+export const key = (value: unknown) =>
+  JSON.stringify(value, (k, v) => (k === 'loc' ? undefined : v));
 
 const HOIST_ORDER: Record<string, number> = { charset: 0, layer: 1, import: 2, namespace: 3 };
 
@@ -171,46 +186,60 @@ export function parseBlock(code: string, lang: Lang, options: ParseOptions): Par
     }
   }
 
-  const parsed: ParsedBlock = { atoms: [], globals: [] };
+  const parsed: ParsedBlock = { atoms: [], globals: [], composes: [] };
   // Sass output positions don't match the block, so scss atoms have none.
   const position = (loc: { line: number; column: number } | undefined) =>
     lang === 'css' && loc ? toBlock(loc.line, loc.column) : null;
 
-  // Collected on exit, after the user's visitor has changed the rules.
-  const collect = {
+  parseRules(css, options.lightningcss, position, (rules) =>
+    walk(rules, [], null, parsed, position),
+  );
+
+  return {
+    atoms: dropOverridden(parsed.atoms),
+    globals: parsed.globals,
+    composes: parsed.composes,
+  };
+}
+
+// Parses CSS with Lightning CSS, and passes its rules to `collect` once the
+// user's visitor has changed them. `position` converts error locations.
+export function parseRules(
+  css: string,
+  lightningcss: LightningOptions,
+  position: ToPosition,
+  collect: (rules: Rule[]) => void,
+): void {
+  const exit = {
     StyleSheetExit(sheet: { rules: Rule[] }) {
-      walk(sheet.rules, [], null, parsed, position);
+      collect(sheet.rules);
     },
   };
-  const { visitor, ...rest } = options.lightningcss;
-
+  const { visitor, ...rest } = lightningcss;
   try {
     transform({
       ...rest,
       filename: 'block.css',
       code: Buffer.from(css),
-      visitor: visitor ? composeVisitors([visitor, collect as never]) : (collect as never),
+      visitor: visitor ? composeVisitors([visitor, exit as never]) : (exit as never),
     });
   } catch (error) {
+    if (error instanceof PreStyleError) throw error;
     const loc = (error as { loc?: { line: number; column: number } }).loc;
     // Lightning CSS reports error lines from 1.
     throw new PreStyleError(
       `Invalid CSS: ${(error as Error).message}`,
-      lang === 'css' && loc ? toBlock(loc.line - 1, loc.column) : null,
-      {
-        cause: error,
-      },
+      loc ? position({ line: loc.line - 1, column: loc.column }) : null,
+      { cause: error },
     );
   }
-
-  return { atoms: dropOverridden(parsed.atoms), globals: parsed.globals };
 }
 
 // Within a block, a later declaration overrides an earlier one that sets the
 // same property under the same at-rules and selector variant, as in CSS.
 // `!important` declarations are collected after normal ones in each rule,
 // so they win. Identical atoms are kept once.
-function dropOverridden(atoms: Atom[]): Atom[] {
+export function dropOverridden(atoms: Atom[]): Atom[] {
   const seen = new Set<string>();
   const kept: Atom[] = [];
   for (let i = atoms.length - 1; i >= 0; i--) {
@@ -225,7 +254,7 @@ function dropOverridden(atoms: Atom[]): Atom[] {
   return kept.toReversed();
 }
 
-type ToPosition = (loc: { line: number; column: number } | undefined) => Position | null;
+export type ToPosition = (loc: { line: number; column: number } | undefined) => Position | null;
 
 // Every rule but `ignored` has a value.
 export const valueOf = (rule: Rule): Record<string, any> =>
@@ -234,8 +263,9 @@ export const valueOf = (rule: Rule): Record<string, any> =>
 const ruleLoc = (rule: Rule): { line: number; column: number } | undefined => valueOf(rule).loc;
 
 // Walks the rules. `variant` is the element's selector variant when inside a
-// rule that targets the element, and null outside one.
-function walk(
+// rule that targets the element, and null outside one. Without the
+// placeholder, every rule is global.
+export function walk(
   rules: Rule[],
   atRules: AtRuleSegment[],
   variant: SelectorList | null,
@@ -247,7 +277,7 @@ function walk(
       const { selectors, declarations, rules: children = [], loc } = rule.value;
       if (variant !== null) {
         const composed = compose(variant, selectors);
-        addDeclarations(declarations, atRules, composed, parsed, position(loc));
+        addDeclarations(declarations, atRules, composed, parsed.atoms, null, position(loc));
         walk(children, atRules, composed, parsed, position);
         continue;
       }
@@ -263,18 +293,27 @@ function walk(
         addGlobal(
           { ...rule, value: { ...rule.value, selectors: other } },
           atRules,
-          parsed,
+          parsed.globals,
           position,
         );
       if (element.length > 0) {
-        addDeclarations(declarations, atRules, element, parsed, position(loc));
+        // `composes` only works directly in the block, outside at-rules.
+        const composes = atRules.length === 0 && isElement(element) ? parsed.composes : null;
+        addDeclarations(declarations, atRules, element, parsed.atoms, composes, position(loc));
         walk(children, atRules, element, parsed, position);
       }
       continue;
     }
 
     if (rule.type === 'nested-declarations' && variant !== null) {
-      addDeclarations(rule.value.declarations, atRules, variant, parsed, position(rule.value.loc));
+      addDeclarations(
+        rule.value.declarations,
+        atRules,
+        variant,
+        parsed.atoms,
+        null,
+        position(rule.value.loc),
+      );
       continue;
     }
 
@@ -288,15 +327,25 @@ function walk(
       continue;
     }
 
-    addGlobal(rule, atRules, parsed, position);
+    addGlobal(rule, atRules, parsed.globals, position);
   }
 }
 
-function addDeclarations(
+const COMPOSES_PLACEMENT =
+  "`composes` must come before the rule's other declarations, and can't be used inside nested selectors or at-rules.";
+
+const isComposes = (declaration: Declaration) =>
+  declaration.property === 'unparsed' && declaration.value.propertyId.property === 'composes';
+
+// Adds a rule's declarations as atoms. `composes` declarations are added to
+// `composes` when it's given, and are an error where it isn't (inside
+// nested selectors and at-rules).
+export function addDeclarations(
   block: { declarations?: Declaration[]; importantDeclarations?: Declaration[] } | undefined,
   atRules: AtRuleSegment[],
   selectors: SelectorList,
-  parsed: ParsedBlock,
+  atoms: Atom[],
+  composes: Compose[] | null,
   position: Position | null,
 ) {
   let variant: Atom['variant'] = null;
@@ -304,11 +353,23 @@ function addDeclarations(
     const repaired = repair(selectors);
     variant = { key: key(repaired), selectors: repaired };
   }
+  if (block?.importantDeclarations?.some(isComposes))
+    throw new PreStyleError("`composes` can't be `!important`.", position);
+  let normal = block?.declarations ?? [];
+  // As in CSS Modules, `composes` comes before the rule's other declarations.
+  const leading = normal.findIndex((d) => !isComposes(d));
+  const own = leading === -1 ? normal.length : leading;
+  if (normal.slice(own).some(isComposes)) throw new PreStyleError(COMPOSES_PLACEMENT, position);
+  if (own > 0) {
+    if (composes === null) throw new PreStyleError(COMPOSES_PLACEMENT, position);
+    for (const d of normal.slice(0, own)) composes.push(parseComposes(d, position));
+    normal = normal.slice(own);
+  }
   const add = (declarations: Declaration[] = [], important: boolean) => {
     for (const declaration of declarations) {
       for (const value of expand(declaration)) {
         const { property, shorthand } = propertyOf(value);
-        parsed.atoms.push({
+        atoms.push({
           atRules,
           variant,
           declaration: { key: key(value) + (important ? '!' : ''), value, important },
@@ -319,15 +380,46 @@ function addDeclarations(
       }
     }
   };
-  add(block?.declarations, false);
+  add(normal, false);
   add(block?.importantDeclarations, true);
 }
 
+const ident = (t: { type: string; value?: any } | undefined) =>
+  t?.type === 'token' && t.value.type === 'ident' ? (t.value.value as string) : null;
+
+// Reads `composes: a b`, `composes: a from './file.css'`, or
+// `composes: a from global`.
+function parseComposes(declaration: Declaration, position: Position | null): Compose {
+  const tokens = (declaration.value as { value: { type: string; value?: any }[] }).value.filter(
+    (t) => !(t.type === 'token' && t.value.type === 'white-space'),
+  );
+  const invalid = () =>
+    new PreStyleError(
+      'Invalid `composes`. Use `composes: a b;`, `composes: a from "./file.css";`, or `composes: a from global;`.',
+      position,
+    );
+  const names: string[] = [];
+  let i = 0;
+  for (; i < tokens.length; i++) {
+    const name = ident(tokens[i]);
+    if (name === null || name === 'from') break;
+    names.push(name);
+  }
+  if (names.length === 0) throw invalid();
+  if (i === tokens.length) return { names, from: { type: 'local' }, position };
+  if (ident(tokens[i]) !== 'from' || tokens.length !== i + 2) throw invalid();
+  const source = tokens[i + 1];
+  if (ident(source) === 'global') return { names, from: { type: 'global' }, position };
+  if (source.type === 'token' && source.value.type === 'string')
+    return { names, from: { type: 'file', path: source.value.value }, position };
+  throw invalid();
+}
+
 // Global rules inside at-rules keep their at-rules around them.
-function addGlobal(
+export function addGlobal(
   rule: Rule,
   atRules: AtRuleSegment[],
-  parsed: ParsedBlock,
+  globals: GlobalRule[],
   position: ToPosition,
 ) {
   let wrapped = rule;
@@ -339,7 +431,7 @@ function addGlobal(
   }
   const info = atRules.length === 0 ? atRuleInfo(rule.type) : atRuleInfo('');
   wrapped = repair(wrapped);
-  parsed.globals.push({
+  globals.push({
     key: key(wrapped),
     rule: wrapped,
     hoist: info.hoist,

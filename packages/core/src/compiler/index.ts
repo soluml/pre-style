@@ -1,5 +1,17 @@
 export { Compiler, createCompiler } from './compiler.ts';
-export type { Block, CompilerOptions, Library, PrependFiles } from './compiler.ts';
+export type {
+  Block,
+  CompiledStylesheet,
+  CompilerOptions,
+  Library,
+  PrependFiles,
+  Stylesheet,
+} from './compiler.ts';
 export { PreStyleError } from './block.ts';
 export type { Lang, LightningOptions, Position } from './block.ts';
 export type { Printed } from './print.ts';
+export { checkField, readConfig } from './config.ts';
+export type { PackageConfig } from './config.ts';
+export { findLibraries } from './libraries.ts';
+export type { LibraryConfig, ResolvedLibrary } from './libraries.ts';
+export { isIdentifier } from './stylesheet.ts';

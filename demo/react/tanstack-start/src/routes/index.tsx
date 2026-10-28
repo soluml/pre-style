@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { css } from '@pre.style/core';
-import { Button } from 'pre.style-demo-react-ui';
+import { Badge, Button } from 'pre.style-demo-react-ui';
 
 export const Route = createFileRoute('/')({
   head: () => ({ meta: [{ title: 'Basics · pre.style demo' }] }),
@@ -108,7 +108,8 @@ function Home() {
           margin-top: calc(var(--space) * 8);
         `}
       >
-        <Button className={arrow}>A button with an ::after</Button>
+        <Button className={arrow}>A button with an ::after</Button>{' '}
+        <Badge tone="accent">Styled from a .scss file</Badge>
       </p>
     </>
   );

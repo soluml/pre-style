@@ -1,6 +1,6 @@
 {
   "name": "@pre.style/core",
-  "version": "3.0.0-alpha.0",
+  "version": "3.1.0-alpha.0",
   "description": "Zero-runtime CSS-in-JS that compiles css and scss blocks into atomic CSS classes.",
   "keywords": [
     "atomic-css",
@@ -27,7 +27,8 @@
     "directory": "packages/core"
   },
   "files": [
-    "dist"
+    "dist",
+    "package.schema.json"
   ],
   "type": "module",
   "exports": {
@@ -40,7 +41,8 @@
       "pre.style-source": "./src/compiler/index.ts",
       "types": "./dist/compiler/index.d.ts",
       "default": "./dist/compiler/index.js"
-    }
+    },
+    "./package.schema.json": "./package.schema.json"
   },
   "publishConfig": {
     "access": "public",
@@ -70,6 +72,16 @@
     },
     "sass": {
       "optional": true
+    }
+  },
+  "typescript": {
+    "contentMapper": {
+      "compilerOptions": [],
+      "dynamicConfig": true,
+      "exec": [
+        "node",
+        "dist/compiler/mapper.js"
+      ]
     }
   },
   "engines": {
