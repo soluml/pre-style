@@ -79,9 +79,10 @@ const isSheet = (attributes: Attribute[] | undefined) =>
   (attributes[0].key.name ?? attributes[0].key.value) === 'type' &&
   attributes[0].value.value === 'pre.style';
 
-// Text that marks a stylesheet import, for files that aren't parsed.
+// Text that marks a stylesheet import, for files that aren't parsed,
+// including imports without bindings (`import './reset.css' with …`).
 export const SHEET_IMPORT =
-  /\bfrom\s*(['"])([^'"]+)\1\s*with\s*\{\s*type\s*:\s*(['"])pre\.style\3\s*,?\s*\}/g;
+  /\b(?:from|import)\s*(['"])([^'"]+)\1\s*with\s*\{\s*type\s*:\s*(['"])pre\.style\3\s*,?\s*\}/g;
 
 // Converts offsets to lines and columns, from 1.
 function locator(code: string) {

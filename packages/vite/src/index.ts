@@ -140,6 +140,9 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
   // `output.file`. Astro, for one, imports it only in its server
   // environments, which it builds before the client.
   let cssImported = false;
+  // The compiler's revision when this build environment loaded the CSS
+  // module, whose contents are fixed then.
+  let cssRevision: number | undefined;
   // HTML files already warned about a missing doctype.
   const warnedDoctype = new Set<string>();
   // For each file a module's class strings depend on (through `composes`
@@ -180,6 +183,19 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
         if (environment.config.consumer === 'client') void environment.reloadModule(module);
       }
     }
+  };
+
+  // Rules added after the CSS module loaded would be missing from the
+  // build, so they're an error. They come from files the scan didn't find.
+  const checkLate = (
+    context: { error(e: { message: string; id?: string }): never },
+    file: string,
+  ) => {
+    if (cssRevision === undefined || compiler.revision === cssRevision) return;
+    context.error({
+      message: `${relative(config.root, file)} added styles after the CSS was generated, so they would be missing from the build. pre.style finds styles when the build starts: import stylesheet files with static imports, and include the file in the "include" globs of the "pre.style" field in your package.json.`,
+      id: file,
+    });
   };
 
   // The output CSS with the banner and footer, and its source map (when
@@ -267,6 +283,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
     } catch (error) {
       return fail(context, error, file);
     }
+    checkLate(context, file);
 
     // In dev, the CSS is a module that each file with blocks imports, so
     // it loads after the file's classes are known.
@@ -336,6 +353,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       // same names.
       compiler = await create();
       table = undefined;
+      cssRevision = undefined;
 
       // The app's files, then each library's, as absolute paths.
       const files = new Set<string>();
@@ -426,6 +444,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
         } catch (error) {
           return fail(this, error, file);
         }
+        checkLate(this, file);
         track(this, [file, ...compiled.dependencies], id);
         let code = sheetModule(compiled.exports);
         if (config.command !== 'build') {
@@ -438,7 +457,10 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
         return `import { createCn } from '@pre.style/core';\nexport const cn = /* @__PURE__ */ createCn(${JSON.stringify(current().table)});\n`;
       }
       if (id === RESOLVED_CSS_ID) {
-        if (config.command === 'build') cssImported = true;
+        if (config.command === 'build') {
+          cssImported = true;
+          cssRevision = compiler.revision;
+        }
         // Vite combines this map with its own, for the browser in dev and for
         // the bundled CSS in builds (with `build.sourcemap`).
         const { code, map } = outputCss();

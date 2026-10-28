@@ -277,8 +277,8 @@ describe('Astro components', () => {
       };
     },
   };
-  const astroConfig = (options: PreStyleOptions = {}): InlineConfig => {
-    const base = config('astro', options);
+  const astroConfig = (options: PreStyleOptions = {}, name = 'astro'): InlineConfig => {
+    const base = config(name, options);
     return { ...base, plugins: [...base.plugins!, astro] };
   };
   const card = `${fixture('astro')}/src/Card.astro`;
@@ -300,6 +300,30 @@ describe('Astro components', () => {
     assert.match(js, /document\.body\.className = "C";/);
     assert.match(js, /document\.body\.dataset\.both = "A";/);
     assert.doesNotMatch(js, /css`/);
+  });
+
+  // The component imports the CSS module itself, so it can load before the
+  // stylesheet file, and the scan must find the file.
+  test('scans stylesheet files imported only for their global rules', async () => {
+    const result = (await build(
+      astroConfig({ lightningcss: { minify: true } }, 'astro-reset'),
+    )) as Rollup.RollupOutput;
+    const css = result.output
+      .filter((item) => item.fileName.endsWith('.css'))
+      .map((item) => String((item as Rollup.OutputAsset).source))
+      .join('');
+    assert.match(css, /box-sizing:border-box/);
+  });
+
+  // Excluded from the scan, `late.ts` imports `late.css`, which loads after
+  // the CSS module that `Layout.astro` imports beside it.
+  test("styles from files the scan didn't find are an error, not left out", async () => {
+    await withField('astro-reset', { exclude: '**/late.ts' }, () =>
+      assert.rejects(
+        build(astroConfig({}, 'astro-reset')),
+        /src\/late\.css added styles after the CSS was generated/,
+      ),
+    );
   });
 
   test("errors report the position in the component, not Astro's output", async () => {

@@ -6,5 +6,9 @@
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
   // Named imports from stylesheet files need TypeScript 7.1's content mapper.
-  "exclude": ["test/fixtures/library/**", "test/fixtures/sheets/**"]
+  "exclude": [
+    "test/fixtures/astro-reset/src/late.ts",
+    "test/fixtures/library/**",
+    "test/fixtures/sheets/**"
+  ]
 }
