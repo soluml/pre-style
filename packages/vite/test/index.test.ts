@@ -318,7 +318,7 @@ describe('Astro components', () => {
   // Excluded from the scan, `late.ts` imports `late.css`, which loads after
   // the CSS module that `Layout.astro` imports beside it.
   test("styles from files the scan didn't find are an error, not left out", async () => {
-    await withField('astro-reset', { exclude: '**/late.ts' }, () =>
+    await withField('astro-reset', { exclude: 'src/late.ts' }, () =>
       assert.rejects(
         build(astroConfig({}, 'astro-reset')),
         /src\/late\.css added styles after the CSS was generated/,

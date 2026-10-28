@@ -1,5 +1,5 @@
 import { readFile, glob } from 'node:fs/promises';
-import { matchesGlob, relative, resolve, sep } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import { MagicString } from 'magic-string';
 import { createCn } from '@pre.style/core';
 import type { CnTable } from '@pre.style/core';
@@ -358,12 +358,9 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       // The app's files, then each library's, as absolute paths.
       const files = new Set<string>();
       const add = async (cwd: string, include: string[], exclude: string[]) => {
-        for await (const file of glob(include, {
-          cwd,
-          exclude: (path) => exclude.some((pattern) => matchesGlob(path, pattern)),
-        })) {
-          files.add(resolve(cwd, file));
-        }
+        // As patterns, not a function: Node passes a function only each
+        // entry's name, not its path from `cwd`.
+        for await (const file of glob(include, { cwd, exclude })) files.add(resolve(cwd, file));
       };
       const outDir = `${relative(app.dir, resolve(config.root, config.build.outDir))}/**`;
       const { include, exclude } = app.config;
