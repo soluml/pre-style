@@ -13,17 +13,16 @@ interface Props {
 const { title, description } = Astro.props;
 
 const body = scss`
+  --bg-grid-color: rgb(0 0 0 / .135);
   --bg-grid-gap: 40px;
-
-  $gridColor: rgb(0 0 0 / .035);
-  $gridStops: $gridColor 0px, $gridColor 1px, transparent 1px, transparent var(--bg-grid-gap);
+  $gridStops: var(--bg-grid-color) 0px, var(--bg-grid-color) 1px, transparent 1px, transparent var(--bg-grid-gap);
 
   background-color: #da5b06;
   background-image:    
     repeating-linear-gradient(to bottom, $gridStops),
     repeating-linear-gradient(to right, $gridStops),
     linear-gradient(165deg, oklch(100% 0.24 77), oklch(92% 0.41 64));
-  background-position: top;
+  background-position: top, left;
   color: rgb(0 0 0 / 0.85);
   display: flex;
   flex-direction: column;
@@ -32,6 +31,24 @@ const body = scss`
   margin: 0;
   min-height: 100%;
   width: 100%;
+
+  // &::before {
+  //   animation: fadeInOut 1.06s ease-in-out infinite;
+  //   background-color: color-mix(in srgb, var(--bg-grid-color), black 15%);
+  //   position: absolute;
+  //   content: '';
+  //   left: 0;
+  //   top: var(--bg-grid-gap);
+  //   height: 3px;
+  //   transform: translateY(-50%);
+  //   width: calc(var(--bg-grid-gap) / 2);
+  // }
+
+  // @keyframes fadeInOut {
+  //   0%, 40% { opacity: 1; }
+  //   50%, 90% { opacity: 0; }
+  //   100% { opacity: 1; }
+  // }
 `;
 ---
 

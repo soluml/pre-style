@@ -25,6 +25,7 @@
   "pre.style": {
     "include": [
       "src/**/*.{ts,tsx,astro}"
-    ]
+    ],
+    "keyframeLocalization": true
   }
 }
