@@ -1,0 +1,52 @@
+{
+  "name": "pre-style",
+  "displayName": "pre.style",
+  "version": "3.1.0",
+  "private": true,
+  "description": "Editor support for pre.style: validation and completion for the pre.style field in package.json.",
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "atomic-css",
+    "css",
+    "css-in-js",
+    "pre.style",
+    "scss",
+    "zero-runtime"
+  ],
+  "homepage": "https://pre.style",
+  "bugs": {
+    "url": "https://github.com/soluml/pre.style/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Benjamin Solum",
+    "email": "benjamin@soluml.com",
+    "url": "https://soluml.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soluml/pre.style/",
+    "directory": "packages/vscode"
+  },
+  "publisher": "pre-style",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-schema.ts",
+    "typecheck": "tsc",
+    "test": "node --test \"test/**/*.test.ts\""
+  },
+  "contributes": {
+    "jsonValidation": [
+      {
+        "fileMatch": "package.json",
+        "url": "./dist/package.json.schema.json"
+      }
+    ]
+  },
+  "engines": {
+    "node": ">=24",
+    "vscode": "^1.95.0"
+  }
+}

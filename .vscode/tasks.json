@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build pre.style extension",
+      "type": "npm",
+      "script": "build",
+      "path": "packages/vscode",
+      "problemMatcher": []
+    }
+  ]
+}
