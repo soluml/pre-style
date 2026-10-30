@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json.schemastore.org/tmlanguage.json",
+  "name": "pre.style blocks",
+  "scopeName": "source.pre-style",
+  "patterns": [
+    {
+      "include": "#blocks"
+    }
+  ],
+  "repository": {
+    "blocks": {
+      "patterns": [
+        {
+          "include": "#css-block"
+        },
+        {
+          "include": "#scss-block"
+        }
+      ]
+    },
+    "css-block": {
+      "begin": "(?<![\\w$.])(css)\\s*(`)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.function.tagged-template.js"
+        },
+        "2": {
+          "name": "string.template.js punctuation.definition.string.template.begin.js"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "string.template.js punctuation.definition.string.template.end.js"
+        }
+      },
+      "contentName": "meta.embedded.block.pre-style.css source.css",
+      "patterns": [
+        {
+          "include": "#css-property-value"
+        },
+        {
+          "include": "source.css#rule-list-innards"
+        },
+        {
+          "include": "source.css"
+        }
+      ]
+    },
+    "css-property-value": {
+      "comment": "source.css's value rule, but also ended by the closing backtick, so a last declaration without a semicolon doesn't run past the block.",
+      "begin": "(:)\\s*",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.separator.key-value.css"
+        }
+      },
+      "end": "\\s*(;)|\\s*(?=}|\\)|`)",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.terminator.rule.css"
+        }
+      },
+      "contentName": "meta.property-value.css",
+      "patterns": [
+        {
+          "include": "source.css#comment-block"
+        },
+        {
+          "include": "source.css#property-values"
+        }
+      ]
+    },
+    "scss-block": {
+      "begin": "(?<![\\w$.])(scss)\\s*(`)",
+      "beginCaptures": {
+        "1": {
+          "name": "entity.name.function.tagged-template.js"
+        },
+        "2": {
+          "name": "string.template.js punctuation.definition.string.template.begin.js"
+        }
+      },
+      "end": "`",
+      "endCaptures": {
+        "0": {
+          "name": "string.template.js punctuation.definition.string.template.end.js"
+        }
+      },
+      "contentName": "meta.embedded.block.pre-style.scss source.css.scss",
+      "patterns": [
+        {
+          "include": "#scss-variable-setting"
+        },
+        {
+          "include": "source.css.scss#flow_control"
+        },
+        {
+          "include": "source.css.scss#rules"
+        },
+        {
+          "include": "#scss-property-value"
+        },
+        {
+          "include": "source.css.scss#properties"
+        },
+        {
+          "include": "source.css.scss"
+        }
+      ]
+    },
+    "scss-variable-setting": {
+      "comment": "source.css.scss's variable_setting, but also ended by the closing backtick.",
+      "begin": "(?=\\$[\\w-]+\\s*:)",
+      "end": ";|(?=`)",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.terminator.rule.scss"
+        }
+      },
+      "contentName": "meta.definition.variable.scss",
+      "patterns": [
+        {
+          "match": "\\$[\\w-]+(?=\\s*:)",
+          "name": "variable.scss"
+        },
+        {
+          "begin": ":",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.separator.key-value.scss"
+            }
+          },
+          "end": "(?=;|`)",
+          "patterns": [
+            {
+              "include": "source.css.scss#comment_docblock"
+            },
+            {
+              "include": "source.css.scss#comment_block"
+            },
+            {
+              "include": "source.css.scss#comment_line"
+            },
+            {
+              "include": "source.css.scss#map"
+            },
+            {
+              "include": "source.css.scss#property_values"
+            },
+            {
+              "include": "source.css.scss#variable"
+            },
+            {
+              "match": ",",
+              "name": "punctuation.separator.delimiter.scss"
+            }
+          ]
+        }
+      ]
+    },
+    "scss-property-value": {
+      "comment": "The value rule from source.css.scss's properties, but also ended by the closing backtick.",
+      "begin": "(:)\\s*(?!(\\s*{))",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.separator.key-value.scss"
+        }
+      },
+      "end": "\\s*(;|(?=}|\\)|`))",
+      "endCaptures": {
+        "1": {
+          "name": "punctuation.terminator.rule.scss"
+        }
+      },
+      "contentName": "meta.property-value.scss",
+      "patterns": [
+        {
+          "include": "source.css.scss#general"
+        },
+        {
+          "include": "source.css.scss#property_values"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json.schemastore.org/tmlanguage.json",
+  "name": "pre.style blocks in JavaScript and TypeScript",
+  "scopeName": "inline.pre-style.js",
+  "injectionSelector": "L:source.js -comment -string -meta.embedded.block.pre-style, L:source.js.jsx -comment -string -meta.embedded.block.pre-style, L:source.ts -comment -string -meta.embedded.block.pre-style, L:source.tsx -comment -string -meta.embedded.block.pre-style",
+  "patterns": [{ "include": "source.pre-style#blocks" }]
+}
