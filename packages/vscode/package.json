@@ -34,17 +34,22 @@
   "files": [
     "dist/extension.cjs",
     "dist/package.json.schema.json",
-    "syntaxes"
+    "images/icon.png",
+    "syntaxes",
+    "LICENSE"
   ],
   "type": "module",
   "main": "./dist/extension.cjs",
   "scripts": {
     "build": "node scripts/build.ts",
     "typecheck": "tsc",
-    "test": "node --test \"test/**/*.test.ts\""
+    "test": "node --test \"test/**/*.test.ts\"",
+    "vscode:prepublish": "npm run build",
+    "package": "cp ../../LICENSE . && vsce package --no-dependencies --out pre-style.vsix; s=$?; rm LICENSE; exit $s"
   },
   "devDependencies": {
     "@types/vscode": "~1.95.0",
+    "@vscode/vsce": "^4.1.0",
     "esbuild": "^0.28.2",
     "jsonc-parser": "^3.3.1",
     "tm-grammars": "^1.32.22",
@@ -109,6 +114,7 @@
     "onLanguage:typescript",
     "onLanguage:typescriptreact"
   ],
+  "icon": "images/icon.png",
   "engines": {
     "node": ">=24",
     "vscode": "^1.95.0"

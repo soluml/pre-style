@@ -12,3 +12,8 @@ dist
 # Copied into each package by prepack, removed by postpack
 packages/*/README.md
 packages/*/LICENSE
+# The VS Code extension has its own README
+!packages/vscode/README.md
+
+# Packaged VS Code extension
+*.vsix

@@ -25,6 +25,7 @@
     "demo:astro": "npm run dev -w demo/astro",
     "demo:astro:build": "npm run build -w demo/astro",
     "demo:astro:start": "npm run start -w demo/astro",
+    "vscode:package": "npm run package -w packages/vscode",
     "www": "npm run dev --prefix src/www",
     "www:build": "npm run build --prefix src/www"
   },
