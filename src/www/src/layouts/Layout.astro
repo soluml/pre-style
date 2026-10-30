@@ -13,8 +13,10 @@ interface Props {
 const { title, description } = Astro.props;
 
 const body = scss`
+  --bg-grid-gap: 40px;
+
   $gridColor: rgb(0 0 0 / .035);
-  $gridStops: $gridColor 0px, $gridColor 1px, transparent 1px, transparent 40px;
+  $gridStops: $gridColor 0px, $gridColor 1px, transparent 1px, transparent var(--bg-grid-gap);
 
   background-color: #da5b06;
   background-image:    
