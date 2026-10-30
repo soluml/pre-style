@@ -3,7 +3,7 @@
   "displayName": "pre.style",
   "version": "3.1.0",
   "private": true,
-  "description": "Editor support for pre.style: color coding in css and scss blocks, and validation and completion for the pre.style field in package.json.",
+  "description": "Editor support for pre.style: color coding and CSS completion in css and scss blocks, and validation and completion for the pre.style field in package.json.",
   "categories": [
     "Programming Languages"
   ],
@@ -32,17 +32,23 @@
   },
   "publisher": "pre-style",
   "files": [
-    "dist",
+    "dist/extension.cjs",
+    "dist/package.json.schema.json",
     "syntaxes"
   ],
   "type": "module",
+  "main": "./dist/extension.cjs",
   "scripts": {
-    "build": "node scripts/build-schema.ts",
+    "build": "node scripts/build.ts",
     "typecheck": "tsc",
     "test": "node --test \"test/**/*.test.ts\""
   },
   "devDependencies": {
+    "@types/vscode": "~1.95.0",
+    "esbuild": "^0.28.2",
     "tm-grammars": "^1.32.22",
+    "vscode-css-languageservice": "^6.3.10",
+    "vscode-languageserver-textdocument": "^1.0.16",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.3.2"
   },
@@ -87,6 +93,14 @@
       }
     ]
   },
+  "activationEvents": [
+    "onLanguage:astro",
+    "onLanguage:html",
+    "onLanguage:javascript",
+    "onLanguage:javascriptreact",
+    "onLanguage:typescript",
+    "onLanguage:typescriptreact"
+  ],
   "engines": {
     "node": ">=24",
     "vscode": "^1.95.0"
