@@ -22,6 +22,7 @@ import type {
   Position,
   ToPosition,
 } from './block.ts';
+import { localizeKeyframes } from './keyframes.ts';
 import { compose, isElement } from './selectors.ts';
 
 // Classes used as context for another class (`.card:hover .title`), or in a
@@ -229,6 +230,12 @@ export function parseStylesheet(
   }
 
   for (const target of classes.values()) target.atoms = dropOverridden(target.atoms);
+  // Keyframes are local to the whole file, as in CSS Modules.
+  if (options.keyframeLocalization) {
+    const local = localizeKeyframes(parsed.globals);
+    parsed.globals = local.globals;
+    for (const target of classes.values()) target.atoms = local.atoms(target.atoms);
+  }
   return parsed;
 }
 

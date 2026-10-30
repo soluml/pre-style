@@ -198,6 +198,16 @@ css`
 `;
 ```
 
+#### Local keyframes
+
+By default, keyframes names are global, so two blocks that each define a different `@keyframes spin` collide, and the last one wins everywhere. Set `"keyframeLocalization": true` in your `package.json`'s `pre.style` field to give each `@keyframes` a generated name, as styled-components' `keyframes` helper does:
+
+- A block's or stylesheet file's `@keyframes` get a short generated name, and its `animation` and `animation-name` declarations use it. In a stylesheet file, every class in the file shares the file's keyframes, as in CSS Modules.
+- Keyframes with the same contents get the same name wherever they're defined, so they're written once.
+- Keyframes from [prepended files](#sharing-values-with-prepended-files) are localized too. Every block gets the same copy, so prepended files are the way to share keyframes between blocks.
+- Names a block or file doesn't define are left as they are, so `animation-name: spin` still refers to a global `@keyframes spin`, for example one in a CSS file that pre.style doesn't process. That also means a block can't use keyframes another block defines.
+- Names in custom properties (`--anim: spin`) aren't renamed, because pre.style can't tell they name keyframes.
+
 ### `composes` in blocks
 
 A block can build on classes from a [stylesheet file](#stylesheet-files), or on global class names, with `composes`, as in CSS Modules:
@@ -455,11 +465,12 @@ A library's class names depend on the whole app, so they differ between apps. Do
 }
 ```
 
-| Field          | Default                      | Description                                                                                                                                                                                                                                 |
-| -------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `include`      | Every JS, TS, and Astro file | Globs of the files with blocks, relative to the package. A glob or an array of them. Stylesheet files the library imports are found from its imports.                                                                                       |
-| `exclude`      |                              | Globs removed from `include`.                                                                                                                                                                                                               |
-| `prependFiles` |                              | Files added to the start of the library's blocks and stylesheet files, relative to the package. They apply only to the library's, not the app's, so the library's tokens and mixins are always available to it and never leak into the app. |
+| Field                  | Default                      | Description                                                                                                                                                                                                                                       |
+| ---------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `include`              | Every JS, TS, and Astro file | Globs of the files with blocks, relative to the package. A glob or an array of them. Stylesheet files the library imports are found from its imports.                                                                                             |
+| `exclude`              |                              | Globs removed from `include`.                                                                                                                                                                                                                     |
+| `prependFiles`         |                              | Files added to the start of the library's blocks and stylesheet files, relative to the package. They apply only to the library's, not the app's, so the library's tokens and mixins are always available to it and never leak into the app.       |
+| `keyframeLocalization` | `false`                      | Give each `@keyframes` in the library's blocks and stylesheet files a generated name. See [Local keyframes](#local-keyframes). The library's setting applies to its blocks, whatever the app sets, since the library's styles are written for it. |
 
 `"pre.style": true` uses the defaults. A library's field uses the same name and shape as an app's (see [Configuration](#configuration)). `libraries` and `quirksMode` only apply to the app, so in a library's field they're ignored, with a warning. A package that is both, such as a library with its own demo app, is read as the app when it's the Vite root, and as a library when it's a dependency.
 
@@ -517,7 +528,7 @@ Expanding means some shorthands produce many classes. For example, `font` also r
 
 Within one block, a later declaration overrides an earlier one, as in plain CSS. Across blocks, the CSS file is ordered so the usual rules hold:
 
-1. Hoisted at-rules (`@layer` statements, `@import`, `@namespace`), then other copied at-rules.
+1. Hoisted at-rules (`@layer` statements, `@import`, `@namespace`), then other copied at-rules. With the `layer` option, everything but `@import` and `@namespace` is inside the layer.
 2. Classes on the element.
 3. Selector variants, with pseudo-classes in LVHFA order (`:link`, `:visited`, `:hover`, `:focus`, `:active`).
 4. At-rule groups. `@media` queries with only a `min-width` come last, smallest first (mobile-first).
@@ -549,13 +560,14 @@ Options every tool that reads your styles has to agree on (the bundler plugin, a
 }
 ```
 
-| Option         | Default                                           | Description                                                                                                                                                                                                                                                  |
-| -------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `include`      | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html,astro}` | Globs of the files with blocks, relative to the `package.json`. A glob or an array of them. Scanned before a build to assign names; stylesheet files are found from the scanned files' imports. `node_modules` and the output directory are always skipped.  |
-| `exclude`      |                                                   | Globs removed from `include`.                                                                                                                                                                                                                                |
-| `prependFiles` |                                                   | Files added to the start of the app's blocks and stylesheet files. See [Sharing values with prepended files](#sharing-values-with-prepended-files).                                                                                                          |
-| `libraries`    |                                                   | Component libraries to compile, by package name, in addition to dependencies with a `pre.style` field. A config replaces the package's field, `true` uses the defaults, and `false` leaves the package out. See [Component libraries](#component-libraries). |
-| `quirksMode`   | `false`                                           | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode).                                                                                                               |
+| Option                 | Default                                           | Description                                                                                                                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `include`              | `**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,html,astro}` | Globs of the files with blocks, relative to the `package.json`. A glob or an array of them. Scanned before a build to assign names; stylesheet files are found from the scanned files' imports. `node_modules` and the output directory are always skipped.  |
+| `exclude`              |                                                   | Globs removed from `include`.                                                                                                                                                                                                                                |
+| `prependFiles`         |                                                   | Files added to the start of the app's blocks and stylesheet files. See [Sharing values with prepended files](#sharing-values-with-prepended-files).                                                                                                          |
+| `libraries`            |                                                   | Component libraries to compile, by package name, in addition to dependencies with a `pre.style` field. A config replaces the package's field, `true` uses the defaults, and `false` leaves the package out. See [Component libraries](#component-libraries). |
+| `quirksMode`           | `false`                                           | **You probably don't want this.** Use lowercase class names only, for pages in quirks mode. Names get longer. See [Quirks mode](#quirks-mode).                                                                                                               |
+| `keyframeLocalization` | `false`                                           | Give each `@keyframes` in the app's blocks and stylesheet files a generated name, used only in the block or file that defines it. See [Local keyframes](#local-keyframes). Libraries use their own setting.                                                  |
 
 The plugin warns about keys it doesn't know, and fails the build on values of the wrong type. For completion and validation in your editor, `@pre.style/core` includes a JSON Schema for the field, at `node_modules/@pre.style/core/package.schema.json`. In VS Code, add it to your settings:
 
@@ -584,6 +596,7 @@ Options about how a build writes its output go to the plugin. All options are op
 preStyle({
   lightningcss: { minify: true, targets: { safari: 16 << 16 } },
   sourceMap: true,
+  layer: "pre.style",
   quotes: "single-quote",
   output: {
     file: "css/pre.style.css",
@@ -592,14 +605,15 @@ preStyle({
 });
 ```
 
-| Option          | Default           | Description                                                                                                                                                                                                                                                                                                                                        |
-| --------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lightningcss`  |                   | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before pre.style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored.                                                                   |
-| `sourceMap`     | `false`           | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`). In builds, it's written next to `output.file`. When you import `virtual:pre.style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS. |
-| `quotes`        | `'double-quote'`  | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`.                                                                                                                                                                                                                                |
-| `output.file`   | `'pre.style.css'` | Path and name of the CSS file, relative to Vite's `build.outDir`.                                                                                                                                                                                                                                                                                  |
-| `output.banner` |                   | Text added to the start of the CSS file.                                                                                                                                                                                                                                                                                                           |
-| `output.footer` |                   | Text added to the end of the CSS file.                                                                                                                                                                                                                                                                                                             |
+| Option          | Default                          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lightningcss`  |                                  | [Lightning CSS options](https://lightningcss.dev/transforms.html), such as `minify`, `targets`, `drafts`, and `visitor`. A `visitor` runs before pre.style processes each block. `filename`, `code`, `sourceMap`, `projectRoot`, `inputSourceMap`, and `cssModules` are ignored.                                                                                                                                                                                             |
+| `sourceMap`     | `true` in dev, `false` in builds | Generate a source map for the CSS, mapping each class to the first block it appears in. In dev, it's shown in the browser (the plugin turns on Vite's `css.devSourcemap`, unless you set it). In builds, it's written next to `output.file`. When you import `virtual:pre.style.css`, builds have no CSS source map, because Vite doesn't write them for bundled CSS.                                                                                                        |
+| `layer`         | `false`                          | Wrap the CSS in a [cascade layer](https://developer.mozilla.org/docs/Web/CSS/@layer): `false` for none, `""` for an unnamed layer, or the layer's name, such as `"pre.style"` or `"vendor.pre-style"`. `@import` and `@namespace` rules stay before the layer, since they can't be inside one. `@layer` rules from blocks become layers nested in it. Browsers without cascade layers (Chrome before 99, Safari before 15.4, Firefox before 97) ignore everything inside it. |
+| `quotes`        | `'double-quote'`                 | Quotes around the class string that replaces each block in JS: `'single-quote'`, `'double-quote'`, or `'backtick'`.                                                                                                                                                                                                                                                                                                                                                          |
+| `output.file`   | `'pre.style.css'`                | Path and name of the CSS file, relative to Vite's `build.outDir`.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `output.banner` |                                  | Text added to the start of the CSS file.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `output.footer` |                                  | Text added to the end of the CSS file.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 The CSS isn't minified unless you set `lightningcss: { minify: true }`.
 

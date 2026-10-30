@@ -27,13 +27,18 @@ import type { FoundBlock, FoundImport, ScriptAnalysis, SheetClass } from './find
 export type { LibraryConfig, PackageConfig };
 
 // Options about how the build writes its output. Options every tool must
-// agree on (`include`, `exclude`, `prependFiles`, `libraries`, and
-// `quirksMode`) are set in the `pre.style` field of the app's package.json.
+// agree on (`include`, `exclude`, `prependFiles`, `libraries`,
+// `quirksMode`, and `keyframeLocalization`) are set in the `pre.style` field
+// of the app's package.json.
 export interface PreStyleOptions {
   // Options passed through to Lightning CSS.
   lightningcss?: LightningOptions;
-  // Generate a source map for the output CSS.
+  // Generate a source map for the output CSS. Defaults to on in dev and off
+  // in builds.
   sourceMap?: boolean;
+  // Wrap the output CSS in a cascade layer: `false` (the default) for none,
+  // `''` for an unnamed layer, or the layer's name.
+  layer?: false | string;
   // Quote character around the class string that replaces each block.
   quotes?: 'single-quote' | 'double-quote' | 'backtick';
   output?: {
@@ -301,7 +306,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
     name: 'pre.style',
     enforce: 'pre',
 
-    config(userConfig) {
+    config(userConfig, env) {
       cssImported = false;
       const read = readConfig(resolve(userConfig.root ?? process.cwd()));
       app = read;
@@ -313,7 +318,7 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       return {
         // Vite only passes CSS source maps to the browser in dev with
         // `css.devSourcemap`, so `sourceMap` turns it on unless it's set.
-        ...(options.sourceMap &&
+        ...((options.sourceMap ?? env.command === 'serve') &&
           userConfig.css?.devSourcemap === undefined && { css: { devSourcemap: true } }),
         // Libraries are compiled from their source: not pre-bundled in dev,
         // and not left for Node to load on the server, so their blocks reach
@@ -337,12 +342,18 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
       const create = () =>
         createCompiler({
           prependFiles: app.config.prependFiles,
-          libraries: libraries.map(({ dir, prependFiles }) => ({ dir, prependFiles })),
+          libraries: libraries.map(({ dir, prependFiles, keyframeLocalization }) => ({
+            dir,
+            prependFiles,
+            keyframeLocalization,
+          })),
           lightningcss: options.lightningcss,
-          sourceMap: options.sourceMap,
+          sourceMap: options.sourceMap ?? config.command !== 'build',
           root: app.dir,
           warn: (message) => config.logger.warn(`[pre.style] ${message}`),
           quirksMode: app.config.quirksMode,
+          keyframeLocalization: app.config.keyframeLocalization,
+          layer: options.layer,
         });
       // Dev names blocks on demand, as they're served.
       if (config.command !== 'build') {

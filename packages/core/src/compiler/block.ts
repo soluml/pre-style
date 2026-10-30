@@ -8,6 +8,7 @@ import type {
 } from 'lightningcss';
 import { atRuleInfo } from './at-rules.ts';
 import { expand } from './expand.ts';
+import { localizeKeyframes } from './keyframes.ts';
 import { compose, fromPlaceholder, isElement, PLACEHOLDER, repair } from './selectors.ts';
 import { splitBlock } from './split.ts';
 import { SHORTHANDS } from '../shorthands.ts';
@@ -96,6 +97,9 @@ export interface ParseOptions {
   sass: SassCompiler | null;
   // Receives Sass warnings and `@debug` messages.
   warn: (message: string) => void;
+  // Give each `@keyframes` a generated name, used only in its own block or
+  // stylesheet file.
+  keyframeLocalization: boolean;
 }
 
 // JSON keys used to deduplicate. Locations are left out, so identical rules
@@ -195,11 +199,11 @@ export function parseBlock(code: string, lang: Lang, options: ParseOptions): Par
     walk(rules, [], null, parsed, position),
   );
 
-  return {
-    atoms: dropOverridden(parsed.atoms),
-    globals: parsed.globals,
-    composes: parsed.composes,
-  };
+  const atoms = dropOverridden(parsed.atoms);
+  if (!options.keyframeLocalization)
+    return { atoms, globals: parsed.globals, composes: parsed.composes };
+  const local = localizeKeyframes(parsed.globals);
+  return { atoms: local.atoms(atoms), globals: local.globals, composes: parsed.composes };
 }
 
 // Parses CSS with Lightning CSS, and passes its rules to `collect` once the
@@ -441,11 +445,12 @@ export function addGlobal(
 }
 
 // The identity of an overridable at-rule: its type and name.
-function overrideKey(rule: Rule): string {
+export function overrideKey(rule: Rule): string {
   const value = valueOf(rule);
   switch (rule.type) {
     case 'keyframes':
-      return `keyframes ${key(value.name)}`;
+      // `@-webkit-keyframes x` doesn't replace `@keyframes x`.
+      return `keyframes ${key(value.vendorPrefix ?? [])} ${key(value.name)}`;
     case 'font-face': {
       // A font face is identified by its family, style, weight, and stretch.
       const descriptors = Object.fromEntries(

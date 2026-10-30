@@ -13,6 +13,9 @@ export interface LibraryConfig {
   exclude?: string | string[];
   // Prepended to the library's blocks only. Relative to the package.
   prependFiles?: PrependFiles;
+  // Localize the library's keyframes. The app's setting doesn't apply to
+  // libraries, since a library's styles are written for its own.
+  keyframeLocalization?: boolean;
 }
 
 export interface ResolvedLibrary {
@@ -22,11 +25,12 @@ export interface ResolvedLibrary {
   include: string[];
   exclude: string[];
   prependFiles?: PrependFiles;
+  keyframeLocalization?: boolean;
 }
 
 // Keys a library's field shares with the app's. `libraries` and
 // `quirksMode` only apply to the app.
-const SHARED_KEYS = new Set(['include', 'exclude', 'prependFiles']);
+const SHARED_KEYS = new Set(['include', 'exclude', 'prependFiles', 'keyframeLocalization']);
 const APP_KEYS = new Set(['libraries', 'quirksMode']);
 
 const DEFAULT_INCLUDE = ['**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts,astro}'];
@@ -85,13 +89,14 @@ export function findLibraries(
       ))
         warn(warning);
     }
-    const { include, exclude, prependFiles } = config === true ? {} : config;
+    const { include, exclude, prependFiles, keyframeLocalization } = config === true ? {} : config;
     libraries.push({
       name,
       dir,
       include: include === undefined ? DEFAULT_INCLUDE : [include].flat(),
       exclude: exclude === undefined ? [] : [exclude].flat(),
       prependFiles,
+      keyframeLocalization,
     });
     // A library's peer dependencies are installed by the app, and found the
     // same way from the library.

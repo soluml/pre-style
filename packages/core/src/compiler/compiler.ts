@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { dirname, relative, resolve as resolvePath, sep } from 'node:path';
+import { transform } from 'lightningcss';
 import type { Rule, SelectorList } from 'lightningcss';
 import SweatMap from 'sweatmap';
 import { dropOverridden, parseBlock, PreStyleError, valueOf } from './block.ts';
@@ -18,6 +19,7 @@ import type {
 import { print } from './print.ts';
 import type { Printed } from './print.ts';
 import { lvhfaRank, withClass } from './selectors.ts';
+import { KEYFRAMES_PREFIX } from './keyframes.ts';
 import { MARKER_PREFIX, markerKey, parseStylesheet } from './stylesheet.ts';
 import type { ParsedStylesheet } from './stylesheet.ts';
 import type { CnTable } from '../cn.ts';
@@ -32,6 +34,8 @@ export interface Library {
   // Prepended to the library's blocks only, instead of the app's
   // `prependFiles`. Relative to `dir`.
   prependFiles?: PrependFiles;
+  // Localize the library's keyframes, instead of the app's setting.
+  keyframeLocalization?: boolean;
 }
 
 export interface CompilerOptions {
@@ -49,6 +53,12 @@ export interface CompilerOptions {
   // Lowercase class names only, for pages in quirks mode, where class
   // selectors ignore case. Names get longer.
   quirksMode?: boolean;
+  // Give each `@keyframes` in the app's blocks and stylesheet files a
+  // generated name, used only in its own block or file.
+  keyframeLocalization?: boolean;
+  // Wrap the output in a cascade layer: `false` for none, `''` for an
+  // unnamed layer, or the layer's name.
+  layer?: false | string;
 }
 
 export interface Block {
@@ -146,21 +156,33 @@ export async function createCompiler(options: CompilerOptions = {}): Promise<Com
 }
 
 export class Compiler {
-  readonly #parseOptions: Omit<ParseOptions, 'prepend'>;
+  readonly #parseOptions: Omit<ParseOptions, 'prepend' | 'keyframeLocalization'>;
   readonly #options: CompilerOptions;
   // Prepended code for the app's blocks, and for each library's, with the
   // most deeply nested library first.
   readonly #prepend: Record<Lang, string>;
-  readonly #libraries: { dir: string; prepend: Record<Lang, string> }[];
+  readonly #libraries: {
+    dir: string;
+    prepend: Record<Lang, string>;
+    keyframeLocalization: boolean;
+  }[];
+  // The layer the output is wrapped in, as parsed, or null for none.
+  readonly #layer: Rule | null;
   readonly #blocks = new Map<string, ParsedBlock>();
   readonly #stylesheets = new Map<string, ParsedStylesheet>();
   readonly #root: string;
 
-  // One name list for every class, and one for prefixes (the at-rules and
-  // selector variant a class is under), which only the `cn` table uses.
-  readonly #names: { atoms: SweatMap; prefixes: SweatMap };
-  // How often each class and prefix is used across scanned blocks.
-  readonly #counts = { atoms: new Map<string, number>(), prefixes: new Map<string, number>() };
+  // One name list for every class, one for prefixes (the at-rules and
+  // selector variant a class is under), which only the `cn` table uses, and
+  // one for localized keyframes.
+  readonly #names: { atoms: SweatMap; prefixes: SweatMap; keyframes: SweatMap };
+  // How often each class, prefix, and localized keyframes is used across
+  // scanned blocks.
+  readonly #counts = {
+    atoms: new Map<string, number>(),
+    prefixes: new Map<string, number>(),
+    keyframes: new Map<string, number>(),
+  };
 
   readonly #atoms = new Map<string, AtomRecord>();
   readonly #globals = new Map<string, GlobalRecord>();
@@ -173,14 +195,23 @@ export class Compiler {
     this.#names = {
       atoms: new SweatMap(options.quirksMode ? QUIRKS_NAME_OPTIONS : NAME_OPTIONS),
       prefixes: new SweatMap(NAME_OPTIONS),
+      // Keyframes names are case-sensitive, even in quirks mode. They reach
+      // four characters only after about 227,000 names, so they're never
+      // `none` or a CSS-wide keyword.
+      keyframes: new SweatMap(NAME_OPTIONS),
     };
+    this.#layer = layerRule(options.layer);
     const root = options.root ?? process.cwd();
     this.#root = root;
     this.#prepend = readPrepend(root, options.prependFiles);
     this.#libraries = (options.libraries ?? [])
       .map((library) => {
         const dir = resolvePath(root, library.dir);
-        return { dir: dir + sep, prepend: readPrepend(dir, library.prependFiles) };
+        return {
+          dir: dir + sep,
+          prepend: readPrepend(dir, library.prependFiles),
+          keyframeLocalization: library.keyframeLocalization ?? false,
+        };
       })
       .toSorted((a, b) => b.dir.length - a.dir.length);
     this.#parseOptions = {
@@ -202,6 +233,7 @@ export class Compiler {
     const parsed = this.#parse(block);
     this.#register(block, parsed);
     this.#count(this.#resolveBlock(block, parsed, []));
+    for (const global of parsed.globals) this.#countKeyframes(global.key);
   }
 
   // Pass 1 of naming for a stylesheet file: counts what each class uses.
@@ -209,12 +241,13 @@ export class Compiler {
     const parsed = this.#parseSheet(sheet);
     for (const name of parsed.classes.keys())
       this.#count(this.#resolveClass(sheet.file, parsed, name, [], []));
+    for (const global of parsed.globals) this.#countKeyframes(global.key);
   }
 
   // Pass 2 of naming: gives the most-used entries the shortest names. Ties
   // are broken by key, so names don't depend on the order files are read.
   assignNames(): void {
-    for (const list of ['atoms', 'prefixes'] as const) {
+    for (const list of ['atoms', 'prefixes', 'keyframes'] as const) {
       const sorted = [...this.#counts[list]].toSorted(
         ([a, countA], [b, countB]) => countB - countA || (a < b ? -1 : a > b ? 1 : 0),
       );
@@ -241,14 +274,14 @@ export class Compiler {
   // anything, for tools that only need the names (such as the TypeScript
   // content mapper).
   classNames(sheet: Stylesheet): string[] {
-    const { prepend } = this.#library(sheet.file);
+    const { options } = this.#library(sheet.file);
     try {
       const parsed = parseStylesheet(
         sheet.code,
         sheet.lang,
         sheet.file,
         relative(this.#root, sheet.file),
-        { ...this.#parseOptions, prepend },
+        options,
       );
       return [...parsed.classes.keys()];
     } catch (error) {
@@ -284,13 +317,30 @@ export class Compiler {
       .filter((g) => g.global.hoist !== false)
       .toSorted((a, b) => (a.global.hoist as number) - (b.global.hoist as number));
     const rest = globals.filter((g) => g.global.hoist === false);
-    const rules: Rule[] = [...hoisted, ...rest].map((g) =>
+    const named = (g: GlobalRecord) =>
       withLoc(
-        g.global.key.includes(MARKER_KEY) ? this.#named(g.global.rule) : g.global.rule,
+        hasPlaceholder(g.global.key) ? this.#named(g.global.rule) : g.global.rule,
         loc(g.source),
-      ),
-    );
+      );
+    let rules: Rule[] = [...hoisted, ...rest].map(named);
     rules.push(...this.#atomRules(loc));
+
+    // `@import` and `@namespace` can't be inside a layer, so they stay
+    // before it. `@layer` statements go inside, so the layers they order
+    // are the same ones blocks' `@layer` rules add to.
+    if (this.#layer !== null) {
+      rules = [
+        ...rules.filter(outside),
+        {
+          type: 'layer-block',
+          value: {
+            ...valueOf(this.#layer),
+            rules: rules.filter((r) => !outside(r)),
+            loc: loc(null),
+          },
+        } as Rule,
+      ];
+    }
 
     return print(rules, sources, this.#parseOptions.lightningcss, this.#options.sourceMap ?? false);
   }
@@ -309,21 +359,32 @@ export class Compiler {
     return table;
   }
 
-  // A library's blocks and files get its prepended files instead of the
-  // app's.
-  #library(file: string | undefined) {
+  // A library's blocks and files get its prepended files and keyframes
+  // setting instead of the app's.
+  #library(file: string | undefined): { library: number; options: ParseOptions } {
     const library =
       file === undefined ? -1 : this.#libraries.findIndex(({ dir }) => file.startsWith(dir));
-    return { library, prepend: library === -1 ? this.#prepend : this.#libraries[library].prepend };
+    const { prepend, keyframeLocalization } =
+      library === -1
+        ? { prepend: this.#prepend, keyframeLocalization: this.#options.keyframeLocalization }
+        : this.#libraries[library];
+    return {
+      library,
+      options: {
+        ...this.#parseOptions,
+        prepend,
+        keyframeLocalization: keyframeLocalization ?? false,
+      },
+    };
   }
 
   #parse(block: Block): ParsedBlock {
-    const { library, prepend } = this.#library(block.file);
+    const { library, options } = this.#library(block.file);
     const cacheKey = `${library}\n${block.lang}\n${block.code}`;
     let parsed = this.#blocks.get(cacheKey);
     if (parsed === undefined) {
       try {
-        parsed = parseBlock(block.code, block.lang, { ...this.#parseOptions, prepend });
+        parsed = parseBlock(block.code, block.lang, options);
       } catch (error) {
         throw error instanceof PreStyleError ? locate(error, block) : error;
       }
@@ -335,7 +396,7 @@ export class Compiler {
   // Parses a stylesheet file and registers its classes and global rules, so
   // the output includes them once the file is used.
   #parseSheet(sheet: Stylesheet): ParsedStylesheet {
-    const { library, prepend } = this.#library(sheet.file);
+    const { library, options } = this.#library(sheet.file);
     const cacheKey = `${library}\n${sheet.lang}\n${sheet.file}\n${sheet.code}`;
     let parsed = this.#stylesheets.get(cacheKey);
     if (parsed === undefined) {
@@ -345,10 +406,7 @@ export class Compiler {
           sheet.lang,
           sheet.file,
           relative(this.#root, sheet.file),
-          {
-            ...this.#parseOptions,
-            prepend,
-          },
+          options,
         );
       } catch (error) {
         throw error instanceof PreStyleError ? locate(error, fileBlock(sheet.file)) : error;
@@ -465,6 +523,7 @@ export class Compiler {
       count(this.#counts.atoms, atomKey(atom));
       const prefix = prefixKey(atom);
       if (prefix !== '') count(this.#counts.prefixes, prefix);
+      this.#countKeyframes(atom.declaration.key);
     }
     for (const extra of resolved.extras)
       if (extra.startsWith(MARKER_PREFIX)) count(this.#counts.atoms, extra);
@@ -477,7 +536,15 @@ export class Compiler {
     return [...new Set(names)].join(' ');
   }
 
-  // Replaces markers in selectors with their names.
+  // Counts the localized keyframes a JSON key names.
+  #countKeyframes(json: string) {
+    if (!json.includes(KEYFRAMES_KEY)) return;
+    for (const [, hash] of json.matchAll(KEYFRAMES_KEY_RE))
+      count(this.#counts.keyframes, KEYFRAMES_PREFIX + hash);
+  }
+
+  // Replaces markers in selectors, and localized keyframes names, with their
+  // names.
   #named<T>(value: T): T {
     const visit = (node: unknown): unknown => {
       if (Array.isArray(node)) return node.map(visit);
@@ -489,6 +556,12 @@ export class Compiler {
         record.name.startsWith(MARKER_PREFIX)
       )
         return { ...record, name: this.#names.atoms.set(record.name) };
+      if (
+        record.type === 'ident' &&
+        typeof record.value === 'string' &&
+        record.value.startsWith(KEYFRAMES_PREFIX)
+      )
+        return { ...record, value: this.#names.keyframes.set(record.value) };
       return Object.fromEntries(Object.entries(record).map(([k, v]) => [k, visit(v)]));
     };
     return visit(value) as T;
@@ -550,9 +623,12 @@ export class Compiler {
           ? withClass(atom.variant.selectors, className)
           : [[{ type: 'class', name: className }]];
         if (atom.variant?.key.includes(MARKER_KEY)) selectors = this.#named(selectors);
+        const value = atom.declaration.key.includes(KEYFRAMES_KEY)
+          ? this.#named(atom.declaration.value)
+          : atom.declaration.value;
         const declarations = atom.declaration.important
-          ? { importantDeclarations: [atom.declaration.value] }
-          : { declarations: [atom.declaration.value] };
+          ? { importantDeclarations: [value] }
+          : { declarations: [value] };
         return {
           type: 'style',
           value: { selectors, declarations, rules: [], loc: loc(source) },
@@ -577,8 +653,43 @@ interface Group {
   children: Map<string, Group>;
 }
 
-// Markers as they appear in JSON keys, which escape the `\0`.
+// Markers and localized keyframes names as they appear in JSON keys, which
+// escape the `\0`.
 const MARKER_KEY = JSON.stringify(MARKER_PREFIX).slice(1, -1);
+const KEYFRAMES_KEY = JSON.stringify(KEYFRAMES_PREFIX).slice(1, -1);
+const KEYFRAMES_KEY_RE = new RegExp(`${RegExp.escape(KEYFRAMES_KEY)}([\\w-]+)`, 'g');
+
+// Rules that can't be inside a layer.
+const outside = (rule: Rule) => rule.type === 'import' || rule.type === 'namespace';
+
+const hasPlaceholder = (json: string) => json.includes(MARKER_KEY) || json.includes(KEYFRAMES_KEY);
+
+// Parses the `layer` option into an `@layer` block rule.
+function layerRule(layer: false | string | undefined): Rule | null {
+  if (layer === undefined || layer === false) return null;
+  if (typeof layer !== 'string')
+    throw new PreStyleError('`layer` must be `false` or a string.', null);
+  let rule: Rule | undefined;
+  try {
+    transform({
+      filename: 'layer.css',
+      code: Buffer.from(`@layer ${layer} {}`),
+      visitor: {
+        StyleSheetExit(sheet) {
+          if (sheet.rules.length === 1) rule = sheet.rules[0];
+        },
+      },
+    });
+  } catch {
+    // Reported below.
+  }
+  if (rule?.type !== 'layer-block' || (layer.trim() === '') !== (rule.value.name == null))
+    throw new PreStyleError(
+      `\`layer\` must be a layer name, such as "pre.style" or "base.components", or "" for an unnamed layer. Got ${JSON.stringify(layer)}.`,
+      null,
+    );
+  return rule;
+}
 
 // A stylesheet file, for positions and source maps.
 const fileBlock = (file: string): Block => ({ code: '', lang: 'css', file, line: 1, column: 1 });

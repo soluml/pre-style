@@ -146,6 +146,29 @@ describe('build', () => {
     assert.ok(map.mappings.startsWith(';;'));
   });
 
+  test('builds have no source map by default', async () => {
+    const files = await buildFixture('basic');
+    assert.equal(files.has('pre.style.css.map'), false);
+    assert.doesNotMatch(files.get('pre.style.css')!, /sourceMappingURL/);
+  });
+
+  test('the layer option wraps the CSS in a cascade layer', async () => {
+    const files = await buildFixture('basic', {
+      layer: 'pre.style',
+      lightningcss: { minify: true },
+      output: { banner: '/* banner */' },
+    });
+    // The banner stays outside the layer.
+    assert.match(
+      files.get('pre.style.css')!,
+      /^\/\* banner \*\/\n@layer pre\.style\{\.[A-Za-z]+\{/,
+    );
+  });
+
+  test('an invalid layer name fails the build', async () => {
+    await assert.rejects(buildFixture('basic', { layer: 'a b' }), /`layer` must be a layer name/);
+  });
+
   test('prependFiles in package.json applies to scss blocks, and other imports from pre.style are kept', async () => {
     const files = await buildFixture('prepend', { lightningcss: { minify: true } });
     assert.equal(files.get('pre.style.css'), '.A{color:#639}');
@@ -457,6 +480,30 @@ describe('package.json config', () => {
       withField('basic', { quirksMode: 'yes' }, () => buildFixture('basic')),
       /`quirksMode` must be `true` or `false`/,
     );
+    await assert.rejects(
+      withField('basic', { keyframeLocalization: 1 }, () => buildFixture('basic')),
+      /`keyframeLocalization` must be `true` or `false`/,
+    );
+  });
+
+  test('keyframeLocalization in package.json gives keyframes generated names', async () => {
+    const main = `${fixture('basic')}/src/main.ts`;
+    const original = readFileSync(main, 'utf8');
+    writeFileSync(
+      main,
+      `${original}\nexport const spinner = css\`@keyframes spin { to { rotate: 1turn } } animation-name: spin;\`;\n`,
+    );
+    try {
+      const files = await withField('basic', { keyframeLocalization: true }, () =>
+        buildFixture('basic', { lightningcss: { minify: true } }),
+      );
+      const css = files.get('pre.style.css')!;
+      const name = /@keyframes ([A-Za-z]+)\{/.exec(css)![1];
+      assert.notEqual(name, 'spin');
+      assert.match(css, new RegExp(`animation-name:${name}\\}`));
+    } finally {
+      writeFileSync(main, original);
+    }
   });
 });
 
@@ -538,9 +585,9 @@ describe('dev', () => {
     }
   });
 
-  test('with sourceMap, the CSS module maps to the blocks', async () => {
+  test('the CSS module maps to the blocks by default', async () => {
     const server = await createServer({
-      ...config('basic', { sourceMap: true }),
+      ...config('basic', {}),
       server: { middlewareMode: true, ws: false },
     });
     try {
@@ -553,6 +600,23 @@ describe('dev', () => {
       const map = JSON.parse(Buffer.from(encoded, 'base64').toString());
       assert.deepEqual(map.sources, [`${fixture('basic')}/src/main.ts`]);
       assert.match(map.sourcesContent[0], /const base = css`/);
+      // `sourceMap` turns on Vite's `css.devSourcemap`.
+      assert.equal(server.config.css.devSourcemap, true);
+    } finally {
+      await server.close();
+    }
+  });
+
+  test('sourceMap: false turns the source map off', async () => {
+    const server = await createServer({
+      ...config('basic', { sourceMap: false }),
+      server: { middlewareMode: true, ws: false },
+    });
+    try {
+      await server.transformRequest('/src/main.ts');
+      const css = await server.transformRequest('/__pre.style.css');
+      assert.doesNotMatch(css!.code, /sourceMappingURL/);
+      assert.equal(server.config.css.devSourcemap, false);
     } finally {
       await server.close();
     }
