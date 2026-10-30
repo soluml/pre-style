@@ -362,6 +362,187 @@ describe('global rules', () => {
       `,
     );
   });
+
+  test("`@-webkit-keyframes` doesn't replace `@keyframes` with the same name", async () => {
+    const { css: output } = await compile([
+      `@keyframes spin { to { rotate: 1turn } } @-webkit-keyframes spin { to { rotate: 1turn } }`,
+    ]);
+    // Lightning CSS writes the prefixed rule first.
+    assert.equal(
+      output,
+      css`
+        @-webkit-keyframes spin {
+          to{rotate:1turn}
+        }
+        @keyframes spin {
+          to{rotate:1turn}
+        }
+      `,
+    );
+  });
+});
+
+describe('keyframeLocalization option', () => {
+  const options = { keyframeLocalization: true };
+
+  test("each block's keyframes get a generated name, used in its own declarations", async () => {
+    const { classes, css: output } = await compile(
+      [
+        `@keyframes spin { to { rotate: 1turn } } animation-name: spin`,
+        `@keyframes spin { to { rotate: -1turn } } animation-name: spin`,
+      ],
+      options,
+    );
+    assert.deepEqual(classes, ['B', 'A']);
+    assert.equal(
+      output,
+      css`
+        @keyframes B {
+          to{rotate:1turn}
+        }
+        @keyframes A {
+          to{rotate:-1turn}
+        }
+        .B{animation-name:B}
+        .A{animation-name:A}
+      `,
+    );
+  });
+
+  test('identical keyframes share one name, whatever they were called', async () => {
+    const { classes, css: output } = await compile(
+      [
+        `@keyframes spin { to { rotate: 1turn } } animation-name: spin`,
+        `@keyframes turn { to { rotate: 1turn } } animation-name: turn; color: red`,
+      ],
+      options,
+    );
+    assert.deepEqual(classes, ['A', 'A B']);
+    assert.equal(
+      output,
+      css`
+        @keyframes A {
+          to{rotate:1turn}
+        }
+        .A{animation-name:A}
+        .B{color:red}
+      `,
+    );
+  });
+
+  test("names a block doesn't define are left as they are", async () => {
+    const { css: output } = await compile(
+      [`@keyframes spin { to { rotate: 1turn } }`, `animation-name: spin, fade`],
+      options,
+    );
+    assert.equal(
+      output,
+      css`
+        @keyframes A {
+          to{rotate:1turn}
+        }
+        .A{animation-name:spin,fade}
+      `,
+    );
+  });
+
+  test('shorthands, strings, var(), selector variants, and vendor prefixes are renamed', async () => {
+    const { css: output } = await compile(
+      [
+        `@keyframes spin { to { rotate: 1turn } }
+        @-webkit-keyframes spin { to { rotate: 1turn } }
+        animation: var(--duration) spin;
+        -webkit-animation-name: spin;
+        &:hover { animation-name: "spin", other }`,
+      ],
+      options,
+    );
+    assert.equal(
+      output,
+      css`
+        @-webkit-keyframes A {
+          to{rotate:1turn}
+        }
+        @keyframes A {
+          to{rotate:1turn}
+        }
+        .C{animation:var(--duration) A}
+        .B{-webkit-animation-name:A}
+        .A:hover{animation-name:A,other}
+      `,
+    );
+  });
+
+  test('scss blocks are localized after Sass compiles them', async () => {
+    const { css: output } = await compile(
+      [
+        {
+          code: `$name: spin; @keyframes #{$name} { to { rotate: 1turn } } animation-name: $name`,
+          lang: 'scss',
+        },
+      ],
+      options,
+    );
+    assert.equal(
+      output,
+      css`
+        @keyframes A {
+          to{rotate:1turn}
+        }
+        .A{animation-name:A}
+      `,
+    );
+  });
+
+  test('keyframes from prepended files are written once and shared by every block', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pre.style-'));
+    writeFileSync(join(dir, 'motion.css'), '@keyframes fade { from { opacity: 0 } }');
+    const { classes, css: output } = await compile(
+      [`animation-name: fade`, `animation-name: fade; color: red`],
+      { ...options, root: dir, prependFiles: ['motion.css'] },
+    );
+    assert.deepEqual(classes, ['A', 'A B']);
+    assert.equal(
+      output,
+      css`
+        @keyframes A {
+          0%{opacity:0}
+        }
+        .A{animation-name:A}
+        .B{color:red}
+      `,
+    );
+  });
+
+  test("libraries use their own setting, not the app's", async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'pre.style-'));
+    const block = `@keyframes spin { to { rotate: 1turn } } animation-name: spin`;
+    const blocks = [
+      { code: block, lang: 'css' as const, file: join(dir, 'src', 'App.tsx') },
+      { code: block, lang: 'css' as const, file: join(dir, 'lib', 'Spinner.js') },
+      { code: block, lang: 'css' as const, file: join(dir, 'local', 'Spinner.js') },
+    ];
+    const { css: output } = await compile(blocks, {
+      root: dir,
+      keyframeLocalization: true,
+      libraries: [{ dir: 'lib' }, { dir: 'local', keyframeLocalization: true }],
+    });
+    // The app and the library that opts in share one localized copy; the
+    // other library keeps the global name.
+    assert.equal(
+      output,
+      css`
+        @keyframes A {
+          to{rotate:1turn}
+        }
+        @keyframes spin {
+          to{rotate:1turn}
+        }
+        .A{animation-name:A}
+        .B{animation-name:spin}
+      `,
+    );
+  });
 });
 
 describe('scss blocks', () => {
@@ -520,6 +701,102 @@ describe('sourceMap option', () => {
     const compiler = await createCompiler();
     compiler.classString({ code: 'color: red', lang: 'css' });
     assert.equal(compiler.css().map, null);
+  });
+});
+
+describe('layer option', () => {
+  test('wraps the output in a named layer, with @import outside it', async () => {
+    const compiler = await createCompiler({ layer: 'pre.style' });
+    compiler.classString({
+      code: `@import url(reset.css); @layer base, theme; color: red; @layer theme { margin-top: 0 }`,
+      lang: 'css',
+    });
+    // `@layer` statements and `@layer` rules from blocks are nested in it.
+    // Lightning CSS merges the statement into the `@layer theme` rule, and
+    // writes `.A` after it, which doesn't change the cascade: styles directly
+    // in a layer win over its nested layers.
+    assert.equal(
+      compiler.css().code,
+      [
+        '@import "reset.css";',
+        '',
+        '@layer pre.style {',
+        '  @layer base;',
+        '',
+        '  @layer theme {',
+        '    .B {',
+        '      margin-top: 0;',
+        '    }',
+        '  }',
+        '',
+        '  .A {',
+        '    color: red;',
+        '  }',
+        '}',
+        '',
+      ].join('\n'),
+    );
+  });
+
+  test('an empty string wraps the output in an unnamed layer', async () => {
+    const { css: output } = await compile([`color: red`], { layer: '' });
+    assert.equal(
+      output,
+      css`
+        @layer {
+          .A{color:red}
+        }
+      `,
+    );
+  });
+
+  test('dotted names are nested layers', async () => {
+    const { css: output } = await compile([`color: red`], { layer: 'vendor.pre-style' });
+    assert.equal(
+      output,
+      css`
+        @layer vendor.pre-style {
+          .A{color:red}
+        }
+      `,
+    );
+  });
+
+  test('is off by default, and with false', async () => {
+    assert.equal((await compile([`color: red`])).css, '.A{color:red}');
+    assert.equal((await compile([`color: red`], { layer: false })).css, '.A{color:red}');
+  });
+
+  test('fails on names that are not a layer name', async () => {
+    for (const layer of ['a b', 'a, b', '1x', 'a {} .b']) {
+      await assert.rejects(
+        createCompiler({ layer }),
+        (error: unknown) =>
+          error instanceof PreStyleError &&
+          error.message.startsWith('`layer` must be a layer name'),
+      );
+    }
+  });
+
+  test('source maps still map each class to its block', async () => {
+    const compiler = await createCompiler({
+      sourceMap: true,
+      layer: 'app',
+      lightningcss: { minify: true },
+    });
+    compiler.classString({
+      code: 'color: red',
+      lang: 'css',
+      file: '/src/A.tsx',
+      line: 3,
+      column: 9,
+    });
+    const { code, map } = compiler.css();
+    assert.equal(code, '@layer app{.A{color:red}}');
+    const json = JSON.parse(map!);
+    assert.deepEqual(json.sources, ['/src/A.tsx']);
+    // `.A` (column 11) maps to line 3, column 9.
+    assert.equal(json.mappings, 'AAAA,WAEQ');
   });
 });
 

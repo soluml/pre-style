@@ -60,6 +60,10 @@
         },
         "prependFiles": {
           "$ref": "#/definitions/prependFiles"
+        },
+        "keyframeLocalization": {
+          "description": "Give each @keyframes in the library's blocks and stylesheet files a generated name, used only in the block or file that defines it, like styled-components' `keyframes`. The app's setting doesn't apply to libraries.",
+          "type": "boolean"
         }
       }
     }
@@ -83,6 +87,10 @@
         },
         "prependFiles": {
           "$ref": "#/definitions/prependFiles"
+        },
+        "keyframeLocalization": {
+          "description": "Give each @keyframes in the app's blocks and stylesheet files a generated name, used only in the block or file that defines it (including keyframes from prepended files), like styled-components' `keyframes`. Libraries use their own setting.",
+          "type": "boolean"
         },
         "libraries": {
           "description": "App only. Component libraries to compile, by package name, in addition to dependencies with a \"pre.style\" field. A config replaces the package's field, `true` uses the defaults, and `false` leaves the package out.",

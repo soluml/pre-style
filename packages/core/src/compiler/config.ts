@@ -21,9 +21,19 @@ export interface PackageConfig {
   libraries?: Record<string, LibraryConfig | boolean>;
   // Lowercase class names only, for pages in quirks mode (no doctype).
   quirksMode?: boolean;
+  // Give each `@keyframes` in the app's blocks and stylesheet files a
+  // generated name, used only in its own block or file.
+  keyframeLocalization?: boolean;
 }
 
-const KEYS = new Set(['include', 'exclude', 'prependFiles', 'libraries', 'quirksMode']);
+const KEYS = new Set([
+  'include',
+  'exclude',
+  'prependFiles',
+  'libraries',
+  'quirksMode',
+  'keyframeLocalization',
+]);
 
 const isStrings = (value: unknown) =>
   typeof value === 'string' ||
@@ -57,6 +67,8 @@ export function checkField(
     fail('prependFiles', 'an array of paths, or an object with `css` and `scss` arrays');
   if (field.quirksMode !== undefined && typeof field.quirksMode !== 'boolean')
     fail('quirksMode', '`true` or `false`');
+  if (field.keyframeLocalization !== undefined && typeof field.keyframeLocalization !== 'boolean')
+    fail('keyframeLocalization', '`true` or `false`');
   if (
     field.libraries !== undefined &&
     (field.libraries === null ||

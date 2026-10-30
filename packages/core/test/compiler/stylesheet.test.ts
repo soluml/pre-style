@@ -285,6 +285,55 @@ const fails = async (code: string, pattern: RegExp, files: Record<string, string
     return true;
   });
 
+describe('keyframeLocalization in stylesheet files', () => {
+  test('keyframes are local to the file, and every class in it uses them', async () => {
+    const { exports, css: output } = await compileSheet(
+      `
+        @keyframes spin { to { rotate: 1turn } }
+        .spinner { animation: spin 1s linear infinite; }
+        .icon:hover { animation-name: spin; }
+        .other { animation-name: fade; }
+      `,
+      { options: { keyframeLocalization: true } },
+    );
+    assert.match(output, /^@keyframes A \{\n {2}to\{rotate:1turn\}\n\}/);
+    assert.match(output, /\.[A-Za-z]+\{animation-name:A\}/);
+    assert.match(output, /\.[A-Za-z]+:hover\{animation-name:A\}/);
+    // `fade` isn't defined in the file, so it's left as it is.
+    assert.match(output, /\.[A-Za-z]+\{animation-name:fade\}/);
+    assert.doesNotMatch(output, /spin/);
+    assert.deepEqual(Object.keys(exports), ['spinner', 'icon', 'other']);
+  });
+
+  test("a file's keyframes don't rename another file's", async () => {
+    const root = project({});
+    const compiler = await createCompiler({
+      root,
+      keyframeLocalization: true,
+      lightningcss: { minify: true },
+    });
+    const a = {
+      code: '@keyframes spin { to { rotate: 1turn } } .a { animation-name: spin; }',
+      lang: 'css' as const,
+      file: join(root, 'a.css'),
+    };
+    const b = {
+      code: '@keyframes spin { to { rotate: -1turn } } .b { animation-name: spin; }',
+      lang: 'css' as const,
+      file: join(root, 'b.css'),
+    };
+    for (const sheet of [a, b]) compiler.scanStylesheet(sheet);
+    compiler.assignNames();
+    compiler.stylesheet(a);
+    compiler.stylesheet(b);
+    const output = format(compiler.css().code);
+    // Two keyframes with different names, each used by its own file's class.
+    const names = [...output.matchAll(/@keyframes (\w+)/g)].map((match) => match[1]);
+    assert.equal(new Set(names).size, 2);
+    for (const name of names) assert.match(output, new RegExp(`animation-name:${name}\\}`));
+  });
+});
+
 describe('composes', () => {
   test('composes classes from the same file, with the class’s own declarations winning', async () => {
     const { exports } = await compileSheet(`
