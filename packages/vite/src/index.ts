@@ -22,7 +22,7 @@ import type {
 } from '@pre.style/core/compiler';
 import type { EnvironmentModuleNode, Plugin, ResolvedConfig, Rollup, ViteDevServer } from 'vite';
 import { FindError, findInHtml, findInScript, locateIn, SHEET_IMPORT } from './find.ts';
-import type { FoundBlock, FoundImport, ScriptAnalysis, SheetClass } from './find.ts';
+import type { CnCall, FoundBlock, FoundImport, ScriptAnalysis, SheetClass } from './find.ts';
 
 export type { LibraryConfig, PackageConfig };
 
@@ -261,22 +261,34 @@ export default function preStyle(options: PreStyleOptions = {}): Plugin[] {
         return (await exports).get(name) ?? '';
       };
 
-      // `cn` calls with static arguments are resolved now. Blocks inside
-      // them are replaced along with the call.
+      // `cn` calls with static arguments are resolved now. Blocks written
+      // inside them are replaced along with the call; blocks and calls they
+      // name through a `const` are replaced where they're written.
       const resolved = new Set<FoundBlock>();
-      for (const call of analysis.cnCalls) {
-        if (call.args === null) continue;
-        const args: string[] = [];
-        for (const arg of call.args) {
-          if (typeof arg === 'string') args.push(arg);
-          else if ('sheet' in arg) args.push(await sheetClass(arg));
-          else {
-            args.push(classes.get(arg)!);
-            resolved.add(arg);
-          }
+      const values = new Map<CnCall, Promise<string>>();
+      const resolveCall = (call: CnCall): Promise<string> => {
+        let result = values.get(call);
+        if (result === undefined) {
+          result = (async () => {
+            const args: string[] = [];
+            for (const arg of call.args!) {
+              if (typeof arg === 'string') args.push(arg);
+              else if ('sheet' in arg) args.push(await sheetClass(arg));
+              else if ('args' in arg) args.push(await resolveCall(arg));
+              else {
+                args.push(classes.get(arg)!);
+                if (call.start <= arg.start && arg.end <= call.end) resolved.add(arg);
+              }
+            }
+            return current().cn(...args);
+          })();
+          values.set(call, result);
         }
-        s.overwrite(call.start, call.end, quoted(current().cn(...args), quote));
-      }
+        return result;
+      };
+      for (const call of analysis.cnCalls)
+        if (call.args !== null)
+          s.overwrite(call.start, call.end, quoted(await resolveCall(call), quote));
       for (const [found, value] of classes)
         if (!resolved.has(found)) s.overwrite(found.start, found.end, quoted(value, quote));
       for (const statement of analysis.imports)

@@ -47,9 +47,10 @@ export interface SheetClass {
 export interface CnCall {
   start: number;
   end: number;
-  // Static arguments: string literals, blocks, and classes imported from
-  // stylesheet files. Null when any argument isn't static.
-  args: (string | FoundBlock | SheetClass)[] | null;
+  // Static arguments: string literals, blocks, classes imported from
+  // stylesheet files, and other static `cn` calls, written in the call or
+  // through a `const`. Null when any argument isn't static.
+  args: (string | FoundBlock | SheetClass | CnCall)[] | null;
 }
 
 export interface ScriptAnalysis {
@@ -147,6 +148,93 @@ function isReference(node: Node, parent: Node | null): boolean {
   }
 }
 
+// The names a declaration's pattern binds.
+function patternNames(node: Node | null, names: string[]) {
+  if (node === null) return;
+  switch (node.type) {
+    case 'Identifier':
+      names.push(node.name);
+      break;
+    case 'ObjectPattern':
+      for (const p of node.properties as Node[])
+        patternNames(p.type === 'RestElement' ? p.argument : p.value, names);
+      break;
+    case 'ArrayPattern':
+      for (const element of node.elements as (Node | null)[]) patternNames(element, names);
+      break;
+    case 'AssignmentPattern':
+      patternNames(node.left, names);
+      break;
+    case 'RestElement':
+      patternNames(node.argument, names);
+      break;
+    case 'TSParameterProperty':
+      patternNames(node.parameter, names);
+      break;
+  }
+}
+
+// Where a declared name is visible: in the declaring node itself (a
+// function's parameters), the nearest function (`var`), or the nearest
+// block (`let`, `const`, `class`).
+type Scope = 'self' | 'function' | 'block';
+
+// The names a node declares, and where each is visible.
+function declaredNames(node: Node, parent: Node | null): [string[], Scope][] {
+  const names: string[] = [];
+  switch (node.type) {
+    case 'VariableDeclarator':
+      patternNames(node.id, names);
+      return [[names, parent?.kind === 'var' ? 'function' : 'block']];
+    case 'FunctionDeclaration':
+    case 'FunctionExpression':
+    case 'ArrowFunctionExpression': {
+      for (const param of node.params as Node[]) patternNames(param, names);
+      const id = node.id ? [node.id.name] : [];
+      return [
+        [names, 'self'],
+        [id, node.type === 'FunctionDeclaration' ? 'block' : 'self'],
+      ];
+    }
+    case 'ClassDeclaration':
+    case 'ClassExpression':
+    case 'TSEnumDeclaration':
+    case 'TSModuleDeclaration':
+    case 'TSImportEqualsDeclaration':
+      if (node.id?.type === 'Identifier') names.push(node.id.name);
+      return [[names, node.type === 'ClassExpression' ? 'self' : 'block']];
+    case 'CatchClause':
+      patternNames(node.param, names);
+      return [[names, 'self']];
+    case 'ImportSpecifier':
+    case 'ImportDefaultSpecifier':
+    case 'ImportNamespaceSpecifier':
+      return [[[node.local.name], 'block']];
+  }
+  return [];
+}
+
+const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
+const BLOCKS = new Set([
+  'Program',
+  'BlockStatement',
+  'StaticBlock',
+  'ForStatement',
+  'ForInStatement',
+  'ForOfStatement',
+  'SwitchStatement',
+  'TSModuleBlock',
+]);
+
+// Expressions that only wrap a value: `(…)`, `… as const`, and so on.
+const WRAPPERS = new Set([
+  'ParenthesizedExpression',
+  'TSAsExpression',
+  'TSSatisfiesExpression',
+  'TSNonNullExpression',
+]);
+const unwrap = (node: Node): Node => (WRAPPERS.has(node.type) ? unwrap(node.expression) : node);
+
 // Finds blocks in a JS or TS file, and imports of stylesheet files. Only
 // `css` and `scss` imported from `@pre.style/core` mark blocks. Returns null
 // when the file imports neither.
@@ -216,9 +304,30 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
 
   const blocks: FoundBlock[] = [];
   const blockAt = new Map<Node, FoundBlock>();
-  const cnNodes: Node[] = [];
+  const cnNodes = new Set<Node>();
+  // Each name's declarations, with the node it's visible in, and where
+  // functions are, for `cn` arguments that name a `const`.
+  const declarations = new Map<string, { node: Node; scope: Node }[]>();
+  const functions: Node[] = [];
+  const parents = new Map<Node, Node | null>();
 
   walk(program, null, (node, parent) => {
+    parents.set(node, parent);
+    for (const [names, scope] of declaredNames(node, parent)) {
+      let visible: Node = node;
+      if (scope !== 'self') {
+        const stop = scope === 'block' ? BLOCKS : FUNCTIONS;
+        visible = parent!;
+        while (!stop.has(visible.type) && visible.type !== 'Program')
+          visible = parents.get(visible)!;
+      }
+      for (const name of names) {
+        const list = declarations.get(name) ?? [];
+        list.push({ node, scope: visible });
+        declarations.set(name, list);
+      }
+    }
+    if (FUNCTIONS.has(node.type)) functions.push(node);
     // `import('./file.css', { with: { type: 'pre.style' } })`.
     if (node.type === 'ImportExpression') {
       const options = node.options as Node | null;
@@ -243,7 +352,7 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
     if (node.type !== 'Identifier' || !locals.has(node.name) || !isReference(node, parent)) return;
     const imported = locals.get(node.name)!;
     if (imported === 'cn') {
-      if (parent?.type === 'CallExpression' && parent.callee === node) cnNodes.push(parent);
+      if (parent?.type === 'CallExpression' && parent.callee === node) cnNodes.add(parent);
       return;
     }
     if (parent?.type !== 'TaggedTemplateExpression' || parent.tag !== node) {
@@ -302,23 +411,61 @@ export function findInScript(filename: string, code: string): ScriptAnalysis | n
     return null;
   };
 
-  // `cn` calls with only string literals, blocks, and stylesheet classes
-  // can be resolved at build time.
-  const cnCalls = cnNodes.map((node): CnCall => {
-    const args: (string | FoundBlock | SheetClass)[] = [];
-    for (const arg of node.arguments as Node[]) {
-      const sheet = sheetClass(arg);
+  // Top-level `const`s, which `cn` arguments can name.
+  const consts = new Map<string, Node>();
+  for (const statement of program.body as Node[]) {
+    const declaration =
+      statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
+    if (declaration?.type !== 'VariableDeclaration' || declaration.kind !== 'const') continue;
+    for (const declarator of declaration.declarations as Node[])
+      if (declarator.id.type === 'Identifier' && declarator.init)
+        consts.set(declarator.id.name, declarator);
+  }
+  // The `const` an identifier refers to: null when another declaration of
+  // the name is visible where it's used, or when it's used before the
+  // declaration outside a function, which throws at runtime.
+  const within = (node: Node, outer: Node) => outer.start <= node.start && node.end <= outer.end;
+  const constAt = (arg: Node): Node | null => {
+    if (arg.type !== 'Identifier') return null;
+    const declarator = consts.get(arg.name);
+    if (declarator === undefined) return null;
+    const others = declarations.get(arg.name)!.filter(({ node }) => node !== declarator);
+    if (others.some(({ scope }) => within(arg, scope))) return null;
+    if (arg.start < declarator.end && !functions.some((f) => within(arg, f))) return null;
+    return declarator;
+  };
+
+  // `cn` calls with only string literals, blocks, stylesheet classes, and
+  // other static `cn` calls can be resolved at build time.
+  const cnCalls = new Map<Node, CnCall>();
+  const cnCall = (node: Node): CnCall => {
+    let call = cnCalls.get(node);
+    if (call !== undefined) return call;
+    // Set first, so a cycle through `const`s isn't static.
+    call = { start: node.start, end: node.end, args: null };
+    cnCalls.set(node, call);
+    const args: CnCall['args'] = [];
+    for (const written of node.arguments as Node[]) {
+      const declarator = constAt(written);
+      const arg = unwrap(declarator?.init ?? written);
+      const sheet = sheetClass(written);
       if (arg.type === 'Literal' && typeof arg.value === 'string') args.push(arg.value);
       else if (arg.type === 'TemplateLiteral' && arg.expressions.length === 0)
         args.push(arg.quasis[0].value.cooked);
       else if (blockAt.has(arg)) args.push(blockAt.get(arg)!);
       else if (sheet !== null) args.push(sheet);
-      else return { start: node.start, end: node.end, args: null };
+      // Only through a `const`: a call written inside another isn't
+      // replaced separately.
+      else if (declarator !== null && cnNodes.has(arg) && cnCall(arg).args !== null)
+        args.push(cnCall(arg));
+      else return call;
     }
-    return { start: node.start, end: node.end, args };
-  });
+    call.args = args;
+    return call;
+  };
+  for (const node of cnNodes) cnCall(node);
 
-  return { blocks, imports, sheets, cnCalls };
+  return { blocks, imports, sheets, cnCalls: [...cnCalls.values()] };
 }
 
 const HTML_BLOCK = /\b(s?css)`([^`]*)`/g;
