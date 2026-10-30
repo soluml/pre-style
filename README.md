@@ -252,7 +252,7 @@ const className = cn(button, isDanger && danger);
 
 Two classes conflict when they set the same property under the same at-rules and selector. A later shorthand also removes earlier longhands it covers.
 
-When every argument is a block or a string literal, the plugin resolves the call during the build, so it costs nothing at runtime. Other calls use a small lookup table the plugin generates for your project.
+When every argument is a block or a string literal, the plugin resolves the call during the build, so it costs nothing at runtime. Arguments can also name a top-level `const` holding one of these, or holding another call that's resolved this way (`const base = css`…`;` then `cn(base, …)`). Other calls use a small lookup table the plugin generates for your project.
 
 > **Note:** `cn` removes `!important` declarations too. A later class that sets the same property wins, even when the earlier one is `!important`.
 

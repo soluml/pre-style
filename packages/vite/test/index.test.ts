@@ -107,6 +107,19 @@ describe('build', () => {
     );
   });
 
+  test('cn arguments that name a top-level const are resolved at build time', async () => {
+    const js = chunk(await buildFixture('cn-consts'));
+    // Blocks, strings, and other static cn calls, through consts.
+    assert.match(js, /var both = "A";/);
+    assert.match(js, /var chained = "A label G F D E";/);
+    assert.match(js, /var deferred = \(\) => "A";/);
+    // A parameter with the same name hides the const.
+    assert.match(js, /return cn\(red, blue\);/);
+    // Before the declaration, outside a function, it would throw.
+    assert.match(js, /var tdz = cn\(early\);/);
+    assert.match(js, /var dynamic = cn\(red, window\.location\.hash\);/);
+  });
+
   test('the quotes option sets the quote character', async () => {
     const js = chunk(await buildFixture('basic', { quotes: 'single-quote' }));
     assert.match(js, /document\.body\.className = "H G E F C";/);
