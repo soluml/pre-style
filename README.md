@@ -1,6 +1,6 @@
 # pre.style
 
-[![npm version](https://badge.fury.io/js/pre.style.svg)](https://www.npmjs.com/package/@pre.style/core)
+[![npm version](https://badge.fury.io/js/@pre.style/core.svg)](https://www.npmjs.com/package/@pre.style/core)
 
 Zero-runtime CSS-in-JS. Write plain CSS or SCSS next to your markup, and pre.style compiles it at build time into atomic CSS classes: one small class per declaration, shared across your whole project.
 
