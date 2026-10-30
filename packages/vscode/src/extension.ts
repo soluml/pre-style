@@ -5,6 +5,7 @@ import type {
   Range as LspRange,
 } from 'vscode-css-languageservice';
 import { completeInBlock } from './complete.ts';
+import { registerSetUp } from './setup.ts';
 
 const languages = [
   'javascript',
@@ -16,6 +17,7 @@ const languages = [
 ];
 
 export function activate(context: vscode.ExtensionContext) {
+  registerSetUp(context);
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(
       languages,
